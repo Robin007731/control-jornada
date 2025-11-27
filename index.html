@@ -31,11 +31,6 @@
         box-shadow: 0 2px 10px rgba(0,0,0,0.15);
     }
 
-    h2 {
-        margin-top: 30px;
-        color: #333;
-    }
-
     button {
         width: 100%;
         padding: 15px;
@@ -47,25 +42,11 @@
         transition: 0.2s;
     }
 
-    .btn-main {
-        background: #1e88e5;
-        color: white;
-    }
+    .btn-main { background: #1e88e5; color: white; }
+    .btn-mid { background: #ff0404; color: white; }
+    .btn-save { background: #2e7d32; color: white; }
+    .btn-del { background: #6a1b9a; color: white; }
 
-    .btn-main:hover {
-        background: #1565c0;
-    }
-
-    .btn-mid {
-        background: #ff0404;
-        color: white;
-    }
-
-    .btn-mid:hover {
-        background: #fd0303;
-    }
-
-    /* Estilo cuadrilla tipo Excel */
     table {
         width: 100%;
         border-collapse: collapse;
@@ -99,7 +80,6 @@
         border: 1px solid #ccc;
         margin-top: 5px;
     }
-
 </style>
 </head>
 <body>
@@ -108,8 +88,10 @@
 
 <div class="container">
 
-    <button class="btn-main" onclick="registrarAccion()">Registrar acción (Entrada → Descanso → Fin descanso → Salida)</button>
+    <button class="btn-main" onclick="registrarAccion()">Registrar acción </button>
     <button class="btn-mid" onclick="registrarMedioDia()">Medio día (Entrada / Salida)</button>
+    <button class="btn-save" onclick="generarImagenRecibo()">Guardar Recibo (Imagen)</button>
+    <button class="btn-del" onclick="eliminarRegistros()">Eliminar Registros</button>
 
     <div class="adelanto-box">
         <label>¿Pedir adelanto?</label>
@@ -131,9 +113,9 @@
 </div>
 
 <script>
-/* --------------------
-   VARIABLES GLOBALES
----------------------*/
+/* -------------------- */
+/* VARIABLES GLOBALES   */
+/* -------------------- */
 let estado = JSON.parse(localStorage.getItem("estado")) || 0;
 let registros = JSON.parse(localStorage.getItem("registros")) || {};
 let salario = 29267;
@@ -141,24 +123,20 @@ let adelanto = JSON.parse(localStorage.getItem("adelanto")) || 0;
 
 document.getElementById("adelanto").value = adelanto;
 
-/* --------------------
-   GUARDAR ADELANTO
----------------------*/
+/* -------------------- */
+/* GUARDAR ADELANTO     */
+/* -------------------- */
 function guardarAdelanto() {
     let val = parseFloat(document.getElementById("adelanto").value) || 0;
     localStorage.setItem("adelanto", val);
 }
 
-/* --------------------
-   OBTENER HORA EN TEXTO
----------------------*/
+/* -------------------- */
 function hora() {
     return new Date().toLocaleTimeString();
 }
 
-/* --------------------
-   AGREGAR AL REGISTRO
----------------------*/
+/* -------------------- */
 function agregarRegistro(campo) {
     let d = new Date().toLocaleDateString();
 
@@ -181,9 +159,7 @@ function agregarRegistro(campo) {
     actualizarTabla();
 }
 
-/* --------------------
-   CALCULAR HORAS
----------------------*/
+/* -------------------- */
 function calcularHoras(dia) {
     let r = registros[dia];
 
@@ -199,7 +175,6 @@ function calcularHoras(dia) {
     if (e && s) {
         let totalMin = s - e;
         let horas = (totalMin / 60).toFixed(2);
-
         let extras = horas > 8 ? (horas - 8).toFixed(2) : 0;
 
         r.horas = horas;
@@ -207,55 +182,30 @@ function calcularHoras(dia) {
     }
 }
 
-/* --------------------
-   BOTÓN PRINCIPAL
----------------------*/
+/* -------------------- */
 function registrarAccion() {
-
     let dia = new Date().toLocaleDateString();
 
-    if (estado === 0) {
-        agregarRegistro("entrada");
-    } else if (estado === 1) {
-        agregarRegistro("edesc");
-    } else if (estado === 2) {
-        agregarRegistro("sdesc");
-    } else if (estado === 3) {
-        agregarRegistro("salida");
-
-        // ¿Es fin de mes?
-        let hoy = new Date();
-        let ultimoDia = new Date(hoy.getFullYear(), hoy.getMonth() + 1, 0).getDate();
-
-        if (hoy.getDate() === ultimoDia) {
-            generarExcel();
-        }
-
-    }
+    if (estado === 0) agregarRegistro("entrada");
+    else if (estado === 1) agregarRegistro("edesc");
+    else if (estado === 2) agregarRegistro("sdesc");
+    else if (estado === 3) agregarRegistro("salida");
 
     estado = (estado + 1) % 4;
     localStorage.setItem("estado", estado);
 }
 
-/* --------------------
-   MEDIO DÍA
----------------------*/
+/* -------------------- */
 let medioDiaEstado = 0;
 
 function registrarMedioDia() {
-    if (medioDiaEstado === 0) {
-        agregarRegistro("entrada");
-    } else {
-        agregarRegistro("salida");
-        generarExcel(); 
-    }
+    if (medioDiaEstado === 0) agregarRegistro("entrada");
+    else agregarRegistro("salida");
 
     medioDiaEstado = (medioDiaEstado + 1) % 2;
 }
 
-/* --------------------
-   ACTUALIZAR TABLA
----------------------*/
+/* -------------------- */
 function actualizarTabla() {
     let tabla = document.getElementById("tabla");
 
@@ -285,44 +235,20 @@ function actualizarTabla() {
     }
 }
 
-/* --------------------
-   GENERAR EXCEL
----------------------*/
-function generarExcel() {
-    let csv = "Día,Entrada,EDesc,SDesc,Salida,Horas,Extras\n";
+/* ------------------------ */
+/* BOTÓN: ELIMINAR REGISTROS */
+/* ------------------------ */
+const PASSWORD = "1234";
 
-    let totalHoras = 0;
-    let totalExtras = 0;
+function eliminarRegistros() {
+    let p = prompt("Ingrese la contraseña para eliminar:");
 
-    for (let d in registros) {
-        let r = registros[d];
-
-        totalHoras += parseFloat(r.horas);
-        totalExtras += parseFloat(r.extras);
-
-        csv += `${d},${r.entrada},${r.edesc},${r.sdesc},${r.salida},${r.horas},${r.extras}\n`;
+    if (p !== PASSWORD) {
+        alert("Contraseña incorrecta.");
+        return;
     }
 
-    let valorHora = salario / 160;
-    let totalGanado = totalHoras * valorHora;
-    let extraPago = totalExtras * valorHora * 1.5;
-
-    let totalFinal = totalGanado + extraPago - adelanto;
-
-    csv += `\nTotal Horas,${totalHoras}`;
-    csv += `\nHoras Extras,${totalExtras}`;
-    csv += `\nAdelanto,${adelanto}`;
-    csv += `\nTotal a cobrar,${totalFinal}`;
-
-    let blob = new Blob([csv], { type: "text/csv" });
-    let url = URL.createObjectURL(blob);
-
-    let a = document.createElement("a");
-    a.href = url;
-    a.download = "recibo_mensual.csv";
-    a.click();
-
-    alert("Excel generado. Se reiniciará el mes.");
+    if (!confirm("¿Seguro que desea eliminar TODOS los registros?")) return;
 
     localStorage.removeItem("registros");
     localStorage.removeItem("estado");
@@ -333,9 +259,78 @@ function generarExcel() {
     adelanto = 0;
 
     actualizarTabla();
+    alert("Registros eliminados.");
+}
+
+/* ---------------------------- */
+/* GENERAR RECIBO COMO IMAGEN   */
+/* ---------------------------- */
+function generarImagenRecibo() {
+    let canvas = document.createElement("canvas");
+    canvas.width = 900;
+    canvas.height = 1200;
+
+    let ctx = canvas.getContext("2d");
+
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    ctx.fillStyle = "#000";
+    ctx.font = "28px Arial";
+    ctx.fillText("RECIBO DE CONTROL DE JORNADA", 180, 40);
+
+    ctx.font = "18px Arial";
+    ctx.fillText("Fecha: " + new Date().toLocaleDateString(), 30, 80);
+    ctx.fillText("Salario nominal: $ " + salario, 30, 110);
+
+    let y = 160;
+
+    ctx.font = "20px Arial";
+    ctx.fillText("Detalle del mes:", 30, y);
+    y += 40;
+
+    ctx.font = "16px Arial";
+
+    let totalHoras = 0;
+    let totalExtras = 0;
+
+    for (let d in registros) {
+        let r = registros[d];
+
+        ctx.fillText(`${d} | E: ${r.entrada} | ED: ${r.edesc} | SD: ${r.sdesc} | S: ${r.salida} | Horas: ${r.horas} | Extra: ${r.extras}`, 30, y);
+        y += 25;
+
+        totalHoras += parseFloat(r.horas);
+        totalExtras += parseFloat(r.extras);
+    }
+
+    let valorHora = salario / 160;
+    let totalGanado = totalHoras * valorHora;
+    let extraPago = totalExtras * valorHora * 1.5;
+    let totalFinal = totalGanado + extraPago - adelanto;
+
+    y += 30;
+
+    ctx.font = "20px Arial";
+    ctx.fillText("Resumen:", 30, y);
+    y += 30;
+
+    ctx.font = "18px Arial";
+    ctx.fillText("Total horas: " + totalHoras.toFixed(2), 30, y); y+=25;
+    ctx.fillText("Horas extra: " + totalExtras.toFixed(2), 30, y); y+=25;
+    ctx.fillText("Adelanto: $" + adelanto, 30, y); y+=25;
+    ctx.fillText("Total a cobrar: $" + totalFinal.toFixed(2), 30, y); y+=40;
+
+    let link = document.createElement("a");
+    link.download = "recibo_mensual.png";
+    link.href = canvas.toDataURL();
+    link.click();
+
+    alert("Recibo generado como imagen.");
 }
 
 actualizarTabla();
+
 </script>
 
 </body>
