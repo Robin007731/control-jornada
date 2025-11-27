@@ -84,7 +84,7 @@
 </head>
 <body>
 
-<header>CONTROL DE JORNADA LABORAL</header>
+<header id="titulo">CONTROL DE JORNADA LABORAL</header>
 
 <div class="container">
 
@@ -113,6 +113,19 @@
 </div>
 
 <script>
+/* -------------------- */
+/* NOMBRE DEL TRABAJADOR */
+/* -------------------- */
+let nombre = localStorage.getItem("nombre_trabajador");
+
+if (!nombre) {
+    nombre = prompt("Ingresá tu nombre para comenzar:");
+    if (!nombre || nombre.trim() === "") nombre = "Trabajador";
+    localStorage.setItem("nombre_trabajador", nombre);
+}
+
+document.getElementById("titulo").innerText = "CONTROL DE JORNADA - " + nombre.toUpperCase();
+
 /* -------------------- */
 /* VARIABLES GLOBALES   */
 /* -------------------- */
@@ -184,8 +197,6 @@ function calcularHoras(dia) {
 
 /* -------------------- */
 function registrarAccion() {
-    let dia = new Date().toLocaleDateString();
-
     if (estado === 0) agregarRegistro("entrada");
     else if (estado === 1) agregarRegistro("edesc");
     else if (estado === 2) agregarRegistro("sdesc");
@@ -236,8 +247,6 @@ function actualizarTabla() {
 }
 
 /* ------------------------ */
-/* BOTÓN: ELIMINAR REGISTROS */
-/* ------------------------ */
 const PASSWORD = "1234";
 
 function eliminarRegistros() {
@@ -279,11 +288,14 @@ function generarImagenRecibo() {
     ctx.font = "28px Arial";
     ctx.fillText("RECIBO DE CONTROL DE JORNADA", 180, 40);
 
-    ctx.font = "18px Arial";
-    ctx.fillText("Fecha: " + new Date().toLocaleDateString(), 30, 80);
-    ctx.fillText("Salario nominal: $ " + salario, 30, 110);
+    ctx.font = "20px Arial";
+    ctx.fillText("Trabajador: " + nombre, 30, 70);
 
-    let y = 160;
+    ctx.font = "18px Arial";
+    ctx.fillText("Fecha: " + new Date().toLocaleDateString(), 30, 100);
+    ctx.fillText("Salario nominal: $ " + salario, 30, 130);
+
+    let y = 180;
 
     ctx.font = "20px Arial";
     ctx.fillText("Detalle del mes:", 30, y);
