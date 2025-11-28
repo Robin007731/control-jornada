@@ -46,6 +46,7 @@
     .btn-mid { background: #ff0404; color: white; }
     .btn-save { background: #2e7d32; color: white; }
     .btn-del { background: #6a1b9a; color: white; }
+    .btn-manual { background: #f57c00; color: white; }
 
     table {
         width: 100%;
@@ -73,12 +74,20 @@
         margin-top: 20px;
     }
 
-    input {
+    input, select {
         width: 100%;
         padding: 8px;
         border-radius: 6px;
         border: 1px solid #ccc;
         margin-top: 5px;
+    }
+
+    #manualBox {
+        background: #fff3e0;
+        padding: 15px;
+        border-radius: 8px;
+        margin-top: 15px;
+        display: none;
     }
 </style>
 </head>
@@ -90,8 +99,29 @@
 
     <button class="btn-main" onclick="registrarAccion()">Registrar acción </button>
     <button class="btn-mid" onclick="registrarMedioDia()">Medio día (Entrada / Salida)</button>
+    <button class="btn-manual" onclick="toggleManual()">Registrar Manual</button>
     <button class="btn-save" onclick="generarImagenRecibo()">Guardar Recibo (Imagen)</button>
     <button class="btn-del" onclick="eliminarRegistros()">Eliminar Registros</button>
+
+    <div id="manualBox">
+        <h3>Registro Manual</h3>
+
+        <label>Día (dd/mm/aaaa):</label>
+        <input type="text" id="manualDia" placeholder="Ej: 28/11/2025">
+
+        <label>Hora (hh:mm):</label>
+        <input type="text" id="manualHora" placeholder="Ej: 14:30">
+
+        <label>Tipo de registro:</label>
+        <select id="manualTipo">
+            <option value="entrada">Entrada</option>
+            <option value="edesc">Entrada descanso</option>
+            <option value="sdesc">Salida descanso</option>
+            <option value="salida">Salida</option>
+        </select>
+
+        <button class="btn-main" onclick="guardarManual()">Guardar Manualmente</button>
+    </div>
 
     <div class="adelanto-box">
         <label>¿Pedir adelanto?</label>
@@ -113,9 +143,7 @@
 </div>
 
 <script>
-/* -------------------- */
-/* NOMBRE DEL TRABAJADOR */
-/* -------------------- */
+/* ----- NOMBRE ----- */
 let nombre = localStorage.getItem("nombre_trabajador");
 
 if (!nombre) {
@@ -126,9 +154,7 @@ if (!nombre) {
 
 document.getElementById("titulo").innerText = "CONTROL DE JORNADA - " + nombre.toUpperCase();
 
-/* -------------------- */
-/* VARIABLES GLOBALES   */
-/* -------------------- */
+/* ----- VARIABLES ----- */
 let estado = JSON.parse(localStorage.getItem("estado")) || 0;
 let registros = JSON.parse(localStorage.getItem("registros")) || {};
 let salario = 29267;
@@ -136,22 +162,20 @@ let adelanto = JSON.parse(localStorage.getItem("adelanto")) || 0;
 
 document.getElementById("adelanto").value = adelanto;
 
-/* -------------------- */
-/* GUARDAR ADELANTO     */
-/* -------------------- */
+/* ----- ADELANTO ----- */
 function guardarAdelanto() {
     let val = parseFloat(document.getElementById("adelanto").value) || 0;
     localStorage.setItem("adelanto", val);
 }
 
-/* -------------------- */
+/* ----- HORA AUTO ----- */
 function hora() {
     return new Date().toLocaleTimeString();
 }
 
-/* -------------------- */
-function agregarRegistro(campo) {
-    let d = new Date().toLocaleDateString();
+/* ----- REGISTRO AUTOMÁTICO ----- */
+function agregarRegistro(campo, diaManual = null, horaManual = null) {
+    let d = diaManual || new Date().toLocaleDateString();
 
     if (!registros[d]) {
         registros[d] = {
@@ -164,7 +188,7 @@ function agregarRegistro(campo) {
         }
     }
 
-    registros[d][campo] = hora();
+    registros[d][campo] = horaManual || hora();
 
     calcularHoras(d);
 
@@ -172,13 +196,13 @@ function agregarRegistro(campo) {
     actualizarTabla();
 }
 
-/* -------------------- */
+/* ----- HORAS ------ */
 function calcularHoras(dia) {
     let r = registros[dia];
 
     function convertir(h) {
         if (!h) return null;
-        let [h1, m, s] = h.split(":");
+        let [h1, m] = h.split(":");
         return (parseInt(h1) * 60) + parseInt(m);
     }
 
@@ -195,7 +219,7 @@ function calcularHoras(dia) {
     }
 }
 
-/* -------------------- */
+/* ----- AUTO REGISTRO ----- */
 function registrarAccion() {
     if (estado === 0) agregarRegistro("entrada");
     else if (estado === 1) agregarRegistro("edesc");
@@ -206,7 +230,7 @@ function registrarAccion() {
     localStorage.setItem("estado", estado);
 }
 
-/* -------------------- */
+/* ----- MEDIO DÍA ----- */
 let medioDiaEstado = 0;
 
 function registrarMedioDia() {
@@ -216,7 +240,31 @@ function registrarMedioDia() {
     medioDiaEstado = (medioDiaEstado + 1) % 2;
 }
 
-/* -------------------- */
+/* ----- REGISTRO MANUAL UI ----- */
+function toggleManual() {
+    let box = document.getElementById("manualBox");
+    box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
+/* ----- GUARDAR MANUAL ----- */
+function guardarManual() {
+    let dia = document.getElementById("manualDia").value;
+    let hora = document.getElementById("manualHora").value;
+    let tipo = document.getElementById("manualTipo").value;
+
+    if (!dia || !hora) {
+        alert("Debes ingresar día y hora.");
+        return;
+    }
+
+    agregarRegistro(tipo, dia, hora);
+    alert("Registro manual guardado.");
+
+    document.getElementById("manualDia").value = "";
+    document.getElementById("manualHora").value = "";
+}
+
+/* ----- TABLA ----- */
 function actualizarTabla() {
     let tabla = document.getElementById("tabla");
 
@@ -246,7 +294,7 @@ function actualizarTabla() {
     }
 }
 
-/* ------------------------ */
+/* ----- ELIMINAR ----- */
 const PASSWORD = "1234";
 
 function eliminarRegistros() {
@@ -271,9 +319,7 @@ function eliminarRegistros() {
     alert("Registros eliminados.");
 }
 
-/* ---------------------------- */
-/* GENERAR RECIBO COMO IMAGEN   */
-/* ---------------------------- */
+/* ----- RECIBO ----- */
 function generarImagenRecibo() {
     let canvas = document.createElement("canvas");
     canvas.width = 900;
