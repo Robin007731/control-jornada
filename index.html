@@ -48,11 +48,17 @@
     .btn-del { background: #6a1b9a; color: white; }
     .btn-manual { background: #f57c00; color: white; }
 
+    .tabla-wrapper {
+        width: 100%;
+        overflow-x: auto;
+    }
+
     table {
         width: 100%;
         border-collapse: collapse;
         margin-top: 20px;
         background: #fafafa;
+        min-width: 650px;
     }
 
     table th {
@@ -106,11 +112,13 @@
     <div id="manualBox">
         <h3>Registro Manual</h3>
 
-        <label>Día (dd/mm/aaaa):</label>
-        <input type="text" id="manualDia" placeholder="Ej: 28/11/2025">
+        <label>Día:</label>
+        <!-- CAMBIO SOLICITADO -->
+        <input type="date" id="manualDia">
 
-        <label>Hora (hh:mm):</label>
-        <input type="text" id="manualHora" placeholder="Ej: 14:30">
+        <label>Hora:</label>
+        <!-- CAMBIO SOLICITADO -->
+        <input type="time" id="manualHora">
 
         <label>Tipo de registro:</label>
         <select id="manualTipo">
@@ -126,35 +134,36 @@
     <div class="adelanto-box">
         <label>¿Pedir adelanto?</label>
         <input type="number" id="adelanto" placeholder="Monto del adelanto" oninput="guardarAdelanto()">
+        <button class="btn-save" onclick="confirmarAdelanto()">Confirmar Adelanto</button>
     </div>
 
     <h2>Registro diario</h2>
-    <table id="tabla">
-        <tr>
-            <th>Día</th>
-            <th>Entrada</th>
-            <th>E. Descanso</th>
-            <th>S. Descanso</th>
-            <th>Salida</th>
-            <th>Horas</th>
-            <th>Extras</th>
-        </tr>
-    </table>
+
+    <div class="tabla-wrapper">
+        <table id="tabla">
+            <tr>
+                <th>Día</th>
+                <th>Entrada</th>
+                <th>E. Descanso</th>
+                <th>S. Descanso</th>
+                <th>Salida</th>
+                <th>Horas</th>
+                <th>Extras</th>
+            </tr>
+        </table>
+    </div>
+
 </div>
 
 <script>
-/* ----- NOMBRE ----- */
 let nombre = localStorage.getItem("nombre_trabajador");
-
 if (!nombre) {
-    nombre = prompt("Ingresá tu nombre para comenzar:");
-    if (!nombre || nombre.trim() === "") nombre = "Trabajador";
+    nombre = prompt("Ingresá tu nombre para comenzar:") || "Trabajador";
     localStorage.setItem("nombre_trabajador", nombre);
 }
 
 document.getElementById("titulo").innerText = "CONTROL DE JORNADA - " + nombre.toUpperCase();
 
-/* ----- VARIABLES ----- */
 let estado = JSON.parse(localStorage.getItem("estado")) || 0;
 let registros = JSON.parse(localStorage.getItem("registros")) || {};
 let salario = 29267;
@@ -162,48 +171,41 @@ let adelanto = JSON.parse(localStorage.getItem("adelanto")) || 0;
 
 document.getElementById("adelanto").value = adelanto;
 
-/* ----- ADELANTO ----- */
 function guardarAdelanto() {
     let val = parseFloat(document.getElementById("adelanto").value) || 0;
     localStorage.setItem("adelanto", val);
 }
 
-/* ----- HORA AUTO ----- */
+function confirmarAdelanto() {
+    let val = parseFloat(document.getElementById("adelanto").value) || 0;
+    localStorage.setItem("adelanto", val);
+    alert("Adelanto confirmado: $" + val);
+}
+
 function hora() {
     return new Date().toLocaleTimeString();
 }
 
-/* ----- REGISTRO AUTOMÁTICO ----- */
 function agregarRegistro(campo, diaManual = null, horaManual = null) {
     let d = diaManual || new Date().toLocaleDateString();
 
     if (!registros[d]) {
-        registros[d] = {
-            entrada: "",
-            edesc: "",
-            sdesc: "",
-            salida: "",
-            horas: "0",
-            extras: "0"
-        }
+        registros[d] = { entrada:"", edesc:"", sdesc:"", salida:"", horas:"0", extras:"0" };
     }
 
     registros[d][campo] = horaManual || hora();
-
     calcularHoras(d);
-
     localStorage.setItem("registros", JSON.stringify(registros));
     actualizarTabla();
 }
 
-/* ----- HORAS ------ */
 function calcularHoras(dia) {
     let r = registros[dia];
 
     function convertir(h) {
         if (!h) return null;
         let [h1, m] = h.split(":");
-        return (parseInt(h1) * 60) + parseInt(m);
+        return (+h1 * 60) + (+m);
     }
 
     let e = convertir(r.entrada);
@@ -219,34 +221,7 @@ function calcularHoras(dia) {
     }
 }
 
-/* ----- AUTO REGISTRO ----- */
-function registrarAccion() {
-    if (estado === 0) agregarRegistro("entrada");
-    else if (estado === 1) agregarRegistro("edesc");
-    else if (estado === 2) agregarRegistro("sdesc");
-    else if (estado === 3) agregarRegistro("salida");
-
-    estado = (estado + 1) % 4;
-    localStorage.setItem("estado", estado);
-}
-
-/* ----- MEDIO DÍA ----- */
-let medioDiaEstado = 0;
-
-function registrarMedioDia() {
-    if (medioDiaEstado === 0) agregarRegistro("entrada");
-    else agregarRegistro("salida");
-
-    medioDiaEstado = (medioDiaEstado + 1) % 2;
-}
-
-/* ----- REGISTRO MANUAL UI ----- */
-function toggleManual() {
-    let box = document.getElementById("manualBox");
-    box.style.display = box.style.display === "none" ? "block" : "none";
-}
-
-/* ----- GUARDAR MANUAL ----- */
+/* ---- FIX REGISTRO MANUAL ---- */
 function guardarManual() {
     let dia = document.getElementById("manualDia").value;
     let hora = document.getElementById("manualHora").value;
@@ -257,14 +232,41 @@ function guardarManual() {
         return;
     }
 
-    agregarRegistro(tipo, dia, hora);
+    // Convertir fecha a dd/mm/aaaa
+    let [yyyy, mm, dd] = dia.split("-");
+    let diaFormateado = `${dd}/${mm}/${yyyy}`;
+
+    agregarRegistro(tipo, diaFormateado, hora);
     alert("Registro manual guardado.");
 
     document.getElementById("manualDia").value = "";
     document.getElementById("manualHora").value = "";
 }
 
-/* ----- TABLA ----- */
+function registrarAccion() {
+    if (estado === 0) agregarRegistro("entrada");
+    else if (estado === 1) agregarRegistro("edesc");
+    else if (estado === 2) agregarRegistro("sdesc");
+    else if (estado === 3) agregarRegistro("salida");
+
+    estado = (estado + 1) % 4;
+    localStorage.setItem("estado", estado);
+}
+
+let medioDiaEstado = 0;
+
+function registrarMedioDia() {
+    if (medioDiaEstado === 0) agregarRegistro("entrada");
+    else agregarRegistro("salida");
+
+    medioDiaEstado = (medioDiaEstado + 1) % 2;
+}
+
+function toggleManual() {
+    let box = document.getElementById("manualBox");
+    box.style.display = box.style.display === "none" ? "block" : "none";
+}
+
 function actualizarTabla() {
     let tabla = document.getElementById("tabla");
 
@@ -294,7 +296,6 @@ function actualizarTabla() {
     }
 }
 
-/* ----- ELIMINAR ----- */
 const PASSWORD = "1234";
 
 function eliminarRegistros() {
@@ -319,7 +320,6 @@ function eliminarRegistros() {
     alert("Registros eliminados.");
 }
 
-/* ----- RECIBO ----- */
 function generarImagenRecibo() {
     let canvas = document.createElement("canvas");
     canvas.width = 900;
@@ -388,7 +388,6 @@ function generarImagenRecibo() {
 }
 
 actualizarTabla();
-
 </script>
 
 </body>
