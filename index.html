@@ -1,99 +1,60 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1.0" />
 <title>Control de Jornada</title>
 <style>
-    body {
-        font-family: Arial, sans-serif;
-        background: #eef2f5;
-        margin: 0;
-        padding: 0;
+    :root{
+        --primary:#1e88e5;
+        --accent:#f57c00;
+        --bg:#eef2f5;
+        --card:#ffffff;
+        --muted:#6b7280;
     }
-
-    header {
-        background: #1e88e5;
-        color: white;
-        padding: 20px;
-        text-align: center;
-        font-size: 22px;
-        font-weight: bold;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-    }
-
-    .container {
-        max-width: 900px;
-        margin: 20px auto;
-        background: white;
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 2px 10px rgba(0,0,0,0.15);
-    }
-
-    button {
-        width: 100%;
-        padding: 15px;
-        font-size: 16px;
-        border: none;
-        border-radius: 8px;
-        margin-bottom: 10px;
-        cursor: pointer;
-        transition: 0.2s;
-    }
-
-    .btn-main { background: #1e88e5; color: white; }
-    .btn-mid { background: #ff0404; color: white; }
-    .btn-save { background: #2e7d32; color: white; }
-    .btn-del { background: #6a1b9a; color: white; }
-    .btn-manual { background: #f57c00; color: white; }
-
-    .tabla-wrapper {
-        width: 100%;
-        overflow-x: auto;
-    }
-
-    table {
-        width: 100%;
-        border-collapse: collapse;
-        margin-top: 20px;
-        background: #fafafa;
-        min-width: 650px;
-    }
-
-    table th {
-        background: #e0e0e0;
-        padding: 10px;
-        border: 1px solid #bdbdbd;
-    }
-
-    table td {
-        padding: 10px;
-        border: 1px solid #d0d0d0;
-        text-align: center;
-    }
-
-    .adelanto-box {
-        padding: 10px;
-        background: #e3f2fd;
-        border-radius: 5px;
-        margin-top: 20px;
-    }
-
-    input, select {
-        width: 100%;
-        padding: 8px;
-        border-radius: 6px;
-        border: 1px solid #ccc;
-        margin-top: 5px;
-    }
-
-    #manualBox {
-        background: #fff3e0;
-        padding: 15px;
-        border-radius: 8px;
-        margin-top: 15px;
-        display: none;
+    html,body{height:100%;margin:0;font-family:Inter, Roboto, Arial, sans-serif;background:var(--bg);color:#111;}
+    header{background:var(--primary);color:#fff;padding:20px;text-align:center;font-size:22px;font-weight:700;box-shadow:0 2px 6px rgba(0,0,0,.12)}
+    .container{max-width:1000px;margin:20px auto;background:var(--card);padding:20px;border-radius:12px;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+    button{border:0;padding:12px 14px;border-radius:8px;font-size:15px;cursor:pointer;transition:all .16s}
+    .btn-main{background:var(--primary);color:#fff}
+    .btn-mid{background:#e53935;color:#fff}
+    .btn-save{background:#2e7d32;color:#fff}
+    .btn-del{background:#6a1b9a;color:#fff}
+    .btn-manual{background:var(--accent);color:#fff}
+    .tabla-wrapper{width:100%;overflow-x:auto;margin-top:18px}
+    table{width:100%;border-collapse:collapse;background:#fafafa;min-width:700px}
+    table th{background:#efefef;padding:10px;border:1px solid #ddd}
+    table td{padding:10px;border:1px solid #e6e6e6;text-align:center}
+    .adelanto-box{padding:12px;background:#e3f2fd;border-radius:8px;margin-top:16px}
+    input,select,textarea{width:100%;padding:10px;border-radius:8px;border:1px solid #d1d5db;margin-top:8px;box-sizing:border-box}
+    #manualBox{background:#fff3e0;padding:15px;border-radius:8px;margin-top:12px;display:none}
+    .small{font-size:13px;color:var(--muted)}
+    /* Modal inicial */
+    .overlay{position:fixed;inset:0;background:rgba(0,0,0,.45);display:flex;align-items:center;justify-content:center;z-index:2000}
+    .modal{width:92%;max-width:760px;background:#fff;border-radius:10px;box-shadow:0 8px 30px rgba(2,6,23,.3);padding:18px;position:relative}
+    .modal h2{margin:0 0 8px;font-size:20px}
+    .modal .legal-actions{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+    .modal .hint{font-size:13px;color:var(--muted);margin-top:6px}
+    .modal .row{display:flex;gap:10px}
+    .modal .col{flex:1}
+    .modal .accept-btn{display:inline-block;margin-top:12px;}
+    .disabled{opacity:.45;pointer-events:none}
+    /* Panel legal a pantalla completa */
+    .legal-panel{position:fixed;inset:0;background:#fff;z-index:3000;display:flex;flex-direction:column;transform:translateY(0);transition:transform .2s}
+    .legal-header{background:var(--primary);color:#fff;padding:14px 18px;display:flex;align-items:center;justify-content:space-between}
+    .legal-header h3{margin:0;font-size:18px}
+    .legal-body{padding:18px;overflow:auto;flex:1}
+    .legal-footer{padding:14px;border-top:1px solid #eee;text-align:right}
+    .legal-content{max-width:900px;margin:0 auto;line-height:1.5;color:#0b1720}
+    .section-title{font-weight:700;margin-top:18px}
+    .muted{color:var(--muted);font-size:13px}
+    .back-btn{background:#ddd;color:#111;padding:10px 12px;border-radius:8px;border:0}
+    /* Volver aparece sólo al llegar al final */
+    .hidden{display:none}
+    /* Responsive */
+    @media (max-width:720px){
+        .modal{padding:12px}
+        .legal-header h3{font-size:16px}
     }
 </style>
 </head>
@@ -101,8 +62,7 @@
 
 <header id="titulo">CONTROL DE JORNADA LABORAL</header>
 
-<div class="container">
-
+<div class="container" id="appContent" aria-hidden="true">
     <button class="btn-main" onclick="registrarAccion()">Registrar acción </button>
     <button class="btn-mid" onclick="registrarMedioDia()">Medio día (Entrada / Salida)</button>
     <button class="btn-manual" onclick="toggleManual()">Registrar Manual</button>
@@ -113,11 +73,9 @@
         <h3>Registro Manual</h3>
 
         <label>Día:</label>
-        <!-- CAMBIO SOLICITADO -->
         <input type="date" id="manualDia">
 
         <label>Hora:</label>
-        <!-- CAMBIO SOLICITADO -->
         <input type="time" id="manualHora">
 
         <label>Tipo de registro:</label>
@@ -155,21 +113,353 @@
 
 </div>
 
+<!-- Modal inicial obligatorio -->
+<div id="initialOverlay" class="overlay" role="dialog" aria-modal="true">
+    <div class="modal" role="document" aria-labelledby="modalTitle">
+        <h2 id="modalTitle">Bienvenida a Control de Jornada</h2>
+        <p class="muted">Antes de continuar necesitamos tu nombre y que leas y aceptes nuestros Términos y Condiciones y la Política de Privacidad.</p>
+
+        <div style="margin-top:12px;">
+            <label for="inputNombre">Nombre completo</label>
+            <input id="inputNombre" type="text" placeholder="Ej.: Juan Pérez" />
+        </div>
+
+        <div class="legal-actions">
+            <button id="btnLeer" class="btn-main" onclick="openLegalPanel()">Leer Términos y Condiciones</button>
+            <button id="btnLeerPriv" class="btn-manual" onclick="openLegalPanel()">Leer Política de Privacidad</button>
+        </div>
+
+        <div style="margin-top:12px;">
+            <label><input id="chkAcepto" type="checkbox" /> &nbsp;Acepto los Términos y Condiciones y la Política de Privacidad</label>
+        </div>
+
+        <p class="hint">Importante: para garantizar la aceptación informada, el botón de aceptar se activará solo si: (1) ingresaste tu nombre; (2) abriste el texto de los Términos y llegaste al final del contenido; y (3) marcaste la casilla de aceptación.</p>
+
+        <div style="display:flex;gap:8px;margin-top:12px;">
+            <button id="btnAceptar" class="btn-save accept-btn disabled" onclick="acceptAndContinue()">Aceptar y continuar</button>
+            <button id="btnSalir" class="btn-del" onclick="denyAccess()">Salir</button>
+        </div>
+
+        <p class="small" style="margin-top:10px">Tu aceptación se registrará localmente y no recibirás este mensaje nuevamente en este dispositivo salvo que borres los datos locales.</p>
+    </div>
+</div>
+
+<!-- Panel legal (pantalla completa) -->
+<div id="legalPanel" class="legal-panel hidden" role="dialog" aria-modal="true" aria-labelledby="legalTitle">
+    <div class="legal-header">
+        <h3 id="legalTitle">Términos y Condiciones & Política de Privacidad — Control de Jornada</h3>
+        <div>
+            <button class="back-btn" onclick="closeLegalPanel()" title="Cerrar">Cerrar</button>
+        </div>
+    </div>
+    <div id="legalBody" class="legal-body">
+        <div class="legal-content" id="legalContent">
+            <!-- Long legal text starts here -->
+            <h4 class="section-title">Efectividad y aceptación</h4>
+            <p>Fecha de entrada en vigor: <strong>29 de noviembre de 2025</strong>.</p>
+            <p>Al utilizar la aplicación "Control de Jornada" (en adelante, "la App"), usted reconoce haber leído, comprendido y aceptado estos Términos y Condiciones y la Política de Privacidad en su totalidad. Si no está de acuerdo con cualquiera de las disposiciones contenidas en este documento, no debe utilizar la App.</p>
+
+            <h4 class="section-title">1. Definiciones</h4>
+            <p>1.1. "App": la aplicación móvil o web denominada Control de Jornada desarrollada para registrar jornadas laborales y datos asociados.</p>
+            <p>1.2. "Usuario": la persona que instala o utiliza la App.</p>
+            <p>1.3. "Datos": toda la información que el Usuario proporcione o que la App genere y almacene en el dispositivo, incluidos registros de hora, nombre, montos de adelanto y cualquier dato operativo.</p>
+
+            <h4 class="section-title">2. Objeto</h4>
+            <p>2.1. Estos Términos regulan el uso de la App por parte del Usuario y establecen los derechos y obligaciones entre el Usuario y el desarrollador/operador de la App.</p>
+
+            <h4 class="section-title">3. Alcance y funciones de la App</h4>
+            <p>3.1. La App permite el registro de entradas, salidas y descansos, el cálculo estimado de horas trabajadas y la generación de recibos en formato de imagen.</p>
+            <p>3.2. La App utiliza almacenamiento local (localStorage) en el dispositivo del Usuario para guardar datos. No requiere ni transmite datos a un servidor remoto por defecto, salvo que el Usuario lo configure explícitamente.</p>
+
+            <h4 class="section-title">4. Requisitos del Usuario</h4>
+            <p>4.1. El Usuario declara y garantiza que los datos que introduzca, incluido su nombre, serán veraces y exactos. El Usuario será responsable por la veracidad y actualización de la información que introduzca.</p>
+
+            <h4 class="section-title">5. Permisos y almacenamiento</h4>
+            <p>5.1. Para su funcionamiento, la App solicita al Usuario permiso para utilizar el almacenamiento local del navegador/dispositivo. Los datos se guardan localmente y se consideran responsabilidad del Usuario conservar copias cuando sea necesario.</p>
+            <p>5.2. El desarrollador no asume responsabilidad por la pérdida de Datos debido a borrado manual, formateo del dispositivo, reinstalación de la App o cualquier problema del propio dispositivo.</p>
+
+            <h4 class="section-title">6. Propiedad intelectual</h4>
+            <p>6.1. Todo el contenido, diseño, código fuente, marcas y documentos contenidos en la App son propiedad del desarrollador salvo que se indique lo contrario. Queda prohibida la reproducción, distribución o modificación sin autorización expresa.</p>
+
+            <h4 class="section-title">7. Uso permitido y prohibido</h4>
+            <p>7.1. Uso permitido: registrar jornadas laborales; generar recibos personales; uso privado en dispositivos del Usuario.</p>
+            <p>7.2. Uso prohibido: redistribuir la App con fines comerciales sin permiso; manipular datos de terceros sin consentimiento; emplear la App para actividades ilícitas.</p>
+
+            <h4 class="section-title">8. Responsabilidad y limitaciones</h4>
+            <p>8.1. En la máxima medida permitida por la ley, la App se proporciona "tal cual" sin garantías de ninguna clase, expresas o implícitas, incluidas, sin limitación, garantías de comercialización, idoneidad para un fin concreto o no infracción.</p>
+            <p>8.2. El desarrollador no será responsable por daños indirectos, incidentales, especiales o consecuentes derivados del uso de la App, incluidos pérdida de datos, pérdida de beneficios o interrupción del negocio.</p>
+            <p>8.3. La responsabilidad total del desarrollador por cualquier reclamo relacionado con la App se limitará, en su caso, a la suma pagada por el Usuario por la App o a un importe razonable, según la legislación aplicable.</p>
+
+            <h4 class="section-title">9. Indemnización</h4>
+            <p>9.1. El Usuario acepta indemnizar y mantener indemne al desarrollador frente a cualquier reclamación, daño, pérdida o gasto (incluidos honorarios razonables de abogados) surgidos del incumplimiento de estos Términos por parte del Usuario o del uso indebido de la App.</p>
+
+            <h4 class="section-title">10. Privacidad y tratamiento de datos</h4>
+            <p>10.1. La App almacena datos localmente en el dispositivo del Usuario. La App no comparte datos con terceros por defecto.</p>
+            <p>10.2. Tipos de datos: nombre del Usuario, registros de entrada/salida, registros manuales, montos de adelanto, valores calculados y cualquier dato introducido mediante funciones manuales.</p>
+            <p>10.3. Finalidad del tratamiento: permitir el correcto funcionamiento de la App, el registro de jornada, la generación de recibos y la gestión de adelantos.</p>
+            <p>10.4. Base legal: el tratamiento se basa en el consentimiento del Usuario y en la necesidad del tratamiento para la prestación de la App.</p>
+            <p>10.5. Conservación: los datos se mantendrán mientras el Usuario no los elimine del dispositivo o no borre la información local del navegador.</p>
+            <p>10.6. Derechos del Usuario: el Usuario puede acceder, rectificar, eliminar y exportar sus datos directamente desde la App mediante las funciones provistas o borrando el almacenamiento local.</p>
+
+            <h4 class="section-title">11. Seguridad</h4>
+            <p>11.1. Se adoptan medidas razonables para proteger los datos almacenados en el dispositivo; sin embargo, el desarrollador no garantiza seguridad absoluta ni se hace responsable de accesos no autorizados a un dispositivo comprometido.</p>
+
+            <h4 class="section-title">12. Menores</h4>
+            <p>12.1. La App no está dirigida a menores de edad. Si un menor utiliza la App, se entiende que cuenta con el consentimiento de su representante legal.</p>
+
+            <h4 class="section-title">13. Enlaces a terceros</h4>
+            <p>13.1. La App puede contener enlaces a servicios o recursos externos. El desarrollador no controla dichos sitios y no se responsabiliza por su contenido ni por prácticas de privacidad externas.</p>
+
+            <h4 class="section-title">14. Modificaciones de la App y de los Términos</h4>
+            <p>14.1. El desarrollador puede modificar la App y estos Términos en cualquier momento. Cuando se introduzcan cambios materiales, el Usuario será notificado mediante la App.</p>
+            <p>14.2. El uso continuado de la App tras la publicación de cambios implica la aceptación de los nuevos Términos.</p>
+
+            <h4 class="section-title">15. Terminación</h4>
+            <p>15.1. El desarrollador podrá suspender o cesar la disponibilidad de la App en cualquier momento por razones técnicas, legales o comerciales.</p>
+
+            <h4 class="section-title">16. Legislación aplicable y jurisdicción</h4>
+            <p>16.1. Estos Términos se regirán por las leyes de la República Oriental del Uruguay. Cualquier disputa derivada de su interpretación o aplicación será sometida a la jurisdicción de los tribunales competentes de Montevideo, Uruguay, con renuncia a cualquier otro fuero que pudiera corresponder.</p>
+
+            <h4 class="section-title">17. Exención de responsabilidad por exactitud</h4>
+            <p>17.1. La App facilita cálculos aproximados basados en datos introducidos por el Usuario. No se garantiza que dichos cálculos cumplan requisitos legales o laborales específicos; el Usuario debe verificar con un profesional o con la normativa aplicable cuando corresponda.</p>
+
+            <h4 class="section-title">18. Devolución y reembolsos</h4>
+            <p>18.1. Si la App fuese ofrecida por precio, las condiciones de reembolso se regirán por la política correspondiente en la tienda o plataforma donde se adquiera.</p>
+
+            <h4 class="section-title">19. Notificaciones</h4>
+            <p>19.1. Las notificaciones al Usuario podrán realizarse mediante la propia App o por la vía de contacto que el Usuario proporcione, si existiera.</p>
+
+            <h4 class="section-title">20. Limitaciones técnicas</h4>
+            <p>20.1. El correcto funcionamiento de la App depende de las capacidades del dispositivo y del navegador utilizado; el desarrollador no garantiza compatibilidad con todos los dispositivos o versiones.</p>
+
+            <h4 class="section-title">21. Uso de datos para mejora</h4>
+            <p>21.1. Si el Usuario opta por enviar informes de error o diagnósticos, cualquier información compartida será utilizada únicamente para mejorar la App, a menos que el Usuario indique lo contrario.</p>
+
+            <h4 class="section-title">22. Cláusula de integridad</h4>
+            <p>22.1. Estos Términos constituyen el acuerdo completo entre las partes en relación con el objeto del mismo y sustituyen acuerdos previos escritos u orales.</p>
+
+            <hr style="margin:18px 0;border:none;border-top:1px solid #eee"/>
+
+            <h4 class="section-title">Política de Privacidad — Detalle ampliado</h4>
+            <p class="muted">A continuación se desarrolla con mayor extensión la política de privacidad, el tratamiento de datos y las obligaciones del responsable.</p>
+
+            <h4 class="section-title">A. Responsable del tratamiento</h4>
+            <p>A.1. El responsable del tratamiento es el desarrollador/operador de la App (en adelante, "Responsable"). Si el Usuario requiere datos de contacto del Responsable los encontrará en la sección "Contacto" al final de este documento.</p>
+
+            <h4 class="section-title">B. Datos recabados y finalidades</h4>
+            <p>B.1. Datos de identidad: nombre que el Usuario introduce para personalizar la App.</p>
+            <p>B.2. Datos de uso: registros de entradas, salidas, descansos, horarios, horas totales y horas extra.</p>
+            <p>B.3. Datos de configuración: montos de adelanto, ajustes locales y cualquier preferencia almacenada.</p>
+            <p>B.4. Finalidades: (i) permitir la funcionalidad principal de la App; (ii) generar recibos; (iii) proporcionar herramientas de gestión personal de jornada.</p>
+
+            <h4 class="section-title">C. Legitimación</h4>
+            <p>C.1. La base legal del tratamiento es el consentimiento y la ejecución de un servicio técnico solicitado por el Usuario (prestación de la App).</p>
+
+            <h4 class="section-title">D. Conservación y supresión</h4>
+            <p>D.1. Los Datos permanecerán en el dispositivo mientras el Usuario no los elimine o no elimine la App y sus datos locales.</p>
+            <p>D.2. El Usuario puede suprimir los datos borrando el almacenamiento local o mediante las funciones de eliminación de la App.</p>
+
+            <h4 class="section-title">E. Derechos del Usuario</h4>
+            <p>E.1. Acceso: derecho a conocer qué Datos se almacenan en su dispositivo por la App.</p>
+            <p>E.2. Rectificación: derecho a corregir los Datos introducidos.</p>
+            <p>E.3. Supresión: derecho a eliminar los Datos (p. ej., borrar registros o eliminar almacenamiento local).</p>
+            <p>E.4. Portabilidad: el Usuario puede exportar la información manualmente (por ejemplo, generando recibos) y conservar copias.</p>
+
+            <h4 class="section-title">F. Transferencias</h4>
+            <p>F.1. Por defecto no se realizan transferencias de Datos a terceros ni a servidores remotos. Si el Usuario activa funciones que permitan compartir o sincronizar datos con servicios externos, se le informará previamente y deberá dar su consentimiento explícito.</p>
+
+            <h4 class="section-title">G. Medidas de seguridad</h4>
+            <p>G.1. Se aplican medidas técnicas razonables para proteger Datos en el dispositivo. No obstante, el Usuario debe adoptar prácticas seguras (por ejemplo, no compartir el teléfono, utilizar bloqueo del dispositivo).</p>
+
+            <h4 class="section-title">H. Menores y consentimiento matrimonial/parental</h4>
+            <p>H.1. Si el Usuario es menor, el uso se entiende condicionado a la autorización de su representante legal.</p>
+
+            <h4 class="section-title">I. Cambios en la Política</h4>
+            <p>I.1. El Responsable podrá actualizar esta Política. Los cambios sustanciales serán comunicados en la App cuando proceda.</p>
+
+            <h4 class="section-title">J. Contacto</h4>
+            <p>J.1. Para ejercer derechos o solicitar información adicional, el Usuario podrá contactar al desarrollador/operador mediante el canal correspondiente (si aplica), o bien mediante la dirección de contacto publicada por el desarrollador.</p>
+
+            <h4 class="section-title">Cláusulas adicionales y recomendaciones prácticas</h4>
+            <p>• Recomendamos realizar copias de seguridad externas si el Usuario desea conservar registros a largo plazo.</p>
+            <p>• Si el Usuario comparte dispositivo con terceros, se recomienda crear procedimientos locales para proteger su información.</p>
+            <p>• La App no sustituye documentación laboral oficial; los registros generados sirven como apoyo informativo al Usuario.</p>
+
+            <h4 class="section-title">Aceptación explícita</h4>
+            <p>Mediante el uso continuado de la App y la marcación de la casilla de aceptación, el Usuario otorga su consentimiento informado para el tratamiento de Datos descrito en esta Política.</p>
+
+            <h4 class="section-title">Cláusula de jurisdicción y arbitraje</h4>
+            <p>Si surgiera controversia, las partes podrán intentar una solución amistosa y, de no ser posible, someter la cuestión a los tribunales competentes de Montevideo, Uruguay.</p>
+
+            <h4 class="section-title">Contacto y soporte</h4>
+            <p>Para consultas sobre estos Términos o sobre la Política de Privacidad, escriba a la dirección de contacto que el desarrollador tenga publicada en la App o en su canal oficial.</p>
+
+            <hr style="margin-top:18px;border:none;border-top:1px solid #eee"/>
+
+            <p class="muted" style="margin-top:14px">Has llegado al final del documento. Para volver al inicio y continuar con la configuración, pulsa <strong>"Volver al inicio"</strong>.</p>
+
+            <!-- Long legal text ends here -->
+        </div>
+    </div>
+    <div class="legal-footer">
+        <button id="volverBtn" class="back-btn hidden" onclick="returnToModal()">Volver al inicio</button>
+    </div>
+</div>
+
 <script>
-let nombre = localStorage.getItem("nombre_trabajador");
-if (!nombre) {
-    nombre = prompt("Ingresá tu nombre para comenzar:") || "Trabajador";
-    localStorage.setItem("nombre_trabajador", nombre);
+/* ---------------------------
+   Gestión estados y localStorage
+   --------------------------- */
+const LS_KEY_ACCEPTED = "cj_aceptado_v1";
+const LS_KEY_NAME = "nombre_trabajador";
+const LS_KEY_READ_TERMS = "cj_read_terms_v1";
+
+const initialOverlay = document.getElementById("initialOverlay");
+const appContent = document.getElementById("appContent");
+const inputNombre = document.getElementById("inputNombre");
+const chkAcepto = document.getElementById("chkAcepto");
+const btnAceptar = document.getElementById("btnAceptar");
+const btnLeer = document.getElementById("btnLeer");
+const legalPanel = document.getElementById("legalPanel");
+const legalBody = document.getElementById("legalBody");
+const legalContent = document.getElementById("legalContent");
+const volverBtn = document.getElementById("volverBtn");
+
+/* Inicialización: si ya aceptó, ocultamos modal */
+function initAcceptanceFlow(){
+    const accepted = JSON.parse(localStorage.getItem(LS_KEY_ACCEPTED));
+    const name = localStorage.getItem(LS_KEY_NAME);
+    if(accepted && name){
+        // habilitar app
+        setUserName(name);
+        hideInitialModal();
+    } else {
+        // mostrar modal y evitar acceso a app
+        showInitialModal();
+        // Si ya había puesto nombre en un intento previo lo cargamos
+        if(name) inputNombre.value = name;
+    }
 }
 
-document.getElementById("titulo").innerText = "CONTROL DE JORNADA - " + nombre.toUpperCase();
+function setUserName(name){
+    document.getElementById("titulo").innerText = "CONTROL DE JORNADA - " + (name || "TRABAJADOR").toString().toUpperCase();
+    window.nombre = name || "Trabajador";
+}
+
+/* Mostrar / ocultar modal */
+function showInitialModal(){
+    initialOverlay.style.display = "flex";
+    appContent.setAttribute("aria-hidden","true");
+}
+function hideInitialModal(){
+    initialOverlay.style.display = "none";
+    appContent.setAttribute("aria-hidden","false");
+}
+
+/* Lógica para habilitar botón Aceptar solo si condiciones cumplidas */
+function updateAcceptButtonState(){
+    const name = inputNombre.value && inputNombre.value.trim().length > 1;
+    const checked = chkAcepto.checked;
+    const read = JSON.parse(localStorage.getItem(LS_KEY_READ_TERMS)) || false;
+    if(name && checked && read){
+        btnAceptar.classList.remove("disabled");
+    } else {
+        btnAceptar.classList.add("disabled");
+    }
+}
+
+/* Abrir panel legal (pantalla completa) */
+function openLegalPanel(){
+    legalPanel.classList.remove("hidden");
+    // Al abrir indicamos que no ha leído todavía en esta sesión hasta que llegue al final
+    // No borramos valor histórico: solo forzamos que vuelva a leer en esta sesión para asegurar lectura consciente
+    // Marcar lectura en localStorage solo cuando llegue al final
+    // Colocar scroll en arriba
+    legalBody.scrollTop = 0;
+    volverBtn.classList.add("hidden");
+    // si hay un valor previo de lectura, respetarlo — pero exigimos que el usuario vuelva a llegar al final para la aceptación actual
+    sessionStorage.setItem("cj_session_read_flag", "false");
+}
+
+/* Cerrar panel legal (botón cerrar) */
+function closeLegalPanel(){
+    // No permite cerrar sin que haya llegado al final? Permitimos cerrar, pero volverBtn solo aparece si llegó al final.
+    legalPanel.classList.add("hidden");
+    // si no leyó no habilitamos el volver
+}
+
+/* Detectar si llegó al final del contenido legal */
+legalBody.addEventListener("scroll", function(){
+    // si el usuario llegó al final, mostramos el botón volver y guardamos que leyó
+    const el = legalBody;
+    const scrolledToBottom = (el.scrollTop + el.clientHeight) >= (el.scrollHeight - 8);
+    if(scrolledToBottom){
+        volverBtn.classList.remove("hidden");
+        // marcar que leyó los términos en localStorage
+        localStorage.setItem(LS_KEY_READ_TERMS, true);
+        // marcar la sesión
+        sessionStorage.setItem("cj_session_read_flag", "true");
+        updateAcceptButtonState();
+    }
+});
+
+/* Cuando el usuario pulsa Volver al inicio (aparece solo si llegó al final) */
+function returnToModal(){
+    // cerrar panel legal y volver al modal
+    legalPanel.classList.add("hidden");
+    initialOverlay.style.display = "flex";
+    appContent.setAttribute("aria-hidden","true");
+}
+
+/* Acciones del modal */
+inputNombre.addEventListener("input", ()=>{
+    updateAcceptButtonState();
+});
+chkAcepto.addEventListener("change", ()=>{
+    updateAcceptButtonState();
+});
+
+/* Botón Aceptar */
+function acceptAndContinue(){
+    if(btnAceptar.classList.contains("disabled")) return;
+    const nombreVal = inputNombre.value.trim();
+    if(!nombreVal || nombreVal.length < 2){
+        alert("Ingrese su nombre completo antes de continuar.");
+        return;
+    }
+    // confirmar que leyó los términos
+    const read = JSON.parse(localStorage.getItem(LS_KEY_READ_TERMS)) || false;
+    if(!read){
+        alert("Por favor, abra los Términos y Condiciones y desplácese hasta el final para confirmar que los ha leído.");
+        return;
+    }
+    // guardar aceptación
+    localStorage.setItem(LS_KEY_ACCEPTED, true);
+    localStorage.setItem(LS_KEY_NAME, nombreVal);
+    setUserName(nombreVal);
+    hideInitialModal();
+}
+
+/* Si el usuario elige salir */
+function denyAccess(){
+    // Podemos ofrecer salir cerrando la ventana/tab. Pero no forzamos cerrar programaticamente (malo UX).
+    // Mostramos mensaje y dejamos el modal visible.
+    if(confirm("Si no acepta los Términos no podrá usar la app. ¿Desea cerrar esta ventana ahora?")){
+        try { window.close(); } catch(e){ /* no siempre se puede cerrar */ }
+        // como fallback, lo dejamos en la pantalla
+    }
+}
+
+/* ---------------------------
+   Resto de la app (tu código original adaptado)
+   --------------------------- */
 
 let estado = JSON.parse(localStorage.getItem("estado")) || 0;
 let registros = JSON.parse(localStorage.getItem("registros")) || {};
 let salario = 29267;
 let adelanto = JSON.parse(localStorage.getItem("adelanto")) || 0;
 
-document.getElementById("adelanto").value = adelanto;
+document.getElementById("adelanto").value = adelanto || "";
 
 function guardarAdelanto() {
     let val = parseFloat(document.getElementById("adelanto").value) || 0;
@@ -183,7 +473,11 @@ function confirmarAdelanto() {
 }
 
 function hora() {
-    return new Date().toLocaleTimeString();
+    // devolver hora en hh:mm con ceros
+    const d = new Date();
+    const hh = String(d.getHours()).padStart(2,'0');
+    const mm = String(d.getMinutes()).padStart(2,'0');
+    return `${hh}:${mm}`;
 }
 
 function agregarRegistro(campo, diaManual = null, horaManual = null) {
@@ -204,16 +498,21 @@ function calcularHoras(dia) {
 
     function convertir(h) {
         if (!h) return null;
-        let [h1, m] = h.split(":");
-        return (+h1 * 60) + (+m);
+        // admitir formatos hh:mm o hh:mm:ss
+        const parts = h.split(":");
+        const h1 = parseInt(parts[0],10);
+        const m = parseInt(parts[1]||"0",10);
+        return (h1 * 60) + (m);
     }
 
     let e = convertir(r.entrada);
     let s = convertir(r.salida);
 
-    if (e && s) {
+    if (e && s && !isNaN(e) && !isNaN(s)) {
         let totalMin = s - e;
-        let horas = (totalMin / 60).toFixed(2);
+        let horas = (totalMin / 60);
+        if(horas < 0) horas = 0;
+        horas = horas.toFixed(2);
         let extras = horas > 8 ? (horas - 8).toFixed(2) : 0;
 
         r.horas = horas;
@@ -224,10 +523,10 @@ function calcularHoras(dia) {
 /* ---- FIX REGISTRO MANUAL ---- */
 function guardarManual() {
     let dia = document.getElementById("manualDia").value;
-    let hora = document.getElementById("manualHora").value;
+    let horaVal = document.getElementById("manualHora").value;
     let tipo = document.getElementById("manualTipo").value;
 
-    if (!dia || !hora) {
+    if (!dia || !horaVal) {
         alert("Debes ingresar día y hora.");
         return;
     }
@@ -236,7 +535,7 @@ function guardarManual() {
     let [yyyy, mm, dd] = dia.split("-");
     let diaFormateado = `${dd}/${mm}/${yyyy}`;
 
-    agregarRegistro(tipo, diaFormateado, hora);
+    agregarRegistro(tipo, diaFormateado, horaVal);
     alert("Registro manual guardado.");
 
     document.getElementById("manualDia").value = "";
@@ -335,7 +634,7 @@ function generarImagenRecibo() {
     ctx.fillText("RECIBO DE CONTROL DE JORNADA", 180, 40);
 
     ctx.font = "20px Arial";
-    ctx.fillText("Trabajador: " + nombre, 30, 70);
+    ctx.fillText("Trabajador: " + (window.nombre || "Sin nombre"), 30, 70);
 
     ctx.font = "18px Arial";
     ctx.fillText("Fecha: " + new Date().toLocaleDateString(), 30, 100);
@@ -358,8 +657,8 @@ function generarImagenRecibo() {
         ctx.fillText(`${d} | E: ${r.entrada} | ED: ${r.edesc} | SD: ${r.sdesc} | S: ${r.salida} | Horas: ${r.horas} | Extra: ${r.extras}`, 30, y);
         y += 25;
 
-        totalHoras += parseFloat(r.horas);
-        totalExtras += parseFloat(r.extras);
+        totalHoras += parseFloat(r.horas) || 0;
+        totalExtras += parseFloat(r.extras) || 0;
     }
 
     let valorHora = salario / 160;
@@ -374,10 +673,10 @@ function generarImagenRecibo() {
     y += 30;
 
     ctx.font = "18px Arial";
-    ctx.fillText("Total horas: " + totalHoras.toFixed(2), 30, y); y+=25;
-    ctx.fillText("Horas extra: " + totalExtras.toFixed(2), 30, y); y+=25;
+    ctx.fillText("Total horas: " + (totalHoras.toFixed ? totalHoras.toFixed(2) : totalHoras), 30, y); y+=25;
+    ctx.fillText("Horas extra: " + (totalExtras.toFixed ? totalExtras.toFixed(2) : totalExtras), 30, y); y+=25;
     ctx.fillText("Adelanto: $" + adelanto, 30, y); y+=25;
-    ctx.fillText("Total a cobrar: $" + totalFinal.toFixed(2), 30, y); y+=40;
+    ctx.fillText("Total a cobrar: $" + (totalFinal.toFixed ? totalFinal.toFixed(2) : totalFinal), 30, y); y+=40;
 
     let link = document.createElement("a");
     link.download = "recibo_mensual.png";
@@ -388,6 +687,13 @@ function generarImagenRecibo() {
 }
 
 actualizarTabla();
+
+/* Inicialización de la experiencia de aceptación */
+initAcceptanceFlow();
+
+/* Si el usuario ya había marcado lectura anteriormente (en este o en otro acceso),
+   actualizamos el estado del botón automáticamente */
+if(JSON.parse(localStorage.getItem(LS_KEY_READ_TERMS))) updateAcceptButtonState();
 </script>
 
 </body>
