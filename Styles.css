@@ -1,143 +1,118 @@
-:root{
-    --primary:#1e88e5;
-    --accent:#f57c00;
-    --bg:#eef2f5;
-    --card:#ffffff;
-    --muted:#6b7280;
-}
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<title>Control de Jornada</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<header id="titulo">CONTROL DE JORNADA LABORAL</header>
 
-html,body{
-    height:100%;
-    margin:0;
-    font-family:Inter, Roboto, Arial, sans-serif;
-    background:var(--bg);
-    color:#111;
-}
+<!-- App principal -->
+<div class="container" id="appContent" aria-hidden="true" style="display:none;">
+    <div class="top-actions">
+        <button class="btn-main" onclick="registrarAccion()">Registrar acción</button>
+        <button class="btn-mid" onclick="registrarMedioDia()">Medio día (Entrada/Salida)</button>
+        <button class="btn-manual" onclick="toggleManual()">Registrar Manual</button>
+        <button class="btn-save" onclick="generarImagenRecibo()">Guardar Recibo (Imagen)</button>
+        <button class="btn-del" onclick="eliminarRegistros()">Eliminar Registros</button>
+    </div>
 
-header{
-    background:var(--primary);
-    color:#fff;
-    padding:20px;
-    text-align:center;
-    font-size:22px;
-    font-weight:700;
-    box-shadow:0 2px 6px rgba(0,0,0,.12);
-}
+    <div id="manualBox">
+        <h3>Registro Manual</h3>
+        <label>Día:</label>
+        <input type="date" id="manualDia">
 
-.container{
-    max-width:1000px;
-    margin:20px auto;
-    background:var(--card);
-    padding:20px;
-    border-radius:12px;
-    box-shadow:0 6px 18px rgba(0,0,0,.08);
-}
+        <label>Hora:</label>
+        <input type="time" id="manualHora">
 
-.top-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px;}
+        <label>Tipo de registro:</label>
+        <select id="manualTipo">
+            <option value="entrada">Entrada</option>
+            <option value="edesc">Entrada descanso</option>
+            <option value="sdesc">Salida descanso</option>
+            <option value="salida">Salida</option>
+        </select>
 
-button{
-    border:0;
-    padding:10px 12px;
-    border-radius:8px;
-    font-size:14px;
-    cursor:pointer;
-    transition:all .12s;
-}
+        <button class="btn-main" onclick="guardarManual()">Guardar Manualmente</button>
+    </div>
 
-.btn-main{background:var(--primary);color:#fff}
-.btn-mid{background:#e53935;color:#fff}
-.btn-save{background:#2e7d32;color:#fff}
-.btn-del{background:#6a1b9a;color:#fff}
-.btn-manual{background:var(--accent);color:#fff}
+    <div class="adelanto-box">
+        <label>¿Pedir adelanto?</label>
+        <input type="number" id="adelanto" placeholder="Monto del adelanto" oninput="guardarAdelanto()">
+        <button class="btn-save" onclick="confirmarAdelanto()">Confirmar Adelanto</button>
+    </div>
 
-.tabla-wrapper{width:100%;overflow-x:auto;margin-top:18px}
-table{width:100%;border-collapse:collapse;background:#fafafa;min-width:700px}
-table th{background:#efefef;padding:10px;border:1px solid #ddd}
-table td{padding:10px;border:1px solid #e6e6e6;text-align:center}
+    <h2>Registro diario</h2>
 
-.adelanto-box{
-    padding:12px;
-    background:#e3f2fd;
-    border-radius:8px;
-    margin-top:16px;
-    display:flex;
-    gap:8px;
-    align-items:center;
-}
+    <div class="tabla-wrapper">
+        <table id="tabla">
+            <tr>
+                <th>Día</th>
+                <th>Entrada</th>
+                <th>E. Descanso</th>
+                <th>S. Descanso</th>
+                <th>Salida</th>
+                <th>Horas</th>
+                <th>Extras</th>
+            </tr>
+        </table>
+    </div>
+</div>
 
-input,select{
-    width:100%;
-    padding:10px;
-    border-radius:8px;
-    border:1px solid #d1d5db;
-    margin-top:8px;
-    box-sizing:border-box;
-}
+<!-- Modal inicial -->
+<div id="initialOverlay" class="overlay" role="dialog" aria-modal="true" style="display:none;">
+    <div class="modal" role="document" aria-labelledby="modalTitle">
+        <h2 id="modalTitle">Bienvenida a Control de Jornada</h2>
+        <p class="muted">Antes de continuar necesitamos tu nombre y que aceptes los Términos y Condiciones y la Política de Privacidad.</p>
 
-#manualBox{
-    background:#fff3e0;
-    padding:15px;
-    border-radius:8px;
-    margin-top:12px;
-    display:none;
-}
+        <div class="modal-body">
+            <label for="inputNombre">Nombre completo</label>
+            <input id="inputNombre" type="text" placeholder="Ej.: Juan Pérez" />
 
-.small{font-size:13px;color:var(--muted)}
-.muted{color:var(--muted)}
+            <div style="margin-top:10px;">
+                <label><input id="chkAcepto" type="checkbox" /> &nbsp;Acepto los Términos y Condiciones y la Política de Privacidad</label>
+            </div>
 
-.overlay{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.45);
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    z-index:2000;
-}
+            <p class="hint small">Debes ingresar tu nombre y marcar la casilla para continuar. Si querés leer los términos primero, usá el botón.</p>
 
-.modal{
-    width:92%;
-    max-width:720px;
-    background:#fff;
-    border-radius:10px;
-    box-shadow:0 8px 30px rgba(2,6,23,.3);
-    padding:18px;
-}
+            <div class="modal-actions">
+                <button class="btn-main" onclick="openLegalPanelFromModal()">Leer Términos y Condiciones</button>
+                <button id="btnAceptar" class="btn-save disabled" onclick="acceptAndContinue()">Aceptar y continuar</button>
+                <button id="btnSalir" class="btn-del" onclick="denyAccess()">Salir</button>
+            </div>
+        </div>
+    </div>
+</div>
 
-.modal .modal-actions{display:flex;gap:8px;margin-top:12px}
+<!-- Panel legal -->
+<div id="legalPanel" class="legal-panel hidden">
+    <div class="legal-header">
+        <h3>Términos y Condiciones & Política de Privacidad</h3>
+        <button class="back-btn" onclick="returnToModal()">Cerrar y volver</button>
+    </div>
 
-.disabled{opacity:.5;pointer-events:none}
+    <div class="legal-body">
+        <div class="legal-content">
+            <h4 class="section-title">Términos y Condiciones (resumen)</h4>
+            <p class="muted">La aplicación almacena los registros únicamente en tu dispositivo.</p>
+            <p class="muted">Puedes eliminar todos tus datos desde la opción del menú con contraseña.</p>
+            <p class="muted">No se envían datos a servidores externos.</p>
+            <p class="muted">El uso de la app implica la aceptación de estas condiciones.</p>
+            <br>
+            <h4 class="section-title">Política de Privacidad</h4>
+            <p class="muted">La información ingresada se guarda solo en tu navegador (LocalStorage).</p>
+            <p class="muted">No se comparte con terceros ni se utiliza para análisis.</p>
+            <p class="muted">Puedes borrar todo cuando quieras.</p>
+        </div>
+    </div>
 
-.legal-panel{
-    position:fixed;inset:0;background:#fff;
-    z-index:3000;display:flex;
-    flex-direction:column;
-    transform:translateY(0);
-    transition:transform .2s;
-}
+    <div class="legal-footer">
+        <button id="volverBtn" class="back-btn" onclick="returnToModal()">Cerrar y volver</button>
+    </div>
+</div>
 
-.legal-header{
-    background:var(--primary);
-    color:#fff;
-    padding:14px 18px;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-}
-
-.legal-body{
-    padding:18px;
-    overflow:auto;
-    flex:1;
-}
-
-.legal-content{
-    max-width:800px;
-    margin:0 auto;
-    line-height:1.5;
-    color:#0b1720;
-}
-
-.back-btn{background:#ddd;color:#111;padding:10px 12px;border-radius:8px;border:0}
-
-.hidden{display:none}
+<script src="app.js"></script>
+</body>
+</html>
