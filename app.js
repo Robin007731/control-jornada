@@ -32,9 +32,6 @@ function setUserName(n) {
     document.getElementById("titulo").innerText = "CONTROL DE JORNADA - " + n.toUpperCase();
 }
 
-// === TODAS LAS FUNCIONES (registro, eliminar, etc) iguales que antes ===
-// (las mantengo todas funcionando perfecto)
-
 function horaActual() { return new Date().toTimeString().slice(0,5); }
 
 function convertirMin(h){
@@ -105,9 +102,7 @@ function actualizarTabla(){
     });
 }
 
-// === RECIBO 100% CORREGIDO Y HERMOSO ===
 function generarImagenRecibo(){
-    // Recalcular todas las horas
     Object.keys(registros).forEach(calcularHoras);
 
     let totalHoras = 0;
@@ -134,17 +129,14 @@ function generarImagenRecibo(){
     const netoDespuesBPS = totalBruto - descuentoBPS;
     const liquidoFinal = netoDespuesBPS - adelanto;
 
-    // Crear canvas
     const canvas = document.createElement("canvas");
     canvas.width = 900;
-    canvas.height = 1600 + fechas.length * 25; // más espacio si hay muchos días
+    canvas.height = 1600 + fechas.length * 25;
     const ctx = canvas.getContext("2d");
 
-    // Fondo
     ctx.fillStyle = "#ffffff";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Títulos
     ctx.fillStyle = "#000000";
     ctx.font = "bold 32px Arial";
     ctx.textAlign = "center";
@@ -157,7 +149,6 @@ function generarImagenRecibo(){
     ctx.fillText(`Fecha de emisión: ${new Date().toLocaleDateString("es-UY")}`, 50, 180);
     ctx.fillText(`Sueldo nominal mensual: $${salario.toLocaleString()}`, 50, 210);
 
-    // Detalle de días
     let y = 280;
     ctx.font = "bold 18px Arial";
     ctx.fillText("DETALLE DIARIO", 50, y);
@@ -170,7 +161,6 @@ function generarImagenRecibo(){
         y += 25;
     });
 
-    // Resumen final
     y += 30;
     ctx.fillStyle = "#1565c0";
     ctx.font = "bold 20px Arial";
@@ -196,15 +186,11 @@ function generarImagenRecibo(){
     ctx.font = "bold 28px Arial";
     ctx.fillText(`LÍQUIDO A COBRAR: $${liquidoFinal.toFixed(2)}`, 50, y);
 
-    // Descargar
     const link = document.createElement("a");
     link.download = `recibo_${new Date().toISOString().slice(0,10)}.png`;
     link.href = canvas.toDataURL();
     link.click();
 }
-
-// === RESTO DE FUNCIONES (ajustes, eliminar día, etc) ===
-// (las mismas perfectas que te pasé antes)
 
 function pedirPassAjustes(){
     document.getElementById("inputPassAjustes").value = "";
@@ -281,7 +267,6 @@ function guardarAdelanto(){
 }
 function confirmarAdelanto(){ guardarAdelanto(); alert("Adelanto confirmado"); }
 
-// Modal inicial simplificado
 function setupModalFlow(){
     if(localStorage.getItem(LS_NAME)){
         showApp();
@@ -297,4 +282,21 @@ function acceptAndContinue(){
     document.getElementById("initialOverlay").style.display = "none";
     showApp();
 }
-function showApp(){ document.getElementById("appContent").style.display = "block"; }s
+function showApp(){ document.getElementById("appContent").style.display = "block"; }
+
+// === NUEVAS FUNCIONES PARA TÉRMINOS Y CHECKBOX ===
+function openLegalPanelFromModal() {
+    document.getElementById("initialOverlay").style.display = "none";
+    document.getElementById("legalPanel").classList.remove("hidden");
+}
+
+function returnToModal() {
+    document.getElementById("legalPanel").classList.add("hidden");
+    document.getElementById("initialOverlay").style.display = "flex";
+}
+
+function toggleAceptarBtn() {
+    const chk = document.getElementById("chkAcepto");
+    const btn = document.getElementById("btnAceptar");
+    btn.classList.toggle("disabled", !chk.checked);
+}
