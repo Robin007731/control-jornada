@@ -112,8 +112,6 @@ input,select{
     position:fixed;inset:0;background:#fff;
     z-index:3000;display:flex;
     flex-direction:column;
-    transform:translateY(0);
-    transition:transform .2s;
 }
 
 .legal-header{
@@ -125,19 +123,10 @@ input,select{
     justify-content:space-between;
 }
 
-.legal-body{
-    padding:18px;
-    overflow:auto;
-    flex:1;
-}
-
-.legal-content{
-    max-width:800px;
-    margin:0 auto;
-    line-height:1.5;
-    color:#0b1720;
-}
-
+.legal-body{padding:18px;overflow:auto;flex:1}
+.legal-content{max-width:800px;margin:0 auto;line-height:1.5;color:#0b1720}
 .back-btn{background:#ddd;color:#111;padding:10px 12px;border-radius:8px;border:0}
-
 .hidden{display:none}
+
+#ajustesOverlay,#passAjustesOverlay{display:flex !important}
+#ajustesOverlay.hidden,#passAjustesOverlay.hidden{display:none !important}
