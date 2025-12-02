@@ -9,79 +9,57 @@
 <body>
 <header id="titulo">CONTROL DE JORNADA LABORAL</header>
 
-<!-- App principal -->
 <div class="container" id="appContent" aria-hidden="true" style="display:none;">
     <div class="top-actions">
         <button class="btn-main" onclick="registrarAccion()">Registrar acción</button>
-        <button class="btn-mid" onclick="registrarMedioDia()">Medio día (Entrada/Salida)</button>
+        <button class="btn-mid" onclick="registrarMedioDia()">Medio día</button>
         <button class="btn-manual" onclick="toggleManual()">Registrar Manual</button>
-        <button class="btn-save" onclick="generarImagenRecibo()">Guardar Recibo (Imagen)</button>
-        <button class="btn-del" onclick="eliminarRegistros()">Eliminar Registros</button>
+        <button class="btn-save" onclick="generarImagenRecibo()">Guardar Recibo</button>
+        <button class="btn-del" onclick="eliminarRegistros()">Eliminar Todo</button>
+        <button style="background:#7b1fa2;color:#fff;" onclick="pedirPassAjustes()">Ajustes</button>
     </div>
 
     <div id="manualBox">
         <h3>Registro Manual</h3>
-        <label>Día:</label>
-        <input type="date" id="manualDia">
-
-        <label>Hora:</label>
-        <input type="time" id="manualHora">
-
-        <label>Tipo de registro:</label>
+        <label>Día:</label><input type="date" id="manualDia">
+        <label>Hora:</label><input type="time" id="manualHora">
+        <label>Tipo:</label>
         <select id="manualTipo">
             <option value="entrada">Entrada</option>
             <option value="edesc">Entrada descanso</option>
             <option value="sdesc">Salida descanso</option>
             <option value="salida">Salida</option>
         </select>
-
-        <button class="btn-main" onclick="guardarManual()">Guardar Manualmente</button>
+        <button class="btn-main" onclick="guardarManual()">Guardar</button>
     </div>
 
     <div class="adelanto-box">
-        <label>¿Pedir adelanto?</label>
-        <input type="number" id="adelanto" placeholder="Monto del adelanto" oninput="guardarAdelanto()">
-        <button class="btn-save" onclick="confirmarAdelanto()">Confirmar Adelanto</button>
+        <label>Adelanto:</label>
+        <input type="number" id="adelanto" placeholder="0" oninput="guardarAdelanto()">
+        <button class="btn-save" onclick="confirmarAdelanto()">Confirmar</button>
     </div>
 
     <h2>Registro diario</h2>
-
     <div class="tabla-wrapper">
         <table id="tabla">
-            <tr>
-                <th>Día</th>
-                <th>Entrada</th>
-                <th>E. Descanso</th>
-                <th>S. Descanso</th>
-                <th>Salida</th>
-                <th>Horas</th>
-                <th>Extras</th>
-            </tr>
+            <tr><th>Día</th><th>Entrada</th><th>E.Descanso</th><th>S.Descanso</th><th>Salida</th><th>Horas</th><th>Extras</th></tr>
         </table>
     </div>
 </div>
 
 <!-- Modal inicial -->
-<div id="initialOverlay" class="overlay" role="dialog" aria-modal="true" style="display:none;">
-    <div class="modal" role="document" aria-labelledby="modalTitle">
-        <h2 id="modalTitle">Bienvenida a Control de Jornada</h2>
-        <p class="muted">Antes de continuar necesitamos tu nombre y que aceptes los Términos y Condiciones y la Política de Privacidad.</p>
-
-        <div class="modal-body">
-            <label for="inputNombre">Nombre completo</label>
-            <input id="inputNombre" type="text" placeholder="Ej.: Juan Pérez" />
-
-            <div style="margin-top:10px;">
-                <label><input id="chkAcepto" type="checkbox" /> &nbsp;Acepto los Términos y Condiciones y la Política de Privacidad</label>
-            </div>
-
-            <p class="hint small">Debes ingresar tu nombre y marcar la casilla para continuar. Si querés leer los términos primero, usá el botón.</p>
-
-            <div class="modal-actions">
-                <button class="btn-main" onclick="openLegalPanelFromModal()">Leer Términos y Condiciones</button>
-                <button id="btnAceptar" class="btn-save disabled" onclick="acceptAndContinue()">Aceptar y continuar</button>
-                <button id="btnSalir" class="btn-del" onclick="denyAccess()">Salir</button>
-            </div>
+<div id="initialOverlay" class="overlay" style="display:none;">
+    <div class="modal">
+        <h2>Bienvenida</h2>
+        <p class="muted">Ingresa tu nombre y acepta los términos para continuar.</p>
+        <label>Nombre completo</label>
+        <input id="inputNombre" type="text" placeholder="Ej.: Juan Pérez">
+        <div style="margin-top:10px;">
+            <label><input id="chkAcepto" type="checkbox"> Acepto Términos y Privacidad</label>
+        </div>
+        <div class="modal-actions">
+            <button class="btn-main" onclick="openLegalPanelFromModal()">Leer Términos</button>
+            <button id="btnAceptar" class="btn-save disabled" onclick="acceptAndContinue()">Aceptar</button>
         </div>
     </div>
 </div>
@@ -89,107 +67,64 @@
 <!-- Panel legal -->
 <div id="legalPanel" class="legal-panel hidden">
     <div class="legal-header">
-        <h3>Términos y Condiciones & Política de Privacidad</h3>
-        <button class="back-btn" onclick="returnToModal()">Cerrar y volver</button>
+        <h3>Términos y Privacidad</h3>
+        <button class="back-btn" onclick="returnToModal()">Cerrar</button>
     </div>
-
     <div class="legal-body">
         <div class="legal-content">
-
-            <!-- ============================
-                 TERMINOS Y CONDICIONES NUEVOS
-            ================================ -->
-
-            <h4 class="section-title">Términos y Condiciones</h4>
-
-            <p class="muted">
-                Bienvenido/a a la aplicación “Control de Jornada Laboral”.  
-                Al utilizar esta herramienta aceptas estos Términos y Condiciones, que regulan el uso de la aplicación y el tratamiento de los datos almacenados en tu dispositivo.
-            </p>
-
-            <p class="muted">
-                Esta app fue diseñada como una herramienta personal para registrar de forma sencilla tus horarios laborales diarios, calcular horas trabajadas, horas extra y permitir la generación de un recibo mensual basado en esos datos.  
-                Su uso es totalmente opcional y bajo tu responsabilidad.
-            </p>
-
-            <p class="muted">
-                La aplicación funciona de manera 100% local.  
-                Toda la información se guarda directamente en tu navegador mediante LocalStorage, sin conexión a servidores externos, sin cuentas de usuario y sin transferencia de datos.
-            </p>
-
-            <p class="muted">
-                Eres responsable del ingreso correcto de tus horarios, ya sean automáticos o manuales.  
-                La app realiza los cálculos en base a lo que ingreses, pero no verifica la veracidad de dicha información.
-            </p>
-
-            <p class="muted">
-                La app se ofrece “tal como está”, sin garantías de continuidad, compatibilidad universal o conservación permanente de datos.  
-                El desarrollador no se hace responsable por pérdidas de información debido a borrado accidental, limpieza del navegador o cambio de dispositivo.
-            </p>
-
-            <p class="muted">
-                Puedes eliminar todos tus registros manualmente desde la opción con contraseña.  
-                Una vez eliminados, no podrán recuperarse.
-            </p>
-
-            <br>
-
-            <h4 class="section-title">Cómo funciona la aplicación</h4>
-
-            <p class="muted">
-                La app registra cuatro tipos de marcación por día:
-            </p>
-
-            <p class="muted">
-                • <strong>Entrada</strong><br>
-                • <strong>Entrada a descanso</strong><br>
-                • <strong>Salida de descanso</strong><br>
-                • <strong>Salida</strong>
-            </p>
-
-            <p class="muted">
-                El botón “Registrar acción” carga automáticamente la siguiente marcación según el orden correspondiente.  
-                También puedes registrar día y hora manualmente si lo necesitas.
-            </p>
-
-            <p class="muted">
-                La app calcula horas trabajadas, horas extra y genera un recibo mensual con:  
-                total de horas trabajadas, pago correspondiente, extras, descuento de BPS y líquido final.  
-                Si solicitas un adelanto, el mismo se descuenta del total líquido.
-            </p>
-
-            <p class="muted">
-                Todo el funcionamiento es interno: no usa internet, no sincroniza en línea y no comparte datos con nadie.
-            </p>
-
-            <br>
-
-            <h4 class="section-title">Política de Privacidad</h4>
-
-            <p class="muted">
-                La aplicación no recopila, procesa ni comparte datos personales.  
-                El único dato personal ingresado es tu nombre, y se utiliza únicamente para mostrarlo dentro de la app y en el recibo generado.
-            </p>
-
-            <p class="muted">
-                No se emplean cookies de seguimiento, análisis estadístico, publicidad ni herramientas de rastreo.  
-                Ninguna información sale de tu dispositivo.
-            </p>
-
-            <p class="muted">
-                Todos los datos quedan bajo tu control dentro del almacenamiento local del navegador.  
-                Puedes eliminarlos en cualquier momento desde el menú correspondiente.
-            </p>
-
-            <p class="muted">
-                Al continuar utilizando la aplicación aceptas estos Términos y esta Política de Privacidad.
-            </p>
-
+            <h4>Términos y Condiciones</h4>
+            <p class="muted">Esta aplicación funciona 100% offline. Tus datos nunca salen de tu dispositivo...</p>
         </div>
     </div>
+</div>
 
-    <div class="legal-footer">
-        <button id="volverBtn" class="back-btn" onclick="returnToModal()">Cerrar y volver</button>
+<!-- Contraseña para Ajustes -->
+<div id="passAjustesOverlay" class="overlay hidden">
+    <div class="modal" style="text-align:center;max-width:400px;">
+        <h2>Acceso a Ajustes</h2>
+        <p>Ingresa la contraseña:</p>
+        <input type="password" id="inputPassAjustes" placeholder="1234" style="text-align:center;font-size:18px;">
+        <div class="modal-actions">
+            <button class="btn-del" onclick="cerrarPassAjustes()">Cancelar</button>
+            <button class="btn-save" onclick="verificarPassAjustes()">Entrar</button>
+        </div>
+    </div>
+</div>
+
+<!-- Ajustes -->
+<div id="ajustesOverlay" class="overlay hidden">
+    <div class="modal">
+        <h2>Ajustes</h2>
+        
+        <label>Nombre completo</label>
+        <input type="text" id="ajustesNombre">
+
+        <label>Sueldo nominal mensual ($)</label>
+        <input type="number" id="ajustesSalario" min="10000">
+
+        <label>Nueva contraseña (para eliminar)</label>
+        <input type="password" id="ajustesPass" placeholder="Dejar vacío = no cambiar">
+
+        <hr style="margin:20px 0;border:none;border-top:1px solid #ddd;">
+
+        <h3>Eliminar datos</h3>
+        <label>Eliminar un día:</label>
+        <input type="date" id="diaEliminar">
+        <button class="btn-del" onclick="eliminarDiaEspecifico()" style="margin-top:8px;">Eliminar Día</button>
+
+        <button class="btn-del" onclick="eliminarTodoConConfirm()" style="margin-top:20px;width:100%;padding:14px;font-size:16px;">
+            ELIMINAR TODO EL HISTORIAL
+        </button>
+
+        <div style="margin:20px 0;padding:12px;background:#f0f0f0;border-radius:8px;font-size:13px;">
+            <strong>Control de Jornada v2.3</strong><br>
+            100% offline • Tus datos solo en tu celular
+        </div>
+
+        <div class="modal-actions">
+            <button class="btn-del" onclick="cerrarAjustes()">Cerrar</button>
+            <button class="btn-save" onclick="guardarAjustes()">Guardar Cambios</button>
+        </div>
     </div>
 </div>
 
