@@ -47,33 +47,107 @@
     </div>
 </div>
 
-<!-- Modal inicial -->
+<!-- Modal inicial - MEJORADO -->
 <div id="initialOverlay" class="overlay" style="display:none;">
-    <div class="modal">
-        <h2>Bienvenida</h2>
-        <p class="muted">Ingresa tu nombre y acepta los términos para continuar.</p>
-        <label>Nombre completo</label>
-        <input id="inputNombre" type="text" placeholder="Ej.: Juan Pérez">
-        <div style="margin-top:10px;">
-            <label><input id="chkAcepto" type="checkbox"> Acepto Términos y Privacidad</label>
-        </div>
-        <div class="modal-actions">
+    <div class="modal" style="text-align:center;max-width:440px;padding:32px 24px;">
+        <h2 style="margin-bottom:8px;color:var(--primary);">¡Bienvenido!</h2>
+        <p class="muted" style="margin-bottom:24px;line-height:1.5;">
+            Esta app funciona 100% sin conexión.<br>Tus datos quedan solo en tu celular.
+        </p>
+        
+        <label style="display:block;margin-bottom:8px;font-weight:600;">Nombre completo</label>
+        <input id="inputNombre" type="text" placeholder="Ej.: Juan Pérez" style="margin-bottom:20px;text-align:center;font-size:16px;">
+
+        <label style="display:flex;align-items:center;justify-content:center;gap:8px;margin:24px 0 28px;font-size:15px;line-height:1.4;">
+            <input id="chkAcepto" type="checkbox" onchange="toggleAceptarBtn()">
+            He leído y acepto los 
+            <span style="color:var(--primary);text-decoration:underline;cursor:pointer;font-weight:600;" onclick="openLegalPanelFromModal()">Términos y Privacidad</span>
+        </label>
+
+        <div class="modal-actions" style="justify-content:center;gap:12px;">
             <button class="btn-main" onclick="openLegalPanelFromModal()">Leer Términos</button>
-            <button id="btnAceptar" class="btn-save disabled" onclick="acceptAndContinue()">Aceptar</button>
+            <button id="btnAceptar" class="btn-save disabled" onclick="acceptAndContinue()">Continuar</button>
         </div>
     </div>
 </div>
 
-<!-- Panel legal -->
+<!-- Panel Términos y Privacidad (COMPLETO Y MEJORADO) -->
 <div id="legalPanel" class="legal-panel hidden">
     <div class="legal-header">
         <h3>Términos y Privacidad</h3>
-        <button class="back-btn" onclick="returnToModal()">Cerrar</button>
+        <button class="back-btn" onclick="returnToModal()">Volver</button>
     </div>
     <div class="legal-body">
         <div class="legal-content">
-            <h4>Términos y Condiciones</h4>
-            <p class="muted">Esta aplicación funciona 100% offline. Tus datos nunca salen de tu dispositivo...</p>
+
+            <h4>Términos y Condiciones de Uso</h4>
+            <p class="muted">Control de Jornada es una aplicación 100% offline diseñada para ayudarte a registrar tus horas de trabajo de forma simple y segura.</p>
+            
+            <p class="muted"><strong>Privacidad total:</strong><br>
+            ✓ Tus datos nunca salen de tu celular<br>
+            ✓ No usamos internet, servidores ni cuentas<br>
+            ✓ Todo se guarda exclusivamente en tu dispositivo mediante LocalStorage<br>
+            ✓ No recolectamos, vendemos ni compartimos ninguna información personal</p>
+
+            <p class="muted"><strong>Responsabilidad sobre los cálculos:</strong><br>
+            Los cálculos de horas trabajadas, horas extras, valor hora y descuentos (BPS, etc.) son estimativos y tienen carácter exclusivamente informativo.<br>
+            <strong>El recibo generado no tiene validez legal ni fiscal oficial.</strong> Es solo una herramienta de control personal.</p>
+
+            <p class="muted"><strong>Eliminación de datos:</strong><br>
+            Podés borrar toda tu información en cualquier momento desde el menú Ajustes → "Eliminar todo el historial".<br>
+            También podés borrar días individuales o cambiar tu sueldo/nombre cuando quieras.</p>
+
+            <p class="muted"><strong>Actualizaciones y versiones:</strong><br>
+            Esta es la versión 2.3 (Diciembre 2025). Al seguir usando la app aceptás que podamos lanzar mejoras visuales o funcionales sin previo aviso, siempre manteniendo el funcionamiento offline y la privacidad total.</p>
+
+            <p class="muted"><strong>Uso permitido:</strong><br>
+            Esta app está hecha con cariño en Uruguay para trabajadores que quieran llevar un control claro y honesto de sus horas. Queda prohibido su uso comercial, reventa o distribución modificada sin autorización.</p>
+
+            <!-- NUEVA SECCIÓN: CÓMO USAR LA APP -->
+            <h4 style="margin-top:32px;">Cómo usar la app correctamente (¡es re fácil!)</h4>
+            <p class="muted">
+                <strong>1. Jornada normal (8 horas)</strong><br>
+                Botón azul → <strong>“Registrar acción”</strong><br>
+                Tocás 4 veces por día en este orden:<br>
+                1. Entrada → 2. Salida a descansar → 3. Vuelta del descanso → 4. Salida final<br>
+                → La app calcula sola las horas y las extras.
+            </p>
+
+            <p class="muted">
+                <strong>2. Medio día (4 horas)</strong><br>
+                Botón rojo → <strong>“Medio día”</strong><br>
+                Solo 2 toques: Entrada → Salida<br>
+                Perfecto para francos, licencias o medios días.
+            </p>
+
+            <p class="muted">
+                <strong>3. Corregir o agregar días pasados</strong><br>
+                Botón naranja → <strong>“Registrar Manual”</strong><br>
+                Elegís fecha, hora y tipo → Guardar.
+            </p>
+
+            <p class="muted">
+                <strong>4. Adelanto</strong><br>
+                Escribís el monto que te adelantaron → Confirmar<br>
+                Se resta automáticamente en el recibo.
+            </p>
+
+            <p class="muted">
+                <strong>5. Generar recibo</strong><br>
+                Botón verde → <strong>“Guardar Recibo”</strong><br>
+                Descarga una imagen con todo el detalle: horas, extras, BPS 22 % y líquido final.
+            </p>
+
+            <p class="muted" style="background:#e3f2fd;padding:12px;border-radius:8px;margin-top:20px;">
+                <strong>Consejo de oro:</strong><br>
+                Si te equivocás de botón, ¡tranqui! Entrás con “Registrar Manual” y corregís lo que quieras. Nunca perdés nada.
+            </p>
+
+            <p style="margin-top:32px;padding-top:20px;border-top:1px solid #ddd;font-size:14px;color:var(--muted);text-align:center;">
+                <strong>Control de Jornada v2.3</strong><br>
+                100% offline • 100% tuyo • Hecho con ❤️ en Uruguay<br>
+                Diciembre 2025
+            </p>
         </div>
     </div>
 </div>
