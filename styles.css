@@ -39,18 +39,18 @@ header {
 }
 
 /* =====================================
-   TOP ACTIONS – FIX: SIEMPRE EN UNA FILA
+   TOP ACTIONS – SIEMPRE EN FILA
 ===================================== */
 .top-actions {
     display: flex;
     gap: 8px;
-    flex-wrap: nowrap;      /* ← evitar que se bajen */
+    flex-wrap: nowrap;      /* ← evita columna */
     overflow-x: auto;       /* ← scroll si no entran */
     margin-bottom: 12px;
 }
 
 .top-actions button {
-    flex-shrink: 0;         /* ← no se achican */
+    flex-shrink: 0;         /* ← evita que se achiquen */
 }
 
 button {
@@ -488,7 +488,7 @@ small {
 
     .top-actions {
         gap: 6px;
-        flex-wrap: nowrap; /* ← mantener fila incluso en tablet */
+        flex-wrap: nowrap;
         overflow-x: auto;
     }
 
@@ -575,18 +575,17 @@ small {
         min-height: 36px;
     }
 
-    /* ===============================
-       SOLO EN MOBILE → EN COLUMNA
-    ================================= */
+    /* ← SE ELIMINÓ EL CAMBIO A COLUMNA
+       Ahora se ven igual que en PC */
     .top-actions {
-        gap: 4px;
-        flex-direction: column;
-        flex-wrap: wrap;
-        overflow-x: unset;
+        gap: 8px;
+        flex-wrap: nowrap;
+        overflow-x: auto;
     }
 
     .top-actions button {
-        width: 100%;
+        flex-shrink: 0;
+        width: auto;
     }
 
     .manual-grid {
@@ -600,7 +599,7 @@ small {
         max-height: 90vh;
     }
 
-    .modal-ajustes {
+    .modal-content {
         padding: 10px;
     }
 
