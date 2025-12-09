@@ -38,11 +38,19 @@ header {
     box-shadow: 0 6px 18px rgba(0, 0, 0, .06);
 }
 
+/* =====================================
+   TOP ACTIONS – FIX: SIEMPRE EN UNA FILA
+===================================== */
 .top-actions {
     display: flex;
     gap: 8px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;      /* ← evitar que se bajen */
+    overflow-x: auto;       /* ← scroll si no entran */
     margin-bottom: 12px;
+}
+
+.top-actions button {
+    flex-shrink: 0;         /* ← no se achican */
 }
 
 button {
@@ -479,7 +487,9 @@ small {
     }
 
     .top-actions {
-        gap: 4px;
+        gap: 6px;
+        flex-wrap: nowrap; /* ← mantener fila incluso en tablet */
+        overflow-x: auto;
     }
 
     button {
@@ -565,9 +575,14 @@ small {
         min-height: 36px;
     }
 
+    /* ===============================
+       SOLO EN MOBILE → EN COLUMNA
+    ================================= */
     .top-actions {
         gap: 4px;
         flex-direction: column;
+        flex-wrap: wrap;
+        overflow-x: unset;
     }
 
     .top-actions button {
