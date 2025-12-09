@@ -1,207 +1,292 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
-<meta charset="utf-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1"/>
-<title>Control de Jornada</title>
-<link rel="stylesheet" href="styles.css">
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Control de Jornada - Versión PRO</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-<header id="titulo">CONTROL DE JORNADA LABORAL</header>
-<div class="container" id="appContent" aria-hidden="true" style="display:none;">
-    <div class="top-actions">
-        <button class="btn-main" onclick="registrarAccion()">Registrar acción</button>
-        <button class="btn-mid" onclick="registrarMedioDia()">Medio día</button>
-        <button class="btn-manual" onclick="toggleManual()">Registrar Manual</button>
-        <button class="btn-save" onclick="generarImagenRecibo()">Guardar Recibo</button>
-       
-        <button style="background:#7b1fa2;color:#fff;" onclick="pedirPassAjustes()">Ajustes</button>
-    </div>
+    <header id="titulo">CONTROL DE JORNADA LABORAL</header>
 
-    <div id="manualBox">
-        <h3>Registro Manual</h3>
-        <label>Día:</label><input type="date" id="manualDia">
-        <label>Hora:</label><input type="time" id="manualHora">
-        <label>Tipo:</label>
-        <select id="manualTipo">
-            <option value="entrada">Entrada</option>
-            <option value="edesc">Entrada descanso</option>
-            <option value="sdesc">Salida descanso</option>
-            <option value="salida">Salida</option>
-        </select>
-        <button class="btn-main" onclick="guardarManual()">Guardar</button>
-    </div>
+    <div class="container" id="appContent" aria-hidden="true" style="display:none;">
 
-    <div class="adelanto-box">
-        <label>Adelanto:</label>
-        <input type="number" id="adelanto" placeholder="0" oninput="guardarAdelanto()">
-        <button class="btn-save" onclick="confirmarAdelanto()">Confirmar</button>
-    </div>
-
-    <h2>Registro diario</h2>
-    <div class="tabla-wrapper">
-        <table id="tabla">
-            <tr><th>Día</th><th>Entrada</th><th>E.Descanso</th><th>S.Descanso</th><th>Salida</th><th>Horas</th><th>Extras</th></tr>
-        </table>
-    </div>
-</div>
-
-<!-- Modal inicial - MEJORADO -->
-<div id="initialOverlay" class="overlay" style="display:none;">
-    <div class="modal" style="text-align:center;max-width:440px;padding:32px 24px;">
-        <h2 style="margin-bottom:8px;color:var(--primary);">¡Bienvenido!</h2>
-        <p class="muted" style="margin-bottom:24px;line-height:1.5;">
-            Esta app funciona 100% sin conexión.<br>Tus datos quedan solo en tu celular.
-        </p>
-        
-        <label style="display:block;margin-bottom:8px;font-weight:600;">Nombre completo</label>
-        <input id="inputNombre" type="text" placeholder="Ej.: Juan Pérez" style="margin-bottom:20px;text-align:center;font-size:16px;">
-
-        <label style="display:flex;align-items:center;justify-content:center;gap:8px;margin:24px 0 28px;font-size:15px;line-height:1.4;">
-            <input id="chkAcepto" type="checkbox" onchange="toggleAceptarBtn()">
-            He leído y acepto los 
-            <span style="color:var(--primary);text-decoration:underline;cursor:pointer;font-weight:600;" onclick="openLegalPanelFromModal()">Términos y Privacidad</span>
-        </label>
-
-        <div class="modal-actions" style="justify-content:center;gap:12px;">
-            <button class="btn-main" onclick="openLegalPanelFromModal()">Leer Términos</button>
-            <button id="btnAceptar" class="btn-save disabled" onclick="acceptAndContinue()">Continuar</button>
-        </div>
-    </div>
-</div>
-
-<!-- Panel Términos y Privacidad (COMPLETO Y MEJORADO) -->
-<div id="legalPanel" class="legal-panel hidden">
-    <div class="legal-header">
-        <h3>Términos y Privacidad</h3>
-        <button class="back-btn" onclick="returnToModal()">Volver</button>
-    </div>
-    <div class="legal-body">
-        <div class="legal-content">
-
-            <h4>Términos y Condiciones de Uso</h4>
-            <p class="muted">Control de Jornada es una aplicación 100% offline diseñada para ayudarte a registrar tus horas de trabajo de forma simple y segura.</p>
-            
-            <p class="muted"><strong>Privacidad total:</strong><br>
-            ✓ Tus datos nunca salen de tu celular<br>
-            ✓ No usamos internet, servidores ni cuentas<br>
-            ✓ Todo se guarda exclusivamente en tu dispositivo mediante LocalStorage<br>
-            ✓ No recolectamos, vendemos ni compartimos ninguna información personal</p>
-
-            <p class="muted"><strong>Responsabilidad sobre los cálculos:</strong><br>
-            Los cálculos de horas trabajadas, horas extras, valor hora y descuentos (BPS, etc.) son estimativos y tienen carácter exclusivamente informativo.<br>
-            <strong>El recibo generado no tiene validez legal ni fiscal oficial.</strong> Es solo una herramienta de control personal.</p>
-
-            <p class="muted"><strong>Eliminación de datos:</strong><br>
-            Podés borrar toda tu información en cualquier momento desde el menú Ajustes → "Eliminar todo el historial".<br>
-            También podés borrar días individuales o cambiar tu sueldo/nombre cuando quieras.</p>
-
-            <p class="muted"><strong>Actualizaciones y versiones:</strong><br>
-            Esta es la versión 2.3 (Diciembre 2025). Al seguir usando la app aceptás que podamos lanzar mejoras visuales o funcionales sin previo aviso, siempre manteniendo el funcionamiento offline y la privacidad total.</p>
-
-            <p class="muted"><strong>Uso permitido:</strong><br>
-            Esta app está hecha con cariño en Uruguay para trabajadores que quieran llevar un control claro y honesto de sus horas. Queda prohibido su uso comercial, reventa o distribución modificada sin autorización.</p>
-
-            <!-- NUEVA SECCIÓN: CÓMO USAR LA APP -->
-            <h4 style="margin-top:32px;">Cómo usar la app correctamente (¡es re fácil!)</h4>
-            <p class="muted">
-                <strong>1. Jornada normal (8 horas)</strong><br>
-                Botón azul → <strong>“Registrar acción”</strong><br>
-                Tocás 4 veces por día en este orden:<br>
-                1. Entrada → 2. Salida a descansar → 3. Vuelta del descanso → 4. Salida final<br>
-                → La app calcula sola las horas y las extras.
-            </p>
-
-            <p class="muted">
-                <strong>2. Medio día (4 horas)</strong><br>
-                Botón rojo → <strong>“Medio día”</strong><br>
-                Solo 2 toques: Entrada → Salida<br>
-                Perfecto para francos, licencias o medios días.
-            </p>
-
-            <p class="muted">
-                <strong>3. Corregir o agregar días pasados</strong><br>
-                Botón naranja → <strong>“Registrar Manual”</strong><br>
-                Elegís fecha, hora y tipo → Guardar.
-            </p>
-
-            <p class="muted">
-                <strong>4. Adelanto</strong><br>
-                Escribís el monto que te adelantaron → Confirmar<br>
-                Se resta automáticamente en el recibo.
-            </p>
-
-            <p class="muted">
-                <strong>5. Generar recibo</strong><br>
-                Botón verde → <strong>“Guardar Recibo”</strong><br>
-                Descarga una imagen con todo el detalle: horas, extras, BPS 22 % y líquido final.
-            </p>
-
-            <p class="muted" style="background:#e3f2fd;padding:12px;border-radius:8px;margin-top:20px;">
-                <strong>Consejo de oro:</strong><br>
-                Si te equivocás de botón, ¡tranqui! Entrás con “Registrar Manual” y corregís lo que quieras. Nunca perdés nada.
-            </p>
-
-            <p style="margin-top:32px;padding-top:20px;border-top:1px solid #ddd;font-size:14px;color:var(--muted);text-align:center;">
-                <strong>Control de Jornada v2.3</strong><br>
-                100% offline • 100% tuyo • Hecho con ❤️ en Uruguay<br>
-                Diciembre 2025
-            </p>
-        </div>
-    </div>
-</div>
-
-<!-- Contraseña para Ajustes -->
-<div id="passAjustesOverlay" class="overlay hidden">
-    <div class="modal" style="text-align:center;max-width:400px;">
-        <h2>Acceso a Ajustes</h2>
-        <p>Ingresa la contraseña:</p>
-        <input type="password" id="inputPassAjustes" placeholder="1234" style="text-align:center;font-size:18px;">
-        <div class="modal-actions">
-            <button class="btn-del" onclick="cerrarPassAjustes()">Cancelar</button>
-            <button class="btn-save" onclick="verificarPassAjustes()">Entrar</button>
-        </div>
-    </div>
-</div>
-
-<!-- Ajustes -->
-<div id="ajustesOverlay" class="overlay hidden">
-    <div class="modal">
-        <h2>Ajustes</h2>
-        
-        <label>Nombre completo</label>
-        <input type="text" id="ajustesNombre">
-
-        <label>Sueldo nominal mensual ($)</label>
-        <input type="number" id="ajustesSalario" min="10000">
-
-        <label>Nueva contraseña (para eliminar)</label>
-        <input type="password" id="ajustesPass" placeholder="Dejar vacío = no cambiar">
-
-        <hr style="margin:20px 0;border:none;border-top:1px solid #ddd;">
-
-        <h3>Eliminar datos</h3>
-        <label>Eliminar un día:</label>
-        <input type="date" id="diaEliminar">
-        <button class="btn-del" onclick="eliminarDiaEspecifico()" style="margin-top:8px;">Eliminar Día</button>
-
-        <button class="btn-del" onclick="eliminarTodoConConfirm()" style="margin-top:20px;width:100%;padding:14px;font-size:16px;">
-            ELIMINAR TODO EL HISTORIAL
-        </button>
-
-        <div style="margin:20px 0;padding:12px;background:#f0f0f0;border-radius:8px;font-size:13px;">
-            <strong>Control de Jornada v2.3</strong><br>
-            100% offline • Tus datos solo en tu celular
+        <div class="top-actions">
+            <button id="btnRegistrar" class="btn-main" onclick="registrarAccion()">Registrar acción</button>
+            <button class="btn-mid" onclick="registrarMedioDia()">Medio día</button>
+            <button class="btn-manual" onclick="toggleManual()">Registrar Manual</button>
+            <button class="btn-save" onclick="generarImagenRecibo()">Guardar Recibo</button>
+            <button style="background:#607d8b;color:#fff;" onclick="undoUltimaAccion()">Deshacer última acción</button>
+            <button style="background:#7b1fa2;color:#fff;" onclick="pedirPassAjustes()">Ajustes</button>
         </div>
 
-        <div class="modal-actions">
-            <button class="btn-del" onclick="cerrarAjustes()">Cerrar</button>
-            <button class="btn-save" onclick="guardarAjustes()">Guardar Cambios</button>
+        <div id="modoRow" style="display:flex;gap:8px;align-items:center;margin-top:8px;flex-wrap:wrap;">
+            <label class="small">Modo simplificado</label>
+            <input id="toggleModoSimple" type="checkbox" onchange="toggleModoSimple()"
+                title="Si activado, el app solo registra Entrada/Salida">
+            <label class="small" style="margin-left:16px;">Descanso automático (minutos)</label>
+            <input id="autoDescansoMin" type="number" min="0" placeholder="0" style="width:80px;"
+                oninput="guardarAjustesRapidos()">
+        </div>
+
+        <div id="manualBox">
+            <h3>Registro Manual</h3>
+            <div class="manual-grid">
+                <div>
+                    <label>Día:</label>
+                    <input type="date" id="manualDia">
+                </div>
+                <div>
+                    <label>Hora:</label>
+                    <input type="time" id="manualHora">
+                </div>
+                <div>
+                    <label>Tipo:</label>
+                    <select id="manualTipo">
+                        <option value="entrada">Entrada</option>
+                        <option value="edesc">Entrada descanso</option>
+                        <option value="sdesc">Salida descanso</option>
+                        <option value="salida">Salida</option>
+                    </select>
+                </div>
+                <div style="align-self:end;">
+                    <button class="btn-main" onclick="guardarManual()">Guardar</button>
+                </div>
+            </div>
+
+            <hr>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <label class="small">Guardar día completo (Entrada, E.Descanso, S.Descanso, Salida)</label>
+                <button class="btn-save" onclick="guardarDiaCompleto()">Guardar día completo</button>
+            </div>
+        </div>
+
+        <div class="adelanto-box">
+            <div style="flex:1;min-width:150px;">
+                <label>Adelanto:</label>
+                <input type="number" id="adelanto" placeholder="0" oninput="guardarAdelantoTemp()">
+            </div>
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;min-width:200px;">
+                <button class="btn-save" onclick="confirmarAdelanto()">Confirmar</button>
+                <button class="btn-del" onclick="borrarAdelanto()">Borrar</button>
+                <button class="btn-mid" onclick="mostrarHistorialAdelantos()">Historial</button>
+            </div>
+        </div>
+
+        <h2>Registro diario</h2>
+        <div class="tabla-wrapper">
+            <table id="tabla">
+                <tr>
+                    <th>Día</th>
+                    <th>Entrada</th>
+                    <th>E.Descanso</th>
+                    <th>S.Descanso</th>
+                    <th>Salida</th>
+                    <th>Horas</th>
+                    <th>Extras</th>
+                    <th>Acciones</th>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- Modal inicial -->
+    <div id="initialOverlay" class="overlay" style="display:none;">
+        <div class="modal" style="text-align:center;max-width:520px;padding:28px 20px;">
+            <h2 style="margin-bottom:8px;color:var(--primary);">¡Bienvenido!</h2>
+            <p class="muted" style="margin-bottom:16px;line-height:1.5;">
+                Esta app funciona 100% sin conexión.<br>Tus datos quedan solo en tu dispositivo.
+            </p>
+
+            <label style="display:block;margin-bottom:8px;font-weight:600;">Nombre completo</label>
+            <input id="inputNombre" type="text" placeholder="Ej.: Juan Pérez"
+                style="margin-bottom:12px;text-align:center;font-size:16px;">
+
+            <div
+                style="display:flex;gap:8px;align-items:center;justify-content:center;margin-bottom:8px;flex-wrap:wrap;">
+                <input id="chkAcepto" type="checkbox" onchange="toggleAceptarBtn()">
+                <span style="font-size:14px;">Acepto los <span
+                        style="color:var(--primary);cursor:pointer;text-decoration:underline;"
+                        onclick="openLegalPanelFromModal()">Términos y Privacidad</span></span>
+            </div>
+
+            <div class="modal-actions" style="justify-content:center;gap:12px;">
+                <button class="btn-main" onclick="openLegalPanelFromModal()">Leer Términos</button>
+                <button id="btnAceptar" class="btn-save disabled" onclick="acceptAndContinue()">Continuar</button>
+            </div>
         </div>
     </div>
-</div>
 
-<script src="app.js"></script>
+    <!-- Legal panel -->
+    <div id="legalPanel" class="legal-panel hidden">
+        <div class="legal-header">
+            <h3>Términos y Privacidad</h3>
+            <button class="back-btn" onclick="returnToModal()">Volver</button>
+        </div>
+        <div class="legal-body">
+            <div class="legal-content">
+                <h4>Términos y Condiciones de Uso</h4>
+                <p class="muted">Control de Jornada es una aplicación 100% offline diseñada para ayudarte a registrar
+                    tus horas de trabajo de forma simple y segura.</p>
+                <p class="muted"><strong>Privacidad total:</strong><br>✓ Tus datos nunca salen de tu dispositivo<br>✓ No
+                    usamos internet ni servidores<br>✓ Todo se guarda en LocalStorage</p>
+                <p class="muted"><strong>Responsabilidad:</strong><br>Los cálculos son informativos; el recibo no tiene
+                    validez fiscal oficial.</p>
+
+                <h4 style="margin-top:20px;">Cómo usar</h4>
+                <p class="muted">1. Registrar acción: 1-Entrada → 2-E.Descanso → 3-S.Descanso → 4-Salida. Si no hacés
+                    descanso, la app lo ignora. Medio día registra Entrada→Salida.</p>
+                <p class="muted">2. Modo simplificado: registra solo Entrada y Salida.</p>
+                <p class="muted">3. Guardá días manualmente si corregís.</p>
+                <p class="muted"><strong>Días festivos:</strong><br>La app marca automáticamente los feriados en
+                    amarillo en el calendario de registro.<br><strong>Días faltantes:</strong><br>Los días laborables
+                    saltados aparecen en rojo para que no olvides registrarlos.</p>
+
+                <p
+                    style="margin-top:32px;padding-top:20px;border-top:1px solid #ddd;font-size:14px;color:var(--muted);text-align:center;">
+                    <strong>Control de Jornada PRO</strong><br>
+                    100% offline • Hecho con ❤️ • Diciembre 2025
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pass ajustes -->
+    <div id="passAjustesOverlay" class="overlay hidden">
+        <div class="modal" style="text-align:center;max-width:420px;">
+            <h2>Acceso a Ajustes</h2>
+            <p>Ingresa la contraseña:</p>
+            <input type="password" id="inputPassAjustes" placeholder="Contraseña"
+                style="text-align:center;font-size:18px;">
+            <div class="modal-actions">
+                <button class="btn-del" onclick="cerrarPassAjustes()">Cancelar</button>
+                <button class="btn-save" onclick="verificarPassAjustes()">Entrar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Ajustes -->
+    <div id="ajustesOverlay" class="overlay hidden">
+        <div class="modal modal-ajustes">
+            <div class="ajustes-header">
+                <h2>Ajustes Generales</h2>
+                <button class="close-btn" onclick="cerrarAjustes()">✕</button>
+            </div>
+
+            <div class="ajustes-content">
+                <!-- Sección: Perfil -->
+                <div class="form-section">
+                    <h3 class="section-title">👤 Perfil</h3>
+                    <div class="form-group">
+                        <label for="ajustesNombre">Nombre completo</label>
+                        <input type="text" id="ajustesNombre" placeholder="Tu nombre">
+                    </div>
+                    <div class="form-group">
+                        <label for="ajustesSalario">Sueldo nominal mensual ($)</label>
+                        <input type="number" id="ajustesSalario" min="10000" placeholder="29267">
+                    </div>
+                </div>
+
+                <!-- Sección: Seguridad -->
+                <div class="form-section">
+                    <h3 class="section-title">🔐 Seguridad</h3>
+                    <div class="form-group">
+                        <label for="ajustesPass">Nueva contraseña</label>
+                        <input type="password" id="ajustesPass" placeholder="Dejar vacío para no cambiar">
+                        <small>Mínimo 4 caracteres</small>
+                    </div>
+                </div>
+
+                <!-- Sección: Descanso -->
+                <div class="form-section">
+                    <h3 class="section-title">⏱️ Configuración de Descanso</h3>
+                    <div class="form-group">
+                        <label for="ajustesAutoDesc">Auto-descanso (minutos)</label>
+                        <input type="number" id="ajustesAutoDesc" min="0" placeholder="0">
+                        <small>Inserta E.Descanso automáticamente después de N minutos de entrada</small>
+                    </div>
+                </div>
+
+                <!-- Sección: Editar Día -->
+                <div class="form-section">
+                    <h3 class="section-title">📝 Editar / Mover Día</h3>
+                    <div class="form-group">
+                        <label for="editarDiaFecha">Seleccionar día</label>
+                        <input type="date" id="editarDiaFecha">
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn-save" onclick="cargarDiaParaEditar()">Cargar para editar</button>
+                        <button class="btn-del" onclick="eliminarDiaEspecifico()">Eliminar Día</button>
+                    </div>
+
+                    <div id="editorDiaBox" class="editor-box hidden">
+                        <h4>Datos del día</h4>
+                        <div class="form-group">
+                            <label for="editEntrada">Entrada</label>
+                            <input type="time" id="editEntrada">
+                        </div>
+                        <div class="form-group">
+                            <label for="editEDesc">Entrada Descanso</label>
+                            <input type="time" id="editEDesc">
+                        </div>
+                        <div class="form-group">
+                            <label for="editSDesc">Salida Descanso</label>
+                            <input type="time" id="editSDesc">
+                        </div>
+                        <div class="form-group">
+                            <label for="editSalida">Salida</label>
+                            <input type="time" id="editSalida">
+                        </div>
+                        <div class="form-group">
+                            <label for="moverAFecha">Mover a fecha (opcional)</label>
+                            <input type="date" id="moverAFecha">
+                        </div>
+                        <div class="btn-group">
+                            <button class="btn-del" onclick="cancelarEdicionDia()">Cancelar</button>
+                            <button class="btn-save" onclick="guardarEdicionDia()">Guardar cambios</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sección: Respaldo y Datos -->
+                <div class="form-section">
+                    <h3 class="section-title">💾 Datos y Respaldo</h3>
+                    <div class="btn-group">
+                        <button class="btn-mid" onclick="restaurarRespaldo()">Restaurar último respaldo</button>
+                        <button class="btn-del" onclick="eliminarTodoConConfirm()"
+                            style="color:#fff;font-weight:bold;">ELIMINAR TODO</button>
+                    </div>
+                </div>
+
+                <!-- Pie de página -->
+                <div class="ajustes-footer">
+                    <p><strong>Control de Jornada PRO</strong></p>
+                    <p>100% offline • Tus datos solo en tu dispositivo</p>
+                </div>
+            </div>
+
+            <div class="modal-actions" style="border-top:1px solid #eee;padding-top:16px;margin-top:16px;">
+                <button class="btn-del" onclick="cerrarAjustes()">Cerrar</button>
+                <button class="btn-save" onclick="guardarAjustes()">Guardar cambios</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Historial de adelantos -->
+    <div id="histAdelantosOverlay" class="overlay hidden">
+        <div class="modal" style="max-width:640px;">
+            <h2>Historial de adelantos</h2>
+            <div id="histAdelantosList" style="max-height:360px;overflow:auto;"></div>
+            <div class="modal-actions">
+                <button class="btn-del" onclick="cerrarHistorialAdelantos()">Cerrar</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
 </body>
-</html>
 
+</html>
