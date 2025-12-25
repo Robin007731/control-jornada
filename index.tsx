@@ -37,7 +37,7 @@ interface WorkDay {
   exitTime?: string;
   isHalfDay: boolean;
   status: 'incomplete' | 'complete';
-  allowance: number; // Viáticos por día
+  allowance: number;
 }
 
 interface Advance {
@@ -50,14 +50,14 @@ interface Advance {
 interface UserSettings {
   workerName: string;
   monthlySalary: number;
-  hourlyRate: number; // Por si prefiere calcular por hora directa
+  hourlyRate: number;
   useHourlyRate: boolean;
   passwordHash: string;
   onboardingComplete: boolean;
   simplifiedMode: boolean;
   bpsRate: number;
   extraMultiplier: number;
-  specialDayMultiplier: number; // Domingos/Feriados
+  specialDayMultiplier: number;
 }
 
 // --- UTILIDADES ---
@@ -122,13 +122,13 @@ const getSummary = (workDays: WorkDay[], settings: UserSettings, advances: Advan
 const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; children: React.ReactNode }> = ({ isOpen, onClose, title, children }) => {
   if (!isOpen) return null;
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white w-full max-w-md rounded-[2.5rem] shadow-2xl overflow-hidden animate-slide-up border border-gray-100">
-        <div className="px-8 py-6 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-          <h3 className="font-black text-xl text-gray-800 tracking-tight">{title}</h3>
-          <button onClick={onClose} className="p-2 text-gray-400 hover:text-red-500 transition-colors"><X className="w-6 h-6" /></button>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 bg-black/60 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden animate-slide-up border border-gray-100">
+        <div className="px-5 py-4 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
+          <h3 className="font-bold text-lg text-gray-800 tracking-tight">{title}</h3>
+          <button onClick={onClose} className="p-2 text-gray-400 hover:text-red-500 transition-colors"><X className="w-5 h-5" /></button>
         </div>
-        <div className="p-8">{children}</div>
+        <div className="p-5">{children}</div>
       </div>
     </div>
   );
@@ -136,26 +136,67 @@ const Modal: React.FC<{ isOpen: boolean; onClose: () => void; title: string; chi
 
 const Onboarding: React.FC<{ onComplete: (name: string) => void }> = ({ onComplete }) => {
   const [name, setName] = useState('');
+  const [step, setStep] = useState(1);
+  const [accepted, setAccepted] = useState(false);
+
   return (
-    <div className="min-h-screen bg-blue-600 flex items-center justify-center p-6 text-white text-center">
-      <div className="max-w-md w-full space-y-12 animate-fade-in">
-        <div className="space-y-4">
-          <div className="bg-white/10 w-28 h-28 rounded-[2.5rem] flex items-center justify-center mx-auto backdrop-blur-xl border border-white/20 shadow-2xl">
-            <ShieldCheck className="w-14 h-14 text-white" />
+    <div className="min-h-screen bg-blue-600 flex items-center justify-center p-4 text-white">
+      <div className="max-w-xs w-full space-y-6 animate-fade-in">
+        {step === 1 && (
+          <div className="text-center space-y-8">
+            <div className="bg-white/10 w-20 h-20 rounded-2xl flex items-center justify-center mx-auto backdrop-blur-xl border border-white/20 shadow-2xl">
+              <ShieldCheck className="w-10 h-10 text-white" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none">Control de Jornadas</h1>
+              <p className="text-blue-100 font-bold text-xs tracking-widest uppercase">By Nexa Studio</p>
+            </div>
+            <div className="bg-white text-gray-900 p-6 rounded-3xl shadow-2xl space-y-6 text-left">
+              <div className="space-y-1">
+                <h2 className="text-xl font-bold text-gray-800">¡Bienvenido!</h2>
+                <p className="text-gray-400 text-xs">Dinos tu nombre para comenzar.</p>
+              </div>
+              <input type="text" placeholder="Juan Pérez" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 focus:border-blue-500 outline-none font-bold text-lg transition-all" value={name} onChange={(e) => setName(e.target.value)} />
+              <button disabled={!name.trim()} onClick={() => setStep(2)} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
+                CONTINUAR <ArrowRight className="w-5 h-5" />
+              </button>
+            </div>
           </div>
-          <h1 className="text-4xl font-black italic tracking-tighter uppercase">Control de Jornadas</h1>
-          <p className="text-blue-100 font-medium text-lg">Tu registro laboral inteligente.</p>
-        </div>
-        <div className="bg-white text-gray-900 p-10 rounded-[3rem] shadow-2xl space-y-8 text-left">
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold text-gray-800">¿Cómo te llamas?</h2>
-            <p className="text-gray-400 text-sm">Usaremos tu nombre para personalizar tus reportes.</p>
+        )}
+
+        {step === 2 && (
+          <div className="bg-white text-gray-900 p-6 rounded-3xl shadow-2xl space-y-5 animate-slide-up">
+            <h2 className="text-xl font-black text-gray-800 uppercase italic">Privacidad y Términos</h2>
+            <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-[10px] text-gray-600 space-y-3 h-64 overflow-y-auto leading-relaxed">
+              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">1. Almacenamiento Local (Local-First)</p>
+              <p>Control de Jornadas (CDJ) es una aplicación privada. Toda la información ingresada reside exclusivamente en tu dispositivo. Nexa Studio no recolecta, almacena ni vende tus datos en servidores externos.</p>
+              
+              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">2. Cálculos y Leyes</p>
+              <p>Los cálculos están optimizados para Uruguay, aplicando el descuento estándar de BPS (22%) y recargos por horas extras. Estos valores son referenciales y pueden variar según convenios específicos.</p>
+              
+              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">3. Responsabilidad</p>
+              <p>Tú eres responsable de respaldar tus datos. Si borras el caché del navegador o formateas tu equipo, los datos se perderán a menos que utilices la función de Backup en Ajustes.</p>
+              
+              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">4. Propiedad Intelectual</p>
+              <p>Esta aplicación es un producto desarrollado por Nexa Studio. Su uso es libre pero la reproducción o modificación del código está sujeta a derechos de autor.</p>
+            </div>
+            
+            <label className="flex items-start gap-3 p-2 cursor-pointer group">
+              <div className="relative mt-0.5">
+                <input type="checkbox" className="peer opacity-0 absolute w-5 h-5" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
+                <div className="w-5 h-5 bg-gray-100 border-2 border-gray-200 rounded-md peer-checked:bg-blue-600 peer-checked:border-blue-600 flex items-center justify-center transition-all">
+                  <Check className="w-3 h-3 text-white" />
+                </div>
+              </div>
+              <span className="text-[10px] font-bold text-gray-500 uppercase leading-tight select-none">He leído y acepto todas las políticas de privacidad y uso de Nexa Studio.</span>
+            </label>
+
+            <div className="flex gap-2">
+              <button onClick={() => setStep(1)} className="flex-1 py-4 font-bold text-gray-400 text-xs uppercase">Atrás</button>
+              <button disabled={!accepted} onClick={() => onComplete(name)} className="flex-[2] bg-blue-600 text-white py-4 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all disabled:opacity-50">CONFIRMAR Y ENTRAR</button>
+            </div>
           </div>
-          <input type="text" placeholder="Ej: Juan Pérez" className="w-full px-6 py-5 rounded-3xl bg-gray-50 border-2 border-gray-100 focus:border-blue-500 outline-none font-bold text-xl transition-all" value={name} onChange={(e) => setName(e.target.value)} />
-          <button disabled={!name.trim()} onClick={() => onComplete(name)} className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-3">
-            EMPEZAR <ArrowRight className="w-6 h-6" />
-          </button>
-        </div>
+        )}
       </div>
     </div>
   );
@@ -178,67 +219,67 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
   };
 
   const getNextAction = () => {
-    if (!currentDay.entryTime) return { label: 'MARCAR ENTRADA', icon: <Play className="fill-current" />, color: 'bg-blue-600' };
+    if (!currentDay.entryTime) return { label: 'ENTRADA', icon: <Play className="w-5 h-5 fill-current" />, color: 'bg-blue-600' };
     if (!settings.simplifiedMode) {
-      if (!currentDay.breakStartTime) return { label: 'INICIAR DESCANSO', icon: <Coffee />, color: 'bg-amber-500' };
-      if (!currentDay.breakEndTime) return { label: 'FINALIZAR DESCANSO', icon: <Play />, color: 'bg-green-600' };
+      if (!currentDay.breakStartTime) return { label: 'DESCANSO', icon: <Coffee className="w-5 h-5" />, color: 'bg-amber-500' };
+      if (!currentDay.breakEndTime) return { label: 'FIN DESCANSO', icon: <Play className="w-5 h-5" />, color: 'bg-green-600' };
     }
-    if (!currentDay.exitTime) return { label: 'MARCAR SALIDA', icon: <LogOut />, color: 'bg-red-600' };
-    return { label: 'JORNADA COMPLETA', icon: <CheckCircle />, color: 'bg-gray-800' };
+    if (!currentDay.exitTime) return { label: 'SALIDA', icon: <LogOut className="w-5 h-5" />, color: 'bg-red-600' };
+    return { label: 'COMPLETADO', icon: <CheckCircle className="w-5 h-5" />, color: 'bg-gray-800' };
   };
 
   const action = getNextAction();
   const progress = (summary.totalNormal / HOURS_IN_MONTH) * 100;
 
   return (
-    <div className="space-y-8 animate-fade-in">
-      <div className="bg-white rounded-[3rem] p-8 shadow-xl border border-gray-100 flex flex-col items-center text-center">
-        <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Líquido Estimado</p>
-        <h2 className="text-5xl font-black text-gray-900 mb-6">{formatCurrency(summary.netPay)}</h2>
-        <div className="w-full bg-gray-100 h-4 rounded-full overflow-hidden mb-2">
+    <div className="space-y-4 animate-fade-in max-w-xl mx-auto">
+      <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center">
+        <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-1">Cobro Estimado</p>
+        <h2 className="text-3xl font-black text-gray-900 mb-4">{formatCurrency(summary.netPay)}</h2>
+        <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden mb-2">
           <div className="bg-blue-600 h-full transition-all duration-1000" style={{ width: `${Math.min(100, progress)}%` }}></div>
         </div>
-        <p className="text-xs font-bold text-blue-600">{summary.totalNormal.toFixed(1)}h de {HOURS_IN_MONTH}h mensuales</p>
+        <p className="text-[10px] font-bold text-blue-600">{summary.totalNormal.toFixed(1)}h de {HOURS_IN_MONTH}h</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        <div className="bg-blue-50 p-6 rounded-[2rem] border border-blue-100">
-          <TrendingUp className="text-blue-600 w-6 h-6 mb-2" />
-          <p className="text-[10px] font-bold text-blue-400 uppercase">H. Extras</p>
-          <p className="text-2xl font-black text-blue-700">{summary.totalExtra.toFixed(1)}h</p>
+      <div className="grid grid-cols-2 gap-3">
+        <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+          <TrendingUp className="text-blue-600 w-5 h-5 mb-1" />
+          <p className="text-[9px] font-bold text-blue-400 uppercase">H. Extras</p>
+          <p className="text-xl font-black text-blue-700">{summary.totalExtra.toFixed(1)}h</p>
         </div>
-        <div className="bg-green-50 p-6 rounded-[2rem] border border-green-100">
-          <Wallet className="text-green-600 w-6 h-6 mb-2" />
-          <p className="text-[10px] font-bold text-green-400 uppercase">Viáticos</p>
-          <p className="text-2xl font-black text-green-700">{formatCurrency(summary.totalAllowances)}</p>
+        <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
+          <Wallet className="text-green-600 w-5 h-5 mb-1" />
+          <p className="text-[9px] font-bold text-green-400 uppercase">Viáticos</p>
+          <p className="text-xl font-black text-green-700">{formatCurrency(summary.totalAllowances)}</p>
         </div>
       </div>
 
-      <div className="bg-white rounded-[3rem] p-10 shadow-2xl border border-gray-100 space-y-8">
+      <div className="bg-white rounded-2xl p-5 shadow-sm border border-gray-100 space-y-6">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-2xl font-black text-gray-800 tracking-tight">Hoy</h3>
-            <p className="text-gray-400 font-bold text-xs uppercase">{today.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
+            <h3 className="text-lg font-bold text-gray-800 tracking-tight">Registro Diario</h3>
+            <p className="text-gray-400 font-bold text-[10px] uppercase">{today.toLocaleDateString('es-UY', { weekday: 'short', day: 'numeric', month: 'short' })}</p>
           </div>
-          {(isSunday(today) || isHoliday(today)) && <span className="bg-amber-100 text-amber-700 text-[10px] px-3 py-1 rounded-full font-black italic">FERIADO/DOMINGO 2X</span>}
+          {(isSunday(today) || isHoliday(today)) && <span className="bg-amber-100 text-amber-700 text-[9px] px-2 py-0.5 rounded-full font-black italic">2X</span>}
         </div>
 
         <button 
           disabled={currentDay.status === 'complete'} 
           onClick={registerAction} 
-          className={`w-full ${action.color} text-white py-10 rounded-[2.5rem] font-black text-2xl shadow-xl active:scale-95 transition-all flex flex-col items-center gap-4 disabled:opacity-50 disabled:scale-100`}
+          className={`w-full ${action.color} text-white py-6 rounded-2xl font-bold text-lg shadow-md active:scale-95 transition-all flex flex-col items-center gap-2 disabled:opacity-50 disabled:scale-100`}
         >
           {action.icon}
           {action.label}
         </button>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <TimeDisplay label="Entrada" time={currentDay.entryTime} />
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <TimeDisplay label="E" time={currentDay.entryTime} />
           {!settings.simplifiedMode && <>
-            <TimeDisplay label="D. Inicio" time={currentDay.breakStartTime} />
-            <TimeDisplay label="D. Fin" time={currentDay.breakEndTime} />
+            <TimeDisplay label="D+" time={currentDay.breakStartTime} />
+            <TimeDisplay label="D-" time={currentDay.breakEndTime} />
           </>}
-          <TimeDisplay label="Salida" time={currentDay.exitTime} />
+          <TimeDisplay label="S" time={currentDay.exitTime} />
         </div>
       </div>
     </div>
@@ -246,9 +287,9 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
 };
 
 const TimeDisplay = ({ label, time }: { label: string, time?: string }) => (
-  <div className="bg-gray-50 p-4 rounded-[1.5rem] text-center border border-gray-100">
-    <span className="block text-[9px] font-black text-gray-400 uppercase mb-1">{label}</span>
-    <span className="text-base font-black text-gray-700">{time ? new Date(time).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+  <div className="bg-gray-50 p-2.5 rounded-xl text-center border border-gray-100">
+    <span className="block text-[8px] font-black text-gray-400 uppercase mb-0.5">{label}</span>
+    <span className="text-xs font-bold text-gray-700">{time ? new Date(time).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
   </div>
 );
 
@@ -265,43 +306,51 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
 
   const getTimeValue = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
 
+  // Fix: Added handleTimeChange to manage entry/exit time changes in the manual entry form
+  const handleTimeChange = (field: keyof WorkDay, time: string) => {
+    if (!editingDay || !editingDay.date) return;
+    const datePart = editingDay.date.split('T')[0];
+    const newDateTime = `${datePart}T${time}:00`;
+    setEditingDay(prev => ({ ...prev, [field]: newDateTime }));
+  };
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-3xl font-black text-gray-800 italic uppercase">Historial</h2>
-        <div className="relative flex-1 max-w-xs">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+    <div className="space-y-4 animate-fade-in max-w-xl mx-auto">
+      <div className="flex items-center justify-between gap-3">
+        <h2 className="text-xl font-black text-gray-800 italic uppercase">Historial</h2>
+        <div className="relative flex-1 max-w-[140px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
           <input 
             type="month" 
-            className="w-full pl-12 pr-4 py-3 bg-white rounded-2xl border border-gray-100 focus:ring-2 ring-blue-500 font-bold text-sm"
+            className="w-full pl-9 pr-2 py-2 bg-white rounded-xl border border-gray-100 text-xs font-bold"
             onChange={(e) => setFilter(e.target.value)}
           />
         </div>
-        <button onClick={() => { setEditingDay({ id: crypto.randomUUID(), date: new Date().toISOString().split('T')[0], status: 'complete', isHalfDay: false, allowance: 0 }); setIsModalOpen(true); }} className="px-6 py-3 bg-blue-600 text-white rounded-2xl font-black text-sm uppercase shadow-lg shadow-blue-100 flex items-center gap-2">
-          <Plus className="w-5 h-5" /> AGREGAR
+        <button onClick={() => { setEditingDay({ id: crypto.randomUUID(), date: new Date().toISOString().split('T')[0], status: 'complete', isHalfDay: false, allowance: 0 }); setIsModalOpen(true); }} className="p-2 bg-blue-600 text-white rounded-xl shadow-md">
+          <Plus className="w-5 h-5" />
         </button>
       </div>
 
-      <div className="space-y-4">
+      <div className="space-y-2">
         {sortedDays.map(day => {
           const fin = getDayFinancials(day, settings);
           return (
-            <div key={day.id} className={`bg-white rounded-[2rem] p-6 shadow-sm border-l-[12px] flex justify-between items-center transition-all hover:shadow-md ${fin.isSpecial ? 'border-amber-400' : 'border-blue-600'}`}>
-              <div className="flex gap-4 items-center">
-                <div className="bg-gray-50 rounded-2xl p-3 text-center min-w-[60px]">
-                  <span className="block text-[10px] font-black text-gray-400 uppercase">{new Date(day.date).toLocaleDateString('es-UY', { weekday: 'short' })}</span>
-                  <span className="block text-xl font-black text-gray-800">{new Date(day.date).getDate()}</span>
+            <div key={day.id} className={`bg-white rounded-xl p-4 shadow-sm border-l-4 flex justify-between items-center transition-all ${fin.isSpecial ? 'border-amber-400' : 'border-blue-600'}`}>
+              <div className="flex gap-3 items-center">
+                <div className="bg-gray-50 rounded-lg p-2 text-center min-w-[45px]">
+                  <span className="block text-[8px] font-black text-gray-400 uppercase">{new Date(day.date).toLocaleDateString('es-UY', { weekday: 'short' })}</span>
+                  <span className="block text-base font-black text-gray-800">{new Date(day.date).getDate()}</span>
                 </div>
                 <div>
-                  <p className="font-black text-gray-800 text-lg uppercase tracking-tight">{new Date(day.date).toLocaleDateString('es-UY', { month: 'short', year: 'numeric' })}</p>
-                  <p className="text-xs font-bold text-gray-400">{getTimeValue(day.entryTime)} — {getTimeValue(day.exitTime)}</p>
+                  <p className="font-bold text-gray-800 text-sm uppercase tracking-tight">{new Date(day.date).toLocaleDateString('es-UY', { month: 'short' })}</p>
+                  <p className="text-[10px] font-bold text-gray-400">{getTimeValue(day.entryTime)} — {getTimeValue(day.exitTime)}</p>
                 </div>
               </div>
-              <div className="text-right">
-                <p className="text-2xl font-black text-blue-600 tracking-tighter">{fin.duration.toFixed(1)}h</p>
-                <div className="flex gap-2 justify-end">
-                  <button onClick={() => { setEditingDay(day); setIsModalOpen(true); }} className="text-gray-300 hover:text-blue-600 transition-colors"><Edit2 className="w-4 h-4" /></button>
-                  <button onClick={() => { if(confirm('¿Eliminar?')) setWorkDays(p => p.filter(d => d.id !== day.id)); }} className="text-gray-300 hover:text-red-600 transition-colors"><Trash2 className="w-4 h-4" /></button>
+              <div className="text-right flex items-center gap-4">
+                <p className="text-lg font-black text-blue-600 tracking-tighter">{fin.duration.toFixed(1)}h</p>
+                <div className="flex flex-col gap-1">
+                  <button onClick={() => { setEditingDay(day); setIsModalOpen(true); }} className="text-gray-300 hover:text-blue-600"><Edit2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => { if(confirm('¿Eliminar?')) setWorkDays(p => p.filter(d => d.id !== day.id)); }} className="text-gray-300 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             </div>
@@ -310,91 +359,90 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Editar Jornada">
-        <form onSubmit={(e) => { e.preventDefault(); setWorkDays(p => p.some(d => d.id === editingDay!.id) ? p.map(d => d.id === editingDay!.id ? editingDay as WorkDay : d) : [editingDay as WorkDay, ...p]); setIsModalOpen(false); }} className="space-y-6">
-          <div><label className="text-[10px] font-black text-gray-400 uppercase mb-2 block">Fecha</label><input type="date" required className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold" value={editingDay?.date?.split('T')[0] || ''} onChange={(e) => setEditingDay({ ...editingDay, date: e.target.value })} /></div>
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className="text-[10px] font-black text-gray-400 uppercase mb-2 block">Entrada</label><input type="time" required className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold" value={getTimeValue(editingDay?.entryTime)} onChange={(e) => setEditingDay({ ...editingDay, entryTime: `${editingDay?.date?.split('T')[0]}T${e.target.value}:00` })} /></div>
-            <div><label className="text-[10px] font-black text-gray-400 uppercase mb-2 block">Salida</label><input type="time" required className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold" value={getTimeValue(editingDay?.exitTime)} onChange={(e) => setEditingDay({ ...editingDay, exitTime: `${editingDay?.date?.split('T')[0]}T${e.target.value}:00` })} /></div>
+        <form onSubmit={(e) => { e.preventDefault(); setWorkDays(p => p.some(d => d.id === editingDay!.id) ? p.map(d => d.id === editingDay!.id ? editingDay as WorkDay : d) : [editingDay as WorkDay, ...p]); setIsModalOpen(false); }} className="space-y-4">
+          <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Fecha</label><input type="date" required className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={editingDay?.date?.split('T')[0] || ''} onChange={(e) => setEditingDay({ ...editingDay, date: e.target.value })} /></div>
+          <div className="grid grid-cols-2 gap-3">
+            <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Entrada</label><input type="time" required className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={getTimeValue(editingDay?.entryTime)} onChange={(e) => handleTimeChange('entryTime', e.target.value)} /></div>
+            <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Salida</label><input type="time" required className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={getTimeValue(editingDay?.exitTime)} onChange={(e) => handleTimeChange('exitTime', e.target.value)} /></div>
           </div>
-          <div><label className="text-[10px] font-black text-gray-400 uppercase mb-2 block">Viáticos ($)</label><input type="number" className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold" value={editingDay?.allowance || ''} onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })} /></div>
-          <button type="submit" className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-xl hover:bg-blue-700">GUARDAR CAMBIOS</button>
+          <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Viáticos ($)</label><input type="number" className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={editingDay?.allowance || ''} onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })} /></div>
+          <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-base shadow-lg">GUARDAR</button>
         </form>
       </Modal>
     </div>
   );
 };
 
-const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; advances: Advance[]; onAddAdvance: (a: Advance) => void; onDeleteAdvance: (id: string) => void }> = ({ settings, setSettings, advances, onAddAdvance, onDeleteAdvance }) => {
+const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; advances: Advance[]; onAddAdvance: (adv: Advance) => void; onDeleteAdvance: (id: string) => void }> = ({ settings, setSettings, advances, onAddAdvance, onDeleteAdvance }) => {
   const [isAuth, setIsAuth] = useState(false);
   const [pass, setPass] = useState('');
   const [newAdv, setNewAdv] = useState({ amt: '', note: '' });
 
   if (!isAuth) return (
-    <div className="py-20 px-6 flex flex-col items-center justify-center animate-fade-in">
-      <div className="bg-white p-12 rounded-[3.5rem] shadow-2xl w-full max-w-md border border-gray-100 text-center space-y-8">
-        <div className="bg-blue-50 w-24 h-24 rounded-[2rem] flex items-center justify-center mx-auto"><Lock className="w-12 h-12 text-blue-600" /></div>
-        <div className="space-y-2">
-          <h2 className="text-3xl font-black text-gray-800 italic">ÁREA PRIVADA</h2>
-          <p className="text-gray-400 font-medium">Introduce tu contraseña de acceso.</p>
+    <div className="py-12 px-4 flex flex-col items-center justify-center animate-fade-in">
+      <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-xs text-center space-y-6 text-gray-800">
+        <div className="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"><Lock className="w-8 h-8 text-blue-600" /></div>
+        <div className="space-y-1">
+          <h2 className="text-xl font-bold">ÁREA PRIVADA</h2>
+          <p className="text-gray-400 text-xs uppercase font-bold tracking-widest">Nexa Studio Secure</p>
         </div>
         <form onSubmit={(e) => { e.preventDefault(); if (pass === settings.passwordHash) setIsAuth(true); else alert('Contraseña incorrecta'); }} className="space-y-4">
-          <input type="password" placeholder="Pass (Default: 1234)" className="w-full px-6 py-6 rounded-3xl border-2 border-gray-50 text-center text-2xl font-black tracking-widest focus:border-blue-500 outline-none transition-all" value={pass} onChange={(e) => setPass(e.target.value)} autoFocus />
-          <button className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-xl shadow-blue-100 active:scale-95 transition-all">DESBLOQUEAR</button>
+          <input type="password" placeholder="Pass (1234)" className="w-full px-4 py-4 rounded-2xl border border-gray-100 text-center text-xl font-black tracking-widest outline-none transition-all" value={pass} onChange={(e) => setPass(e.target.value)} autoFocus />
+          <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-md">ENTRAR</button>
         </form>
       </div>
     </div>
   );
 
   return (
-    <div className="space-y-10 animate-fade-in pb-20">
-      <section className="space-y-4">
-        <h3 className="text-xl font-black text-gray-800 italic flex items-center gap-2 px-2"><User className="text-blue-600" /> PERFIL Y SALARIO</h3>
-        <div className="bg-white p-8 rounded-[3rem] shadow-xl space-y-6 border border-gray-50">
-          <div><label className="text-[10px] font-black text-gray-400 uppercase mb-2 block ml-2">Nombre</label><input type="text" value={settings.workerName} onChange={(e) => setSettings(p => ({ ...p, workerName: e.target.value }))} className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold outline-none focus:ring-2 ring-blue-500 transition-all" /></div>
-          <div className="flex items-center gap-4 bg-gray-50 p-6 rounded-[2rem]">
+    <div className="space-y-8 animate-fade-in pb-20 max-w-xl mx-auto">
+      <section className="space-y-3">
+        <h3 className="text-sm font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-wider"><User className="text-blue-600 w-4 h-4" /> Perfil y Salario</h3>
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-4 text-gray-800">
+          <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block ml-1">Nombre</label><input type="text" value={settings.workerName} onChange={(e) => setSettings(p => ({ ...p, workerName: e.target.value }))} className="w-full px-4 py-2.5 bg-gray-50 rounded-xl font-bold text-sm outline-none" /></div>
+          <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl">
             <div className="flex-1">
-              <p className="text-[10px] font-black text-gray-400 uppercase mb-1">Cálculo por:</p>
-              <div className="flex gap-2">
-                <button onClick={() => setSettings(p => ({ ...p, useHourlyRate: false }))} className={`flex-1 py-3 rounded-xl font-black text-xs ${!settings.useHourlyRate ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-400'}`}>MENSUAL</button>
-                <button onClick={() => setSettings(p => ({ ...p, useHourlyRate: true }))} className={`flex-1 py-3 rounded-xl font-black text-xs ${settings.useHourlyRate ? 'bg-blue-600 text-white shadow-lg' : 'bg-white text-gray-400'}`}>POR HORA</button>
+              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Cálculo</p>
+              <div className="flex gap-1.5">
+                <button onClick={() => setSettings(p => ({ ...p, useHourlyRate: false }))} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold ${!settings.useHourlyRate ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-400'}`}>MENSUAL</button>
+                <button onClick={() => setSettings(p => ({ ...p, useHourlyRate: true }))} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold ${settings.useHourlyRate ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-400'}`}>HORA</button>
               </div>
             </div>
             <div className="flex-1">
-              <label className="text-[10px] font-black text-gray-400 uppercase mb-1 block">Monto ($)</label>
-              <input type="number" value={settings.useHourlyRate ? settings.hourlyRate : settings.monthlySalary} onChange={(e) => setSettings(p => ({ ...p, [settings.useHourlyRate ? 'hourlyRate' : 'monthlySalary']: Number(e.target.value) }))} className="w-full px-4 py-3 bg-white rounded-xl font-black" />
+              <label className="text-[8px] font-black text-gray-400 uppercase mb-1 block">Monto ($)</label>
+              <input type="number" value={settings.useHourlyRate ? settings.hourlyRate : settings.monthlySalary} onChange={(e) => setSettings(p => ({ ...p, [settings.useHourlyRate ? 'hourlyRate' : 'monthlySalary']: Number(e.target.value) }))} className="w-full px-3 py-1.5 bg-white rounded-lg font-bold text-sm" />
             </div>
           </div>
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h3 className="text-xl font-black text-gray-800 italic flex items-center gap-2 px-2"><TrendingUp className="text-amber-500" /> PARÁMETROS LEGALES</h3>
-        <div className="bg-white p-8 rounded-[3rem] shadow-xl space-y-6 border border-gray-50">
-          <div className="grid grid-cols-2 gap-4">
-            <div><label className="text-[10px] font-black text-gray-400 uppercase mb-2 block ml-2">Descuento BPS (%)</label><input type="number" value={settings.bpsRate} onChange={(e) => setSettings(p => ({ ...p, bpsRate: Number(e.target.value) }))} className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold" /></div>
-            <div><label className="text-[10px] font-black text-gray-400 uppercase mb-2 block ml-2">Extra (1.5x / 2x)</label><input type="number" value={settings.extraMultiplier} onChange={(e) => setSettings(p => ({ ...p, extraMultiplier: Number(e.target.value) }))} className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold" /></div>
-          </div>
-          <div><label className="text-[10px] font-black text-gray-400 uppercase mb-2 block ml-2">Domingo/Feriado (Normal x Multiplicador)</label><input type="number" value={settings.specialDayMultiplier} onChange={(e) => setSettings(p => ({ ...p, specialDayMultiplier: Number(e.target.value) }))} className="w-full px-6 py-4 bg-gray-50 rounded-2xl font-bold" /></div>
+      <section className="space-y-3">
+        <h3 className="text-sm font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-wider"><Shield className="text-purple-600 w-4 h-4" /> Seguridad</h3>
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 text-gray-800">
+           <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block ml-1">Pin de Acceso</label><input type="password" value={settings.passwordHash} onChange={(e) => setSettings(p => ({ ...p, passwordHash: e.target.value }))} className="w-full px-4 py-2.5 bg-gray-50 rounded-xl font-bold text-center tracking-widest text-sm outline-none" /></div>
         </div>
       </section>
 
-      <section className="space-y-4">
-        <h3 className="text-xl font-black text-gray-800 italic flex items-center gap-2 px-2"><Wallet className="text-green-600" /> ADELANTOS</h3>
-        <div className="bg-white p-8 rounded-[3rem] shadow-xl space-y-6 border border-gray-50">
+      <section className="space-y-3">
+        <h3 className="text-sm font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-wider"><Wallet className="text-green-600 w-4 h-4" /> Adelantos</h3>
+        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-4 text-gray-800">
           <div className="flex gap-2">
-            <input type="number" placeholder="$ Monto" className="flex-1 px-6 py-4 bg-gray-50 rounded-2xl font-bold" value={newAdv.amt} onChange={(e) => setNewAdv({...newAdv, amt: e.target.value})} />
-            <input type="text" placeholder="Nota" className="flex-1 px-6 py-4 bg-gray-50 rounded-2xl font-bold" value={newAdv.note} onChange={(e) => setNewAdv({...newAdv, note: e.target.value})} />
-            <button onClick={() => { if(newAdv.amt) onAddAdvance({ id: crypto.randomUUID(), date: new Date().toISOString(), amount: Number(newAdv.amt), note: newAdv.note }); setNewAdv({amt:'', note:''})}} className="bg-green-600 text-white px-8 rounded-2xl font-black">OK</button>
+            <input type="number" placeholder="$" className="w-20 px-3 py-2.5 bg-gray-50 rounded-xl font-bold text-sm" value={newAdv.amt} onChange={(e) => setNewAdv({...newAdv, amt: e.target.value})} />
+            <input type="text" placeholder="Nota" className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl font-bold text-sm" value={newAdv.note} onChange={(e) => setNewAdv({...newAdv, note: e.target.value})} />
+            <button onClick={() => { if(newAdv.amt) onAddAdvance({ id: crypto.randomUUID(), date: new Date().toISOString(), amount: Number(newAdv.amt), note: newAdv.note }); setNewAdv({amt:'', note:''})}} className="bg-green-600 text-white px-4 rounded-xl font-bold text-xs">OK</button>
           </div>
-          <div className="space-y-2">{advances.map(a => <div key={a.id} className="flex justify-between items-center p-4 bg-gray-50 rounded-2xl"><span className="font-black text-gray-700">{formatCurrency(a.amount)} ({a.note || 'S/N'})</span><button onClick={() => onDeleteAdvance(a.id)} className="text-red-500"><Trash2 className="w-5 h-5" /></button></div>)}</div>
+          <div className="space-y-1.5">{advances.map(a => <div key={a.id} className="flex justify-between items-center px-4 py-2.5 bg-gray-50 rounded-xl text-xs"><span className="font-bold text-gray-700">{formatCurrency(a.amount)} ({a.note || 'S/N'})</span><button onClick={() => onDeleteAdvance(a.id)} className="text-red-500"><Trash2 className="w-4 h-4" /></button></div>)}</div>
         </div>
       </section>
 
-      <section className="p-4 flex flex-col gap-4">
-        <button onClick={() => { if(confirm('¿Borrar todo?')) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-red-50 text-red-600 py-6 rounded-[2rem] font-black flex items-center justify-center gap-3 active:scale-95 transition-all">
-          <AlertCircle className="w-6 h-6" /> REINICIAR TODA LA APP
+      <section className="p-4 flex flex-col gap-3">
+        <button onClick={() => { if(confirm('¿Borrar todo?')) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-red-50 text-red-600 py-4 rounded-xl font-bold text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-all">
+          <AlertCircle className="w-3 h-3" /> REINICIAR APP
         </button>
-        <p className="text-center text-[10px] text-gray-300 font-black tracking-widest uppercase italic">Control de Jornadas v1.1 • Uruguay Edition</p>
+        <div className="text-center space-y-1 opacity-40">
+           <p className="text-[8px] text-gray-600 font-black tracking-widest uppercase italic">Control de Jornadas v1.3 • Uruguay Edition</p>
+           <p className="text-[7px] text-blue-600 font-black tracking-widest uppercase italic">Developed by Nexa Studio</p>
+        </div>
       </section>
     </div>
   );
@@ -427,28 +475,28 @@ const App: React.FC = () => {
   if (!settings.onboardingComplete) return <Onboarding onComplete={(n) => setSettings(s => ({ ...s, workerName: n, onboardingComplete: true }))} />;
 
   return (
-    <div className="min-h-screen pb-32 bg-gray-50 flex flex-col selection:bg-blue-100 selection:text-blue-900">
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 px-6 py-4">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200"><ShieldCheck className="w-6 h-6" /></div>
-            <h1 className="text-2xl font-black italic tracking-tighter text-gray-800 uppercase">CDJ</h1>
+    <div className="min-h-screen pb-24 bg-gray-50 flex flex-col selection:bg-blue-100 selection:text-blue-900">
+      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 px-4 py-3">
+        <div className="max-w-xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="bg-blue-600 p-1.5 rounded-lg text-white shadow-sm"><ShieldCheck className="w-4 h-4" /></div>
+            <h1 className="text-lg font-black italic tracking-tighter text-gray-800 uppercase">CDJ</h1>
           </div>
           <div className="text-right">
-            <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">TRABAJADOR</p>
-            <p className="text-sm font-black text-blue-600">{settings.workerName}</p>
+            <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Nexa Studio</p>
+            <p className="text-xs font-black text-blue-600 max-w-[100px] truncate">{settings.workerName}</p>
           </div>
         </div>
       </header>
       
-      <main className="flex-1 max-w-4xl mx-auto w-full p-6">
+      <main className="flex-1 max-w-xl mx-auto w-full px-4 py-5">
         {tab === 'dash' && <Dashboard workDays={days} settings={settings} advances={advs} onAction={(d) => setDays(p => { const ex = p.find(old => new Date(old.date).toDateString() === new Date(d.date).toDateString()); return ex ? p.map(o => o.id === ex.id ? d : o) : [d, ...p]; })} />}
         {tab === 'hist' && <History workDays={days} setWorkDays={setDays} settings={settings} />}
         {tab === 'sett' && <SettingsComp settings={settings} setSettings={setSettings} advances={advs} onAddAdvance={(a) => setAdvs(p => [...p, a])} onDeleteAdvance={(id) => setAdvs(p => p.filter(a => a.id !== id))} />}
       </main>
 
-      <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-gray-900/90 backdrop-blur-xl px-10 py-5 rounded-[2.5rem] flex gap-12 items-center z-50 shadow-2xl border border-white/10">
-        <NavBtn act={tab === 'dash'} onClick={() => setTab('dash')} icon={<Clock />} lbl="Tablero" />
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur-lg px-8 py-3.5 rounded-full flex gap-10 items-center z-50 shadow-xl border border-white/5">
+        <NavBtn act={tab === 'dash'} onClick={() => setTab('dash')} icon={<Clock />} lbl="Registro" />
         <NavBtn act={tab === 'hist'} onClick={() => setTab('hist')} icon={<HistoryIcon />} lbl="Historial" />
         <NavBtn act={tab === 'sett'} onClick={() => setTab('sett')} icon={<SettingsIcon />} lbl="Ajustes" />
       </nav>
@@ -457,9 +505,9 @@ const App: React.FC = () => {
 };
 
 const NavBtn = ({ act, onClick, icon, lbl }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all ${act ? 'text-blue-400 scale-110' : 'text-gray-400 hover:text-white'}`}>
-    {React.cloneElement(icon, { className: 'w-7 h-7' })}
-    <span className="text-[9px] font-black uppercase tracking-widest">{lbl}</span>
+  <button onClick={onClick} className={`flex flex-col items-center gap-0.5 transition-all ${act ? 'text-blue-400 scale-105' : 'text-gray-400 hover:text-white'}`}>
+    {React.cloneElement(icon, { className: 'w-5 h-5' })}
+    <span className="text-[8px] font-black uppercase tracking-widest">{lbl}</span>
   </button>
 );
 
