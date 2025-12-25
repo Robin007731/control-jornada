@@ -6,8 +6,10 @@ import {
   ShieldCheck, ArrowRight, Check, Plus, Minus, Play, Coffee, LogOut, 
   CheckCircle, AlertCircle, Download, Trash2, Edit2, Copy, Calendar, Save, 
   User, Wallet, Shield, RefreshCw, Upload, Smartphone, Share2, X, Lock,
-  TrendingUp, BarChart3, ChevronRight, Info, Search
+  TrendingUp, BarChart3, ChevronRight, Info, Search, Sparkles, Loader2,
+  Terminal, CalendarRange, RotateCcw
 } from 'lucide-react';
+import { GoogleGenAI, Type } from "@google/genai";
 
 // --- CONSTANTES ---
 const URUGUAY_HOLIDAYS = [
@@ -148,7 +150,7 @@ const Onboarding: React.FC<{ onComplete: (name: string) => void }> = ({ onComple
               <ShieldCheck className="w-10 h-10 text-white" />
             </div>
             <div className="space-y-2">
-              <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none">Control de Jornadas</h1>
+              <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none text-white">Registro laboral</h1>
               <p className="text-blue-100 font-bold text-xs tracking-widest uppercase">By Nexa Studio</p>
             </div>
             <div className="bg-white text-gray-900 p-6 rounded-3xl shadow-2xl space-y-6 text-left">
@@ -169,16 +171,16 @@ const Onboarding: React.FC<{ onComplete: (name: string) => void }> = ({ onComple
             <h2 className="text-xl font-black text-gray-800 uppercase italic">Privacidad y Términos</h2>
             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-[10px] text-gray-600 space-y-3 h-64 overflow-y-auto leading-relaxed">
               <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">1. Almacenamiento Local (Local-First)</p>
-              <p>Control de Jornadas (CDJ) es una aplicación privada. Toda la información ingresada reside exclusivamente en tu dispositivo. Nexa Studio no recolecta, almacena ni vende tus datos en servidores externos.</p>
+              <p>Registro laboral es una aplicación privada. Toda la información ingresada reside exclusivamente en tu dispositivo. Nexa Studio no recolecta, almacena ni vende tus datos en servidores externos.</p>
               
               <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">2. Cálculos y Leyes</p>
-              <p>Los cálculos están optimizados para Uruguay, aplicando el descuento estándar de BPS (22%) y recargos por horas extras. Estos valores son referenciales y pueden variar según convenios específicos.</p>
+              <p>Los cálculos están optimizados para Uruguay, aplicando el descuento estándar de BPS (22%) y recargos por horas extras (1.5x o 2.0x). Estos valores son referenciales.</p>
               
               <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">3. Responsabilidad</p>
-              <p>Tú eres responsable de respaldar tus datos. Si borras el caché del navegador o formateas tu equipo, los datos se perderán a menos que utilices la función de Backup en Ajustes.</p>
+              <p>Tú eres responsable de respaldar tus datos. Si borras el caché del navegador, los datos se perderán a menos que utilices la función de Backup en Ajustes.</p>
               
               <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">4. Propiedad Intelectual</p>
-              <p>Esta aplicación es un producto desarrollado por Nexa Studio. Su uso es libre pero la reproducción o modificación del código está sujeta a derechos de autor.</p>
+              <p>Esta aplicación es un producto desarrollado por Nexa Studio. Su uso es libre para el control personal de jornadas laborales.</p>
             </div>
             
             <label className="flex items-start gap-3 p-2 cursor-pointer group">
@@ -230,6 +232,7 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
 
   const action = getNextAction();
   const progress = (summary.totalNormal / HOURS_IN_MONTH) * 100;
+  const isDone = currentDay.status === 'complete';
 
   return (
     <div className="space-y-4 animate-fade-in max-w-xl mx-auto">
@@ -259,13 +262,13 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
         <div className="flex justify-between items-center">
           <div>
             <h3 className="text-lg font-bold text-gray-800 tracking-tight">Registro Diario</h3>
-            <p className="text-gray-400 font-bold text-[10px] uppercase">{today.toLocaleDateString('es-UY', { weekday: 'short', day: 'numeric', month: 'short' })}</p>
+            <p className="text-gray-400 font-bold text-[10px] uppercase">{today.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
           {(isSunday(today) || isHoliday(today)) && <span className="bg-amber-100 text-amber-700 text-[9px] px-2 py-0.5 rounded-full font-black italic">2X</span>}
         </div>
 
         <button 
-          disabled={currentDay.status === 'complete'} 
+          disabled={isDone} 
           onClick={registerAction} 
           className={`w-full ${action.color} text-white py-6 rounded-2xl font-bold text-lg shadow-md active:scale-95 transition-all flex flex-col items-center gap-2 disabled:opacity-50 disabled:scale-100`}
         >
@@ -274,24 +277,196 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
         </button>
 
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <TimeDisplay label="E" time={currentDay.entryTime} />
+          <TimeBadge label="E" time={currentDay.entryTime} />
           {!settings.simplifiedMode && <>
-            <TimeDisplay label="D+" time={currentDay.breakStartTime} />
-            <TimeDisplay label="D-" time={currentDay.breakEndTime} />
+            <TimeBadge label="D+" time={currentDay.breakStartTime} />
+            <TimeBadge label="D-" time={currentDay.breakEndTime} />
           </>}
-          <TimeDisplay label="S" time={currentDay.exitTime} />
+          <TimeBadge label="S" time={currentDay.exitTime} />
         </div>
       </div>
     </div>
   );
 };
 
-const TimeDisplay = ({ label, time }: { label: string, time?: string }) => (
+const TimeBadge = ({ label, time }: { label: string, time?: string }) => (
   <div className="bg-gray-50 p-2.5 rounded-xl text-center border border-gray-100">
     <span className="block text-[8px] font-black text-gray-400 uppercase mb-0.5">{label}</span>
     <span className="text-xs font-bold text-gray-700">{time ? new Date(time).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
   </div>
 );
+
+// --- ASISTENTE IA MEJORADO ---
+const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) => void }> = ({ onApply }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [prompt, setPrompt] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [preview, setPreview] = useState<{ toAdd: WorkDay[], toDeleteDates: string[] } | null>(null);
+
+  const handleMagicAction = async () => {
+    if (!prompt.trim()) return;
+    setLoading(true);
+    setPreview(null);
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const today = new Date();
+      const todayISO = today.toISOString().split('T')[0];
+      const todayFull = today.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+      const systemInstruction = `
+        Eres Nexa AI, el cerebro de gestión horaria de la aplicación 'Registro laboral'.
+        CONTEXTO ACTUAL: Hoy es ${todayFull}.
+        
+        MISION: Traducir órdenes de lenguaje natural a un esquema JSON de jornadas laborales.
+        
+        REGLAS DE ORO PARA EL TIEMPO (CRITICO):
+        1. NO CONVIERTAS HORAS A UTC. Usa las horas literales que pida el usuario.
+        2. Si el usuario pide "14:00", el string ISO resultante debe terminar en "T14:00:00" para esa fecha local.
+        3. Si detectas un desfase de 3 horas (ej: pones 11:00 cuando piden 14:00), ESTAS COMETIENDO UN ERROR. Mantén la hora exacta.
+
+        REGLAS DE LOGICA:
+        1. RANGOS: Genera una entrada para CADA DÍA entre la fecha inicial y la final (inclusive).
+        2. EXCEPCIONES: Si pide "librando lunes", omite los lunes. Si pide "martes medio dia", marca esos martes como isHalfDay: true y usa el horario específico.
+        3. ELIMINACION: Si pide "borrar" o "quitar", pon las fechas YYYY-MM-DD en el array 'toDeleteDates'.
+        4. SOBRESCRITURA: Genera los 'toAdd' con la fecha correcta; la app reemplazará los existentes.
+
+        ESTRUCTURA DE SALIDA (JSON ESTRICTO):
+        {
+          "toAdd": [
+            {
+              "id": "uuid-v4",
+              "date": "YYYY-MM-DD",
+              "entryTime": "YYYY-MM-DDTHH:mm:00",
+              "exitTime": "YYYY-MM-DDTHH:mm:00",
+              "isHalfDay": boolean,
+              "status": "complete",
+              "allowance": 0
+            }
+          ],
+          "toDeleteDates": ["YYYY-MM-DD"]
+        }
+      `;
+
+      const response = await ai.models.generateContent({
+        model: 'gemini-3-flash-preview',
+        contents: prompt,
+        config: {
+          systemInstruction,
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: Type.OBJECT,
+            properties: {
+              toAdd: {
+                type: Type.ARRAY,
+                items: {
+                  type: Type.OBJECT,
+                  properties: {
+                    id: { type: Type.STRING },
+                    date: { type: Type.STRING },
+                    entryTime: { type: Type.STRING },
+                    exitTime: { type: Type.STRING },
+                    isHalfDay: { type: Type.BOOLEAN },
+                    status: { type: Type.STRING },
+                    allowance: { type: Type.NUMBER }
+                  },
+                  required: ['id', 'date', 'entryTime', 'exitTime', 'isHalfDay', 'status', 'allowance']
+                }
+              },
+              toDeleteDates: {
+                type: Type.ARRAY,
+                items: { type: Type.STRING }
+              }
+            },
+            required: ['toAdd', 'toDeleteDates']
+          }
+        }
+      });
+
+      const data = JSON.parse(response.text || '{"toAdd": [], "toDeleteDates": []}');
+      setPreview(data);
+    } catch (error) {
+      console.error(error);
+      alert('Error en Nexa AI: No pude procesar tu solicitud. Prueba siendo más específico con las horas.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const confirmAction = () => {
+    if (preview) {
+      onApply(preview.toAdd, preview.toDeleteDates);
+      setPreview(null);
+      setPrompt('');
+      setIsOpen(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden mb-4">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-4 bg-gradient-to-r from-blue-600/5 to-purple-600/5 hover:from-blue-600/10 hover:to-purple-600/10 transition-all"
+      >
+        <div className="flex items-center gap-2">
+          <div className="bg-gradient-to-br from-blue-600 to-purple-600 p-1.5 rounded-lg text-white shadow-sm">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <span className="font-black text-xs text-gray-800 italic uppercase tracking-tighter">Asistente Nexa AI</span>
+        </div>
+        <ChevronRight className={`w-4 h-4 text-gray-400 transition-transform ${isOpen ? 'rotate-90' : ''}`} />
+      </button>
+
+      {isOpen && (
+        <div className="p-4 space-y-4 animate-fade-in">
+          <div className="flex items-start gap-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
+             <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
+             <p className="text-[10px] text-blue-700 leading-tight font-bold">
+               Ej: "Agregame del 1/12 de 14 a 22 hasta hoy, sin los lunes y martes medio turno de 14 a 18"
+             </p>
+          </div>
+          <textarea 
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Dime qué jornadas quieres gestionar..."
+            className="w-full h-24 p-3 bg-gray-50 rounded-xl text-xs font-bold border-none focus:ring-2 focus:ring-blue-600 outline-none resize-none transition-all placeholder:text-gray-300"
+          />
+          
+          <button 
+            disabled={loading || !prompt.trim()}
+            onClick={handleMagicAction}
+            className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50 shadow-md"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Terminal className="w-4 h-4" />}
+            {loading ? 'ANALIZANDO HORARIOS...' : 'EJECUTAR CON IA'}
+          </button>
+
+          {preview && (
+            <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 animate-slide-up">
+              <div className="flex items-center gap-2 mb-3">
+                 <CalendarRange className="w-4 h-4 text-gray-600" />
+                 <h4 className="text-[10px] font-black text-gray-800 uppercase">Resumen de Cambios:</h4>
+              </div>
+              <div className="grid grid-cols-2 gap-2 mb-3">
+                <div className="bg-white p-2 rounded-lg border border-gray-100">
+                  <p className="text-[8px] font-black text-gray-400 uppercase">A crear/editar</p>
+                  <p className="text-sm font-black text-blue-600">{preview.toAdd.length} <span className="text-[10px] text-gray-400">Días</span></p>
+                </div>
+                <div className="bg-white p-2 rounded-lg border border-gray-100">
+                  <p className="text-[8px] font-black text-gray-400 uppercase">A eliminar</p>
+                  <p className="text-sm font-black text-red-600">{preview.toDeleteDates.length} <span className="text-[10px] text-gray-400">Fechas</span></p>
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button onClick={() => setPreview(null)} className="flex-1 bg-white border border-gray-200 text-gray-400 py-2 rounded-lg font-bold text-[9px] uppercase">Atrás</button>
+                <button onClick={confirmAction} className="flex-[2] bg-blue-600 text-white py-2 rounded-lg font-bold text-[9px] uppercase shadow-sm active:scale-95">Aplicar al Historial</button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
 
 const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React.SetStateAction<WorkDay[]>>; settings: UserSettings }> = ({ workDays, setWorkDays, settings }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -304,9 +479,12 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
       .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
   }, [workDays, filter]);
 
-  const getTimeValue = (iso?: string) => iso ? new Date(iso).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '';
+  const getTimeValue = (iso?: string) => {
+    if (!iso) return '';
+    const date = new Date(iso);
+    return date.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false });
+  };
 
-  // Fix: Added handleTimeChange to manage entry/exit time changes in the manual entry form
   const handleTimeChange = (field: keyof WorkDay, time: string) => {
     if (!editingDay || !editingDay.date) return;
     const datePart = editingDay.date.split('T')[0];
@@ -314,8 +492,19 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
     setEditingDay(prev => ({ ...prev, [field]: newDateTime }));
   };
 
+  const applyAIChanges = (toAdd: WorkDay[], toDeleteDates: string[]) => {
+    setWorkDays(prev => {
+      let filtered = prev.filter(d => !toDeleteDates.includes(d.date.split('T')[0]));
+      const addDates = toAdd.map(a => a.date.split('T')[0]);
+      filtered = filtered.filter(f => !addDates.includes(f.date.split('T')[0]));
+      return [...toAdd, ...filtered].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    });
+  };
+
   return (
     <div className="space-y-4 animate-fade-in max-w-xl mx-auto">
+      <AIAssistant onApply={applyAIChanges} />
+
       <div className="flex items-center justify-between gap-3">
         <h2 className="text-xl font-black text-gray-800 italic uppercase">Historial</h2>
         <div className="relative flex-1 max-w-[140px]">
@@ -347,7 +536,10 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
                 </div>
               </div>
               <div className="text-right flex items-center gap-4">
-                <p className="text-lg font-black text-blue-600 tracking-tighter">{fin.duration.toFixed(1)}h</p>
+                <div>
+                  <p className="text-lg font-black text-blue-600 tracking-tighter">{fin.duration.toFixed(1)}h</p>
+                  {day.isHalfDay && <span className="text-[7px] font-black text-green-600 uppercase">1/2 Turno</span>}
+                </div>
                 <div className="flex flex-col gap-1">
                   <button onClick={() => { setEditingDay(day); setIsModalOpen(true); }} className="text-gray-300 hover:text-blue-600"><Edit2 className="w-3.5 h-3.5" /></button>
                   <button onClick={() => { if(confirm('¿Eliminar?')) setWorkDays(p => p.filter(d => d.id !== day.id)); }} className="text-gray-300 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
@@ -356,6 +548,12 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
             </div>
           );
         })}
+        {sortedDays.length === 0 && (
+          <div className="py-20 text-center opacity-20">
+             <Calendar className="w-16 h-16 mx-auto mb-2" />
+             <p className="font-black text-xs uppercase tracking-widest italic">Sin registros</p>
+          </div>
+        )}
       </div>
 
       <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Editar Jornada">
@@ -365,6 +563,10 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
             <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Entrada</label><input type="time" required className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={getTimeValue(editingDay?.entryTime)} onChange={(e) => handleTimeChange('entryTime', e.target.value)} /></div>
             <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Salida</label><input type="time" required className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={getTimeValue(editingDay?.exitTime)} onChange={(e) => handleTimeChange('exitTime', e.target.value)} /></div>
           </div>
+          <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl">
+             <input type="checkbox" id="editHalf" checked={editingDay?.isHalfDay || false} onChange={(e) => setEditingDay({...editingDay, isHalfDay: e.target.checked})} className="w-4 h-4 rounded text-blue-600" />
+             <label htmlFor="editHalf" className="text-[10px] font-bold text-gray-700 uppercase">Medio Turno (Sin descanso)</label>
+          </div>
           <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Viáticos ($)</label><input type="number" className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={editingDay?.allowance || ''} onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })} /></div>
           <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-base shadow-lg">GUARDAR</button>
         </form>
@@ -373,10 +575,28 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
   );
 };
 
-const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; advances: Advance[]; onAddAdvance: (adv: Advance) => void; onDeleteAdvance: (id: string) => void }> = ({ settings, setSettings, advances, onAddAdvance, onDeleteAdvance }) => {
+const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; advances: Advance[]; onAddAdvance: (adv: Advance) => void; onDeleteAdvance: (id: string) => void; workDays: WorkDay[]; setWorkDays: React.Dispatch<React.SetStateAction<WorkDay[]>> }> = ({ settings, setSettings, advances, onAddAdvance, onDeleteAdvance, workDays, setWorkDays }) => {
   const [isAuth, setIsAuth] = useState(false);
   const [pass, setPass] = useState('');
   const [newAdv, setNewAdv] = useState({ amt: '', note: '' });
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+    });
+  }, []);
+
+  const installApp = async () => {
+    if (deferredPrompt) {
+      deferredPrompt.prompt();
+      const { outcome } = await deferredPrompt.userChoice;
+      if (outcome === 'accepted') setDeferredPrompt(null);
+    } else {
+      alert('Para descargar: Toca el icono de compartir y selecciona "Añadir a pantalla de inicio".');
+    }
+  };
 
   if (!isAuth) return (
     <div className="py-12 px-4 flex flex-col items-center justify-center animate-fade-in">
@@ -387,7 +607,7 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
           <p className="text-gray-400 text-xs uppercase font-bold tracking-widest">Nexa Studio Secure</p>
         </div>
         <form onSubmit={(e) => { e.preventDefault(); if (pass === settings.passwordHash) setIsAuth(true); else alert('Contraseña incorrecta'); }} className="space-y-4">
-          <input type="password" placeholder="Pass (1234)" className="w-full px-4 py-4 rounded-2xl border border-gray-100 text-center text-xl font-black tracking-widest outline-none transition-all" value={pass} onChange={(e) => setPass(e.target.value)} autoFocus />
+          <input type="password" placeholder="Pin" className="w-full px-4 py-4 rounded-2xl border border-gray-100 text-center text-xl font-black tracking-widest outline-none transition-all" value={pass} onChange={(e) => setPass(e.target.value)} autoFocus />
           <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-md">ENTRAR</button>
         </form>
       </div>
@@ -395,7 +615,7 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
   );
 
   return (
-    <div className="space-y-8 animate-fade-in pb-20 max-w-xl mx-auto">
+    <div className="space-y-8 animate-fade-in pb-20 max-w-xl mx-auto relative">
       <section className="space-y-3">
         <h3 className="text-sm font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-wider"><User className="text-blue-600 w-4 h-4" /> Perfil y Salario</h3>
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-4 text-gray-800">
@@ -417,13 +637,6 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-sm font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-wider"><Shield className="text-purple-600 w-4 h-4" /> Seguridad</h3>
-        <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 text-gray-800">
-           <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block ml-1">Pin de Acceso</label><input type="password" value={settings.passwordHash} onChange={(e) => setSettings(p => ({ ...p, passwordHash: e.target.value }))} className="w-full px-4 py-2.5 bg-gray-50 rounded-xl font-bold text-center tracking-widest text-sm outline-none" /></div>
-        </div>
-      </section>
-
-      <section className="space-y-3">
         <h3 className="text-sm font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-wider"><Wallet className="text-green-600 w-4 h-4" /> Adelantos</h3>
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-4 text-gray-800">
           <div className="flex gap-2">
@@ -436,14 +649,27 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
       </section>
 
       <section className="p-4 flex flex-col gap-3">
-        <button onClick={() => { if(confirm('¿Borrar todo?')) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-red-50 text-red-600 py-4 rounded-xl font-bold text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-all">
-          <AlertCircle className="w-3 h-3" /> REINICIAR APP
-        </button>
-        <div className="text-center space-y-1 opacity-40">
-           <p className="text-[8px] text-gray-600 font-black tracking-widest uppercase italic">Control de Jornadas v1.3 • Uruguay Edition</p>
+        <div className="flex gap-2">
+           <button onClick={() => { if(confirm('¿Borrar todo?')) { localStorage.clear(); window.location.reload(); } }} className="flex-1 bg-red-50 text-red-600 py-4 rounded-xl font-bold text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-all">
+             <AlertCircle className="w-3 h-3" /> REINICIAR APP
+           </button>
+           <button onClick={() => { const data = localStorage.getItem('llavero_data'); if(data) { const blob = new Blob([data], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'backup_registro_laboral.json'; a.click(); } }} className="flex-1 bg-blue-50 text-blue-600 py-4 rounded-xl font-bold text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-all">
+             <Download className="w-3 h-3" /> BACKUP
+           </button>
+        </div>
+        <div className="text-center space-y-1 opacity-40 py-4">
+           <p className="text-[8px] text-gray-600 font-black tracking-widest uppercase italic">Registro laboral v1.7 • Uruguay Edition</p>
            <p className="text-[7px] text-blue-600 font-black tracking-widest uppercase italic">Developed by Nexa Studio</p>
         </div>
       </section>
+
+      <button 
+        onClick={installApp}
+        className="fixed bottom-24 right-4 bg-gray-900 text-white p-3 rounded-2xl shadow-2xl flex items-center gap-2 active:scale-95 transition-all border border-white/10 z-[60]"
+      >
+        <Smartphone className="w-4 h-4 text-blue-400" />
+        <span className="text-[10px] font-black uppercase tracking-tighter">Descargar App</span>
+      </button>
     </div>
   );
 };
@@ -480,11 +706,11 @@ const App: React.FC = () => {
         <div className="max-w-xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
             <div className="bg-blue-600 p-1.5 rounded-lg text-white shadow-sm"><ShieldCheck className="w-4 h-4" /></div>
-            <h1 className="text-lg font-black italic tracking-tighter text-gray-800 uppercase">CDJ</h1>
+            <h1 className="text-lg font-black italic tracking-tighter text-gray-800 uppercase">Registro laboral</h1>
           </div>
           <div className="text-right">
-            <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest">Nexa Studio</p>
-            <p className="text-xs font-black text-blue-600 max-w-[100px] truncate">{settings.workerName}</p>
+            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight leading-none mb-0.5">Trabajador/a</p>
+            <p className="text-sm font-black text-blue-600 max-w-[120px] truncate leading-none">{settings.workerName}</p>
           </div>
         </div>
       </header>
@@ -492,7 +718,7 @@ const App: React.FC = () => {
       <main className="flex-1 max-w-xl mx-auto w-full px-4 py-5">
         {tab === 'dash' && <Dashboard workDays={days} settings={settings} advances={advs} onAction={(d) => setDays(p => { const ex = p.find(old => new Date(old.date).toDateString() === new Date(d.date).toDateString()); return ex ? p.map(o => o.id === ex.id ? d : o) : [d, ...p]; })} />}
         {tab === 'hist' && <History workDays={days} setWorkDays={setDays} settings={settings} />}
-        {tab === 'sett' && <SettingsComp settings={settings} setSettings={setSettings} advances={advs} onAddAdvance={(a) => setAdvs(p => [...p, a])} onDeleteAdvance={(id) => setAdvs(p => p.filter(a => a.id !== id))} />}
+        {tab === 'sett' && <SettingsComp settings={settings} setSettings={setSettings} advances={advs} onAddAdvance={(a) => setAdvs(p => [...p, a])} onDeleteAdvance={(id) => setAdvs(p => p.filter(a => a.id !== id))} workDays={days} setWorkDays={setDays} />}
       </main>
 
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur-lg px-8 py-3.5 rounded-full flex gap-10 items-center z-50 shadow-xl border border-white/5">
