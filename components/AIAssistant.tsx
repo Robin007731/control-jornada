@@ -1,7 +1,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
-import { Sparkles, Send, X, Loader2, Bot, Wand2, MessageSquare, History, CalendarDays, Trash2 } from 'lucide-react';
+import { Sparkles, Send, X, Loader2, Bot, Wand2, MessageSquare, History, CalendarDays, Trash2, AlertCircle } from 'lucide-react';
 import { WorkDay, UserSettings, Advance } from '../types';
 import { formatCurrency } from '../utils';
 
@@ -29,11 +29,10 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState('');
-  const [messages, setMessages] = useState<{ role: 'user' | 'ai'; text: string }[]>([]);
+  const [messages, setMessages] = useState<{ role: 'user' | 'ai' | 'error'; text: string }[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Persistence: Load chat history
   useEffect(() => {
     const savedChat = localStorage.getItem('llavpodes_chat_history');
     if (savedChat) {
@@ -45,7 +44,6 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     }
   }, []);
 
-  // Persistence: Save chat history
   useEffect(() => {
     localStorage.setItem('llavpodes_chat_history', JSON.stringify(messages));
   }, [messages]);
@@ -66,43 +64,39 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
   const functionDeclarations: FunctionDeclaration[] = [
     {
       name: 'manage_work_day',
-      description: 'Crea o actualiza una jornada laboral. Úsala para uno o varios días.',
+      description: 'Crea o actualiza jornadas laborales. Si faltan datos de descanso en un horario partido, calcúlalos.',
       parameters: {
         type: Type.OBJECT,
         properties: {
-          date: { type: Type.STRING, description: 'Fecha en formato YYYY-MM-DD' },
-          entryTime: { type: Type.STRING, description: 'Hora de entrada (HH:MM)' },
-          exitTime: { type: Type.STRING, description: 'Hora de salida (HH:MM)' },
-          breakStart: { type: Type.STRING, description: 'Inicio descanso (HH:MM).' },
-          breakEnd: { type: Type.STRING, description: 'Fin descanso (HH:MM).' },
-          allowance: { type: Type.NUMBER, description: 'Viáticos extras' },
-          isHalfDay: { type: Type.BOOLEAN, description: 'Medio turno' }
+          date: { type: Type.STRING, description: 'Fecha YYYY-MM-DD' },
+          entryTime: { type: Type.STRING, description: 'HH:MM' },
+          exitTime: { type: Type.STRING, description: 'HH:MM' },
+          breakStart: { type: Type.STRING, description: 'HH:MM' },
+          breakEnd: { type: Type.STRING, description: 'HH:MM' },
+          allowance: { type: Type.NUMBER },
+          isHalfDay: { type: Type.BOOLEAN }
         },
         required: ['date']
       }
     },
     {
       name: 'delete_work_days',
-      description: 'Borra jornadas por rango o fecha específica.',
+      description: 'Elimina jornadas laborales por sus fechas.',
       parameters: {
         type: Type.OBJECT,
         properties: {
-          dates: { 
-            type: Type.ARRAY, 
-            items: { type: Type.STRING }, 
-            description: 'Lista de fechas en formato YYYY-MM-DD a eliminar' 
-          }
+          dates: { type: Type.ARRAY, items: { type: Type.STRING } }
         },
         required: ['dates']
       }
     },
     {
       name: 'manage_advance',
-      description: 'Agrega o elimina adelantos de sueldo.',
+      description: 'Gestiona adelantos de sueldo.',
       parameters: {
         type: Type.OBJECT,
         properties: {
-          action: { type: Type.STRING, enum: ['add', 'delete'], description: 'Si se agrega o quita un adelanto' },
+          action: { type: Type.STRING, enum: ['add', 'delete'] },
           amount: { type: Type.NUMBER },
           note: { type: Type.STRING }
         },
@@ -110,8 +104,8 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
       }
     },
     {
-      name: 'update_user_profile',
-      description: 'Actualiza nombre o sueldo.',
+      name: 'update_profile',
+      description: 'Actualiza ajustes del usuario.',
       parameters: {
         type: Type.OBJECT,
         properties: {
@@ -134,24 +128,39 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const now = new Date();
       
-      const systemInstruction = `
-        Eres Llavpodes Brain, asistente de gestión laboral uruguaya.
-        - INTERPRETA horarios partidos automáticamente (ej: "8 a 12 y 14 a 18" -> descanso de 12 a 14).
-        - GESTIONA múltiples días si se solicita.
-        - RESPONDE con brevedad y precisión.
-        - CONTEXTO: Hoy es ${now.toLocaleDateString()}. Usuario: ${settings.workerName}. Sueldo: ${settings.monthlySalary}.
-      `;
+      const systemInstruction = `Eres Llavpodes Brain, el cerebro de gestión de esta aplicación.
+        CONTEXTO ACTUAL:
+        - Fecha de hoy: ${now.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        - Usuario: ${settings.workerName}
+        - Sueldo: ${settings.monthlySalary}
+        - Datos: ${workDays.length} jornadas, ${advances.length} adelantos.
+
+        REGLAS:
+        1. Resuelve horarios partidos (ej. 8-12 y 14-18) asignando el descanso automáticamente.
+        2. Si el usuario pide algo masivo (ej. "toda la semana"), usa múltiples llamadas a herramientas.
+        3. Sé extremadamente breve y eficiente.
+        4. Si no puedes realizar una acción, explica por qué brevemente.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: [
-          { role: 'user', parts: [{ text: finalInput }] }
-        ],
+        contents: [{ parts: [{ text: finalInput }] }],
         config: {
           systemInstruction,
           tools: [{ functionDeclarations }]
         }
       });
+
+      if (!response || !response.candidates) {
+        throw new Error("Respuesta vacía del servidor.");
+      }
+
+      const candidate = response.candidates[0];
+
+      if (candidate.finishReason === 'SAFETY') {
+        setMessages(prev => [...prev, { role: 'error', text: "Lo siento, mi filtro de seguridad bloqueó esta respuesta. Intenta con palabras diferentes." }]);
+        setIsLoading(false);
+        return;
+      }
 
       if (response.functionCalls) {
         for (const fc of response.functionCalls) {
@@ -159,7 +168,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
           if (fc.name === 'manage_work_day') {
             setWorkDays(prev => {
               const filtered = prev.filter(d => !d.date.includes(args.date));
-              const newDay: WorkDay = {
+              return [{
                 id: crypto.randomUUID(),
                 date: args.date,
                 status: (args.entryTime && args.exitTime) ? 'complete' : 'incomplete',
@@ -170,8 +179,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                 breakStartTime: args.breakStart ? `${args.date}T${args.breakStart}:00` : undefined,
                 breakEndTime: args.breakEnd ? `${args.date}T${args.breakEnd}:00` : undefined,
                 allowance: args.allowance || 0
-              };
-              return [newDay, ...filtered];
+              }, ...filtered];
             });
           }
           if (fc.name === 'delete_work_days') {
@@ -179,23 +187,25 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
           }
           if (fc.name === 'manage_advance') {
             if (args.action === 'add') {
-              onAddAdvance({ id: crypto.randomUUID(), date: new Date().toISOString(), amount: args.amount, note: args.note });
+              onAddAdvance({ id: crypto.randomUUID(), date: now.toISOString(), amount: args.amount, note: args.note });
             } else {
               const query = args.note?.toLowerCase() || args.amount?.toString();
               const target = advances.find(a => a.amount.toString().includes(query) || (a.note && a.note.toLowerCase().includes(query)));
               if (target) onDeleteAdvance(target.id);
             }
           }
-          if (fc.name === 'update_user_profile') {
+          if (fc.name === 'update_profile') {
             setSettings(prev => ({ ...prev, workerName: args.workerName || prev.workerName, monthlySalary: args.monthlySalary || prev.monthlySalary }));
           }
         }
-        setMessages(prev => [...prev, { role: 'ai', text: "Operación completada con éxito." }]);
+        setMessages(prev => [...prev, { role: 'ai', text: "He procesado los cambios correctamente." }]);
       } else {
-        setMessages(prev => [...prev, { role: 'ai', text: response.text || 'Entendido.' }]);
+        const textResponse = response.text;
+        setMessages(prev => [...prev, { role: 'ai', text: textResponse || "Acción completada." }]);
       }
-    } catch (error) {
-      setMessages(prev => [...prev, { role: 'ai', text: 'Error al procesar la solicitud.' }]);
+    } catch (error: any) {
+      console.error("AI Error:", error);
+      setMessages(prev => [...prev, { role: 'error', text: `Error: ${error.message || "No pude conectar con el servidor."}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -205,18 +215,18 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     <>
       <button 
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-tr from-blue-700 to-blue-500 text-white rounded-[20px] shadow-[0_10px_30px_rgba(37,99,235,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group border-2 border-white/30"
+        className="fixed bottom-24 right-6 w-16 h-16 bg-gradient-to-tr from-blue-700 to-blue-500 text-white rounded-[22px] shadow-[0_15px_35px_rgba(37,99,235,0.4)] flex items-center justify-center hover:scale-110 active:scale-95 transition-all z-40 group border-2 border-white/30"
       >
         <Sparkles className="w-7 h-7" />
         {messages.length > 0 && (
-          <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center">
+          <div className="absolute -top-1 -right-1 w-5 h-5 bg-emerald-500 rounded-full border-2 border-white flex items-center justify-center shadow-lg">
             <span className="text-[8px] font-black">{messages.length}</span>
           </div>
         )}
       </button>
 
       {isOpen && (
-        <div className="fixed inset-0 z-[100] bg-slate-950/70 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
+        <div className="fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="bg-white w-full max-w-lg h-[95vh] sm:h-[750px] sm:rounded-[3rem] flex flex-col shadow-2xl animate-slide-up overflow-hidden border border-slate-200">
             {/* Header */}
             <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-900 text-white">
@@ -228,7 +238,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                   <h3 className="font-black uppercase tracking-tight italic text-base">Llavpodes Brain</h3>
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <p className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Memoria Persistente ON</p>
+                    <p className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Estabilidad Mejorada</p>
                   </div>
                 </div>
               </div>
@@ -251,12 +261,12 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                       <MessageSquare className="w-10 h-10 text-blue-600" />
                     </div>
                     <div className="space-y-1">
-                      <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">¿Cómo puedo ayudarte hoy?</h4>
-                      <p className="text-[10px] font-medium text-slate-400 max-w-[200px] mx-auto leading-relaxed italic">Tu historial de chat se guarda automáticamente.</p>
+                      <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Núcleo listo</h4>
+                      <p className="text-[10px] font-medium text-slate-400 max-w-[200px] mx-auto leading-relaxed italic italic">Sistema de gestión inteligente v4.1</p>
                     </div>
                   </div>
                   
-                  {/* Premium Suggestions Carousel */}
+                  {/* Suggestions Carousel */}
                   <div className="w-full space-y-4">
                     <p className="text-[9px] font-black text-slate-300 uppercase tracking-widest text-left pl-2">Sugerencias rápidas</p>
                     <div className="flex overflow-x-auto gap-3 pb-4 px-2 scrollbar-hide -mx-6 px-6">
@@ -269,9 +279,6 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                           <div className="text-2xl mb-3">{s.icon}</div>
                           <span className="text-[8px] font-black uppercase text-blue-500 tracking-widest mb-1 block">{s.category}</span>
                           <p className="text-[11px] font-bold text-slate-700 leading-snug line-clamp-2">{s.text}</p>
-                          <div className="absolute bottom-0 right-0 p-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Wand2 className="w-4 h-4 text-blue-400" />
-                          </div>
                         </button>
                       ))}
                     </div>
@@ -284,8 +291,11 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                   <div className={`max-w-[85%] p-4 rounded-[1.5rem] text-[13px] font-bold leading-relaxed shadow-sm ${
                     m.role === 'user' 
                     ? 'bg-slate-900 text-white rounded-tr-none' 
+                    : m.role === 'error'
+                    ? 'bg-red-50 text-red-700 border border-red-100 rounded-tl-none flex items-start gap-2'
                     : 'bg-white text-slate-800 rounded-tl-none border border-slate-100'
                   }`}>
+                    {m.role === 'error' && <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />}
                     {m.text}
                   </div>
                 </div>
@@ -332,7 +342,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                     <span className="text-[7px] font-black uppercase tracking-widest">Agenda</span>
                   </div>
                 </div>
-                <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest">Llavpodes AI v4.0 PRO</p>
+                <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest italic">Llavpodes PRO v4.1</p>
               </div>
             </div>
           </div>
