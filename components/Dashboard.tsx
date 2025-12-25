@@ -1,8 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
-// Added Clock to the imports from lucide-react
-import { Plus, Minus, Play, Coffee, LogOut, CheckCircle, AlertCircle, Clock } from 'lucide-react';
-import { WorkDay, UserSettings, RegistrationType, Advance } from '../types';
+import { Plus, Play, Coffee, LogOut, CheckCircle, AlertCircle, Clock } from 'lucide-react';
+import { WorkDay, UserSettings, Advance } from '../types';
 import { getSummary, formatCurrency, isHoliday } from '../utils';
 
 interface DashboardProps {

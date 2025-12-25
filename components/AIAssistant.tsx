@@ -3,7 +3,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import { GoogleGenAI, Type, FunctionDeclaration } from '@google/genai';
 import { Sparkles, Send, X, Loader2, Bot, Wand2, MessageSquare, History, CalendarDays, Trash2, AlertCircle } from 'lucide-react';
 import { WorkDay, UserSettings, Advance } from '../types';
-import { formatCurrency } from '../utils';
 
 interface AIAssistantProps {
   workDays: WorkDay[];
@@ -125,15 +124,18 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const apiKey = process.env.API_KEY;
+      if (!apiKey) throw new Error("API Key no configurada.");
+
+      const ai = new GoogleGenAI({ apiKey });
       const now = new Date();
       
       const systemInstruction = `Eres Llavpodes Brain, el cerebro de gestión de esta aplicación.
         CONTEXTO ACTUAL:
         - Fecha de hoy: ${now.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         - Usuario: ${settings.workerName}
-        - Sueldo: ${settings.monthlySalary}
-        - Datos: ${workDays.length} jornadas, ${advances.length} adelantos.
+        - Sueldo mensual: ${settings.monthlySalary}
+        - Datos actuales: ${workDays.length} jornadas, ${advances.length} adelantos.
 
         REGLAS:
         1. Resuelve horarios partidos (ej. 8-12 y 14-18) asignando el descanso automáticamente.
@@ -143,26 +145,16 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-flash-preview',
-        contents: [{ parts: [{ text: finalInput }] }],
+        contents: [{ role: 'user', parts: [{ text: finalInput }] }],
         config: {
           systemInstruction,
           tools: [{ functionDeclarations }]
         }
       });
 
-      if (!response || !response.candidates) {
-        throw new Error("Respuesta vacía del servidor.");
-      }
+      if (!response) throw new Error("Sin respuesta del servicio de IA.");
 
-      const candidate = response.candidates[0];
-
-      if (candidate.finishReason === 'SAFETY') {
-        setMessages(prev => [...prev, { role: 'error', text: "Lo siento, mi filtro de seguridad bloqueó esta respuesta. Intenta con palabras diferentes." }]);
-        setIsLoading(false);
-        return;
-      }
-
-      if (response.functionCalls) {
+      if (response.functionCalls && response.functionCalls.length > 0) {
         for (const fc of response.functionCalls) {
           const args = fc.args as any;
           if (fc.name === 'manage_work_day') {
@@ -179,7 +171,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                 breakStartTime: args.breakStart ? `${args.date}T${args.breakStart}:00` : undefined,
                 breakEndTime: args.breakEnd ? `${args.date}T${args.breakEnd}:00` : undefined,
                 allowance: args.allowance || 0
-              }, ...filtered];
+              } as WorkDay, ...filtered];
             });
           }
           if (fc.name === 'delete_work_days') {
@@ -198,14 +190,14 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
             setSettings(prev => ({ ...prev, workerName: args.workerName || prev.workerName, monthlySalary: args.monthlySalary || prev.monthlySalary }));
           }
         }
-        setMessages(prev => [...prev, { role: 'ai', text: "He procesado los cambios correctamente." }]);
+        setMessages(prev => [...prev, { role: 'ai', text: "Cambios aplicados correctamente." }]);
       } else {
-        const textResponse = response.text;
-        setMessages(prev => [...prev, { role: 'ai', text: textResponse || "Acción completada." }]);
+        const textResponse = response.text || "No pude interpretar la acción, intenta de nuevo.";
+        setMessages(prev => [...prev, { role: 'ai', text: textResponse }]);
       }
     } catch (error: any) {
-      console.error("AI Error:", error);
-      setMessages(prev => [...prev, { role: 'error', text: `Error: ${error.message || "No pude conectar con el servidor."}` }]);
+      console.error("AI Assistant Error:", error);
+      setMessages(prev => [...prev, { role: 'error', text: `Error: ${error.message || "Fallo en la conexión"}` }]);
     } finally {
       setIsLoading(false);
     }
@@ -262,7 +254,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                     </div>
                     <div className="space-y-1">
                       <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Núcleo listo</h4>
-                      <p className="text-[10px] font-medium text-slate-400 max-w-[200px] mx-auto leading-relaxed italic italic">Sistema de gestión inteligente v4.1</p>
+                      <p className="text-[10px] font-medium text-slate-400 max-w-[200px] mx-auto leading-relaxed italic">Sistema de gestión inteligente v4.2</p>
                     </div>
                   </div>
                   
@@ -342,7 +334,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                     <span className="text-[7px] font-black uppercase tracking-widest">Agenda</span>
                   </div>
                 </div>
-                <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest italic">Llavpodes PRO v4.1</p>
+                <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest italic">Llavpodes PRO v4.2</p>
               </div>
             </div>
           </div>

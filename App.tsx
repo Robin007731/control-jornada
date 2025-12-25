@@ -6,8 +6,7 @@ import {
   Settings as SettingsIcon, 
   FileText, 
   Undo,
-  ShieldCheck,
-  TrendingUp
+  ShieldCheck
 } from 'lucide-react';
 import { WorkDay, UserSettings, Advance } from './types';
 import { DEFAULT_SALARY } from './constants';
@@ -37,13 +36,13 @@ const App: React.FC = () => {
 
   // PWA Install Prompt Logic
   useEffect(() => {
-    const handler = (e: Event) => {
+    const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
       console.log('PWA Install prompt saved');
     };
-    window.addEventListener('beforeinstallprompt', handler);
-    return () => window.removeEventListener('beforeinstallprompt', handler);
+    window.addEventListener('beforeinstallprompt' as any, handler);
+    return () => window.removeEventListener('beforeinstallprompt' as any, handler);
   }, []);
 
   // Persistence
