@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import ReactDOM from 'react-dom/client';
 import { 
   Clock, History as HistoryIcon, Settings as SettingsIcon, ShieldCheck, 
   ArrowRight, Check, Plus, Play, Coffee, LogOut, CheckCircle, AlertCircle, 
   Download, Trash2, Edit2, Copy, Calendar, Save, User, Wallet, Shield, 
   RefreshCw, Upload, Smartphone, X, Lock, TrendingUp, Search, Info, 
-  CalendarRange, ChevronRight, FileText, Moon, Sun
+  CalendarRange, ChevronRight, FileText, Moon, Sun, DownloadCloud, Apple
 } from 'lucide-react';
 
 // --- CONSTANTES ---
@@ -449,10 +449,30 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
 };
 
 // --- AJUSTES ---
-const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; advances: Advance[]; onAddAdvance: (adv: Advance) => void; onDeleteAdvance: (id: string) => void; workDays: WorkDay[]; setWorkDays: React.Dispatch<React.SetStateAction<WorkDay[]>> }> = ({ settings, setSettings, advances, onAddAdvance, onDeleteAdvance, workDays, setWorkDays }) => {
+const SettingsComp: React.FC<{ 
+  settings: UserSettings; 
+  setSettings: React.Dispatch<React.SetStateAction<UserSettings>>; 
+  advances: Advance[]; 
+  onAddAdvance: (adv: Advance) => void; 
+  onDeleteAdvance: (id: string) => void; 
+  workDays: WorkDay[]; 
+  setWorkDays: React.Dispatch<React.SetStateAction<WorkDay[]>>;
+  installPrompt: any;
+}> = ({ settings, setSettings, advances, onAddAdvance, onDeleteAdvance, workDays, setWorkDays, installPrompt }) => {
   const [isAuth, setIsAuth] = useState(false);
   const [pass, setPass] = useState('');
   const [newAdv, setNewAdv] = useState({ amt: '', note: '' });
+  const [showInstallModal, setShowInstallModal] = useState(false);
+
+  const handleInstallClick = async () => {
+    if (installPrompt) {
+      installPrompt.prompt();
+      const { outcome } = await installPrompt.userChoice;
+      console.log('User choice:', outcome);
+    } else {
+      setShowInstallModal(true);
+    }
+  };
 
   if (!isAuth) return (
     <div className="py-12 px-4 flex flex-col items-center justify-center animate-fade-in">
@@ -472,6 +492,16 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
 
   return (
     <div className="space-y-8 animate-fade-in pb-20 max-w-xl mx-auto relative">
+      <div className="flex justify-between items-center px-1">
+        <h2 className="text-xl font-black text-slate-800 italic uppercase tracking-tighter">Ajustes</h2>
+        <button 
+          onClick={handleInstallClick}
+          className="bg-blue-600 text-white px-3 py-2 rounded-xl text-[9px] font-black uppercase tracking-widest flex items-center gap-1.5 shadow-lg shadow-blue-900/10 active:scale-95 transition-transform"
+        >
+          <DownloadCloud className="w-3.5 h-3.5" /> Descargar App
+        </button>
+      </div>
+
       <section className="space-y-3">
         <h3 className="text-[10px] font-black text-slate-800 italic flex items-center gap-2 px-1 uppercase tracking-widest"><User className="text-blue-500 w-4 h-4" /> Datos de Trabajador/a</h3>
         <div className="bg-white p-6 rounded-3xl shadow-sm border border-slate-50 space-y-4 text-gray-800">
@@ -518,6 +548,40 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
            <p className="text-[7px] text-blue-600 font-black tracking-widest uppercase italic">Nexa Studio Professional</p>
         </div>
       </section>
+
+      <Modal isOpen={showInstallModal} onClose={() => setShowInstallModal(false)} title="Descargar Aplicación">
+        <div className="space-y-6 text-slate-700">
+          <p className="text-sm font-bold leading-relaxed">Instala el <span className="text-blue-600">Registro Laboral</span> en tu pantalla de inicio para acceder rápido y sin internet.</p>
+          
+          <div className="space-y-4">
+            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <div className="flex items-center gap-3 mb-2">
+                <Apple className="w-5 h-5 text-slate-800" />
+                <h4 className="font-black text-[10px] uppercase">En iPhone / iPad</h4>
+              </div>
+              <ol className="text-[11px] font-bold space-y-1.5 text-slate-500">
+                <li>1. Toca el botón "Compartir" (el cuadrado con flecha).</li>
+                <li>2. Busca "Añadir a pantalla de inicio".</li>
+                <li>3. Toca "Añadir" arriba a la derecha.</li>
+              </ol>
+            </div>
+
+            <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
+              <div className="flex items-center gap-3 mb-2">
+                <Smartphone className="w-5 h-5 text-blue-600" />
+                <h4 className="font-black text-[10px] uppercase">En Android / Chrome</h4>
+              </div>
+              <ol className="text-[11px] font-bold space-y-1.5 text-blue-600/70">
+                <li>1. Toca los tres puntos (⋮) del navegador.</li>
+                <li>2. Elige "Instalar aplicación" o "Añadir a pantalla...".</li>
+                <li>3. Confirma la instalación.</li>
+              </ol>
+            </div>
+          </div>
+
+          <button onClick={() => setShowInstallModal(false)} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase text-xs tracking-widest shadow-xl">Entendido</button>
+        </div>
+      </Modal>
     </div>
   );
 };
@@ -531,6 +595,16 @@ const App: React.FC = () => {
     passwordHash: '1234', onboardingComplete: false, simplifiedMode: false,
     bpsRate: 22, extraMultiplier: 1.5, specialDayMultiplier: 2.0
   });
+  const [installPrompt, setInstallPrompt] = useState<any>(null);
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setInstallPrompt(e);
+    };
+    window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt);
+  }, []);
 
   useEffect(() => {
     const saved = localStorage.getItem('llavero_data');
@@ -566,7 +640,18 @@ const App: React.FC = () => {
       <main className="flex-1 max-w-xl mx-auto w-full px-5 py-6">
         {tab === 'dash' && <Dashboard workDays={days} settings={settings} advances={advs} onAction={(d) => setDays(p => { const ex = p.find(old => new Date(old.date).toDateString() === new Date(d.date).toDateString()); return ex ? p.map(o => o.id === ex.id ? d : o) : [d, ...p]; })} />}
         {tab === 'hist' && <History workDays={days} setWorkDays={setDays} settings={settings} />}
-        {tab === 'sett' && <SettingsComp settings={settings} setSettings={setSettings} advances={advs} onAddAdvance={(a) => setAdvs(p => [...p, a])} onDeleteAdvance={(id) => setAdvs(p => p.filter(a => a.id !== id))} workDays={days} setWorkDays={setDays} />}
+        {tab === 'sett' && (
+          <SettingsComp 
+            settings={settings} 
+            setSettings={setSettings} 
+            advances={advs} 
+            onAddAdvance={(a) => setAdvs(p => [...p, a])} 
+            onDeleteAdvance={(id) => setAdvs(p => p.filter(a => a.id !== id))} 
+            workDays={days} 
+            setWorkDays={setDays} 
+            installPrompt={installPrompt}
+          />
+        )}
       </main>
 
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-3xl px-12 py-4 rounded-full flex gap-14 items-center z-50 shadow-2xl shadow-slate-900/20 border border-white/5">
