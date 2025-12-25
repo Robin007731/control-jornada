@@ -143,13 +143,13 @@ const Onboarding: React.FC<{ onComplete: (name: string) => void }> = ({ onComple
           <div className="bg-white/10 w-28 h-28 rounded-[2.5rem] flex items-center justify-center mx-auto backdrop-blur-xl border border-white/20 shadow-2xl">
             <ShieldCheck className="w-14 h-14 text-white" />
           </div>
-          <h1 className="text-5xl font-black italic tracking-tighter uppercase">LLAV</h1>
-          <p className="text-blue-100 font-medium text-lg">Tu llavero digital para el trabajo.</p>
+          <h1 className="text-4xl font-black italic tracking-tighter uppercase">Control de Jornadas</h1>
+          <p className="text-blue-100 font-medium text-lg">Tu registro laboral inteligente.</p>
         </div>
         <div className="bg-white text-gray-900 p-10 rounded-[3rem] shadow-2xl space-y-8 text-left">
           <div className="space-y-2">
             <h2 className="text-2xl font-bold text-gray-800">¿Cómo te llamas?</h2>
-            <p className="text-gray-400 text-sm">Usaremos tu nombre para personalizar tus recibos.</p>
+            <p className="text-gray-400 text-sm">Usaremos tu nombre para personalizar tus reportes.</p>
           </div>
           <input type="text" placeholder="Ej: Juan Pérez" className="w-full px-6 py-5 rounded-3xl bg-gray-50 border-2 border-gray-100 focus:border-blue-500 outline-none font-bold text-xl transition-all" value={name} onChange={(e) => setName(e.target.value)} />
           <button disabled={!name.trim()} onClick={() => onComplete(name)} className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-lg shadow-blue-200 active:scale-95 transition-all flex items-center justify-center gap-3">
@@ -193,7 +193,7 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
   return (
     <div className="space-y-8 animate-fade-in">
       <div className="bg-white rounded-[3rem] p-8 shadow-xl border border-gray-100 flex flex-col items-center text-center">
-        <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Sueldo Estimado</p>
+        <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-2">Líquido Estimado</p>
         <h2 className="text-5xl font-black text-gray-900 mb-6">{formatCurrency(summary.netPay)}</h2>
         <div className="w-full bg-gray-100 h-4 rounded-full overflow-hidden mb-2">
           <div className="bg-blue-600 h-full transition-all duration-1000" style={{ width: `${Math.min(100, progress)}%` }}></div>
@@ -217,7 +217,7 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
       <div className="bg-white rounded-[3rem] p-10 shadow-2xl border border-gray-100 space-y-8">
         <div className="flex justify-between items-center">
           <div>
-            <h3 className="text-2xl font-black text-gray-800 tracking-tight">Registro de Hoy</h3>
+            <h3 className="text-2xl font-black text-gray-800 tracking-tight">Hoy</h3>
             <p className="text-gray-400 font-bold text-xs uppercase">{today.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
           {(isSunday(today) || isHoliday(today)) && <span className="bg-amber-100 text-amber-700 text-[10px] px-3 py-1 rounded-full font-black italic">FERIADO/DOMINGO 2X</span>}
@@ -268,7 +268,7 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-3xl font-black text-gray-800 italic">HISTORIAL</h2>
+        <h2 className="text-3xl font-black text-gray-800 italic uppercase">Historial</h2>
         <div className="relative flex-1 max-w-xs">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
           <input 
@@ -337,7 +337,7 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
           <h2 className="text-3xl font-black text-gray-800 italic">ÁREA PRIVADA</h2>
           <p className="text-gray-400 font-medium">Introduce tu contraseña de acceso.</p>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); if (pass === settings.passwordHash) setIsAuth(true); else alert('Pass incorrecta (Default: 1234)'); }} className="space-y-4">
+        <form onSubmit={(e) => { e.preventDefault(); if (pass === settings.passwordHash) setIsAuth(true); else alert('Contraseña incorrecta'); }} className="space-y-4">
           <input type="password" placeholder="Pass (Default: 1234)" className="w-full px-6 py-6 rounded-3xl border-2 border-gray-50 text-center text-2xl font-black tracking-widest focus:border-blue-500 outline-none transition-all" value={pass} onChange={(e) => setPass(e.target.value)} autoFocus />
           <button className="w-full bg-blue-600 text-white py-6 rounded-[2rem] font-black text-xl shadow-xl shadow-blue-100 active:scale-95 transition-all">DESBLOQUEAR</button>
         </form>
@@ -394,7 +394,7 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
         <button onClick={() => { if(confirm('¿Borrar todo?')) { localStorage.clear(); window.location.reload(); } }} className="w-full bg-red-50 text-red-600 py-6 rounded-[2rem] font-black flex items-center justify-center gap-3 active:scale-95 transition-all">
           <AlertCircle className="w-6 h-6" /> REINICIAR TODA LA APP
         </button>
-        <p className="text-center text-[10px] text-gray-300 font-black tracking-widest uppercase italic">Llavero Digital (LlaV) v100 • Uruguay Edition</p>
+        <p className="text-center text-[10px] text-gray-300 font-black tracking-widest uppercase italic">Control de Jornadas v1.1 • Uruguay Edition</p>
       </section>
     </div>
   );
@@ -432,7 +432,7 @@ const App: React.FC = () => {
         <div className="max-w-4xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="bg-blue-600 p-2 rounded-xl text-white shadow-lg shadow-blue-200"><ShieldCheck className="w-6 h-6" /></div>
-            <h1 className="text-2xl font-black italic tracking-tighter text-gray-800 uppercase">LLAV</h1>
+            <h1 className="text-2xl font-black italic tracking-tighter text-gray-800 uppercase">CDJ</h1>
           </div>
           <div className="text-right">
             <p className="text-[9px] font-black text-gray-400 uppercase tracking-widest">TRABAJADOR</p>

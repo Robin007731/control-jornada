@@ -1,7 +1,7 @@
 
 {
-  "short_name": "Registro",
-  "name": "Registro laboral",
+  "short_name": "Control",
+  "name": "Control de Jornadas",
   "icons": [
     {
       "src": "icon.png",
