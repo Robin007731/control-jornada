@@ -151,14 +151,14 @@ const Onboarding: React.FC<{ onComplete: (name: string) => void }> = ({ onComple
             </div>
             <div className="space-y-2">
               <h1 className="text-2xl font-black italic tracking-tighter uppercase leading-none text-white">Registro laboral</h1>
-              <p className="text-blue-100 font-bold text-xs tracking-widest uppercase">By Nexa Studio</p>
+              <p className="text-blue-100 font-bold text-xs tracking-widest uppercase italic">Nexa Studio Professional</p>
             </div>
             <div className="bg-white text-gray-900 p-6 rounded-3xl shadow-2xl space-y-6 text-left">
               <div className="space-y-1">
                 <h2 className="text-xl font-bold text-gray-800">¡Bienvenido!</h2>
-                <p className="text-gray-400 text-xs">Dinos tu nombre para comenzar.</p>
+                <p className="text-gray-400 text-xs">Dinos tu nombre para personalizar tu cuenta.</p>
               </div>
-              <input type="text" placeholder="Juan Pérez" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 focus:border-blue-500 outline-none font-bold text-lg transition-all" value={name} onChange={(e) => setName(e.target.value)} />
+              <input type="text" placeholder="Tu Nombre" className="w-full px-4 py-3 rounded-xl bg-gray-50 border border-gray-100 focus:border-blue-500 outline-none font-bold text-lg transition-all" value={name} onChange={(e) => setName(e.target.value)} />
               <button disabled={!name.trim()} onClick={() => setStep(2)} className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-lg shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2">
                 CONTINUAR <ArrowRight className="w-5 h-5" />
               </button>
@@ -170,17 +170,10 @@ const Onboarding: React.FC<{ onComplete: (name: string) => void }> = ({ onComple
           <div className="bg-white text-gray-900 p-6 rounded-3xl shadow-2xl space-y-5 animate-slide-up">
             <h2 className="text-xl font-black text-gray-800 uppercase italic">Privacidad y Términos</h2>
             <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 text-[10px] text-gray-600 space-y-3 h-64 overflow-y-auto leading-relaxed">
-              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">1. Almacenamiento Local (Local-First)</p>
-              <p>Registro laboral es una aplicación privada. Toda la información ingresada reside exclusivamente en tu dispositivo. Nexa Studio no recolecta, almacena ni vende tus datos en servidores externos.</p>
-              
-              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">2. Cálculos y Leyes</p>
-              <p>Los cálculos están optimizados para Uruguay, aplicando el descuento estándar de BPS (22%) y recargos por horas extras (1.5x o 2.0x). Estos valores son referenciales.</p>
-              
-              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">3. Responsabilidad</p>
-              <p>Tú eres responsable de respaldar tus datos. Si borras el caché del navegador, los datos se perderán a menos que utilices la función de Backup en Ajustes.</p>
-              
-              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">4. Propiedad Intelectual</p>
-              <p>Esta aplicación es un producto desarrollado por Nexa Studio. Su uso es libre para el control personal de jornadas laborales.</p>
+              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">1. Registro Laboral</p>
+              <p>Esta es una herramienta privada para el control de tus jornadas. Toda la información reside localmente en tu dispositivo.</p>
+              <p className="font-black text-blue-600 uppercase border-b border-gray-200 pb-1">2. Cálculos Locales</p>
+              <p>Los cálculos son referenciales y están ajustados a la normativa general de Uruguay.</p>
             </div>
             
             <label className="flex items-start gap-3 p-2 cursor-pointer group">
@@ -190,12 +183,12 @@ const Onboarding: React.FC<{ onComplete: (name: string) => void }> = ({ onComple
                   <Check className="w-3 h-3 text-white" />
                 </div>
               </div>
-              <span className="text-[10px] font-bold text-gray-500 uppercase leading-tight select-none">He leído y acepto todas las políticas de privacidad y uso de Nexa Studio.</span>
+              <span className="text-[10px] font-bold text-gray-500 uppercase leading-tight select-none">Acepto los términos de uso de Registro laboral.</span>
             </label>
 
             <div className="flex gap-2">
               <button onClick={() => setStep(1)} className="flex-1 py-4 font-bold text-gray-400 text-xs uppercase">Atrás</button>
-              <button disabled={!accepted} onClick={() => onComplete(name)} className="flex-[2] bg-blue-600 text-white py-4 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all disabled:opacity-50">CONFIRMAR Y ENTRAR</button>
+              <button disabled={!accepted} onClick={() => onComplete(name)} className="flex-[2] bg-blue-600 text-white py-4 rounded-xl font-bold text-sm shadow-lg active:scale-95 transition-all disabled:opacity-50">ENTRAR AHORA</button>
             </div>
           </div>
         )}
@@ -237,23 +230,23 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
   return (
     <div className="space-y-4 animate-fade-in max-w-xl mx-auto">
       <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 flex flex-col items-center text-center">
-        <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-1">Cobro Estimado</p>
-        <h2 className="text-3xl font-black text-gray-900 mb-4">{formatCurrency(summary.netPay)}</h2>
+        <p className="text-gray-400 font-bold uppercase tracking-widest text-[10px] mb-1">Cobro Estimado (Neto)</p>
+        <h2 className="text-3xl font-black text-gray-900 mb-4 tracking-tighter">{formatCurrency(summary.netPay)}</h2>
         <div className="w-full bg-gray-100 h-2.5 rounded-full overflow-hidden mb-2">
           <div className="bg-blue-600 h-full transition-all duration-1000" style={{ width: `${Math.min(100, progress)}%` }}></div>
         </div>
-        <p className="text-[10px] font-bold text-blue-600">{summary.totalNormal.toFixed(1)}h de {HOURS_IN_MONTH}h</p>
+        <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wide">{summary.totalNormal.toFixed(1)}h de {HOURS_IN_MONTH}h Mensuales</p>
       </div>
 
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-blue-50 p-4 rounded-2xl border border-blue-100">
           <TrendingUp className="text-blue-600 w-5 h-5 mb-1" />
-          <p className="text-[9px] font-bold text-blue-400 uppercase">H. Extras</p>
+          <p className="text-[9px] font-black text-blue-400 uppercase">Horas Extras</p>
           <p className="text-xl font-black text-blue-700">{summary.totalExtra.toFixed(1)}h</p>
         </div>
         <div className="bg-green-50 p-4 rounded-2xl border border-green-100">
           <Wallet className="text-green-600 w-5 h-5 mb-1" />
-          <p className="text-[9px] font-bold text-green-400 uppercase">Viáticos</p>
+          <p className="text-[9px] font-black text-green-400 uppercase">Viáticos</p>
           <p className="text-xl font-black text-green-700">{formatCurrency(summary.totalAllowances)}</p>
         </div>
       </div>
@@ -264,7 +257,7 @@ const Dashboard: React.FC<{ workDays: WorkDay[]; settings: UserSettings; advance
             <h3 className="text-lg font-bold text-gray-800 tracking-tight">Registro Diario</h3>
             <p className="text-gray-400 font-bold text-[10px] uppercase">{today.toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' })}</p>
           </div>
-          {(isSunday(today) || isHoliday(today)) && <span className="bg-amber-100 text-amber-700 text-[9px] px-2 py-0.5 rounded-full font-black italic">2X</span>}
+          {(isSunday(today) || isHoliday(today)) && <span className="bg-amber-100 text-amber-700 text-[9px] px-2 py-0.5 rounded-full font-black italic">TARIFA 2X</span>}
         </div>
 
         <button 
@@ -310,34 +303,32 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
     try {
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const today = new Date();
-      const todayISO = today.toISOString().split('T')[0];
       const todayFull = today.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
 
       const systemInstruction = `
-        Eres Nexa AI, el cerebro de gestión horaria de la aplicación 'Registro laboral'.
-        CONTEXTO ACTUAL: Hoy es ${todayFull}.
+        Eres Nexa AI, la inteligencia de gestión de 'Registro laboral'. 
+        CONTEXTO TEMPORAL: Hoy es ${todayFull}.
         
-        MISION: Traducir órdenes de lenguaje natural a un esquema JSON de jornadas laborales.
+        MISION: Transformar órdenes de voz o texto en objetos JSON de jornadas laborales.
         
-        REGLAS DE ORO PARA EL TIEMPO (CRITICO):
-        1. NO CONVIERTAS HORAS A UTC. Usa las horas literales que pida el usuario.
-        2. Si el usuario pide "14:00", el string ISO resultante debe terminar en "T14:00:00" para esa fecha local.
-        3. Si detectas un desfase de 3 horas (ej: pones 11:00 cuando piden 14:00), ESTAS COMETIENDO UN ERROR. Mantén la hora exacta.
+        REGLAS DE PROCESAMIENTO ESTRICTO:
+        1. PRECISION HORARIA: Si el usuario pide "14:00", usa exactamente "14:00" en el campo ISO "entryTime" o "exitTime". NO conviertas zonas horarias.
+        2. RANGOS: "Desde [Fecha] hasta hoy" implica crear una entrada para cada día del rango.
+        3. EXCEPCIONES: "Librando los lunes" significa filtrar los lunes del array de resultados.
+        4. TURNOS ESPECIALES: Si menciona "medio turno" o "media jornada", pon isHalfDay: true.
+        5. FORMATO ISO: Genera strings de tiempo en formato "YYYY-MM-DDTHH:mm:00".
 
-        REGLAS DE LOGICA:
-        1. RANGOS: Genera una entrada para CADA DÍA entre la fecha inicial y la final (inclusive).
-        2. EXCEPCIONES: Si pide "librando lunes", omite los lunes. Si pide "martes medio dia", marca esos martes como isHalfDay: true y usa el horario específico.
-        3. ELIMINACION: Si pide "borrar" o "quitar", pon las fechas YYYY-MM-DD en el array 'toDeleteDates'.
-        4. SOBRESCRITURA: Genera los 'toAdd' con la fecha correcta; la app reemplazará los existentes.
+        ORDEN ESPECIFICA DEL USUARIO A ENTENDER:
+        "agregame del 1/12/2025 de 14:00 hasta las 22:00 hasta el dia de hoy librando todos los lunes y haciendo el medio dia los martes de 14:0 a 18:00"
 
-        ESTRUCTURA DE SALIDA (JSON ESTRICTO):
+        ESTRUCTURA DE SALIDA (JSON):
         {
           "toAdd": [
             {
-              "id": "uuid-v4",
+              "id": "uuid-string",
               "date": "YYYY-MM-DD",
-              "entryTime": "YYYY-MM-DDTHH:mm:00",
-              "exitTime": "YYYY-MM-DDTHH:mm:00",
+              "entryTime": "ISO-String",
+              "exitTime": "ISO-String",
               "isHalfDay": boolean,
               "status": "complete",
               "allowance": 0
@@ -348,7 +339,7 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3-pro-preview',
         contents: prompt,
         config: {
           systemInstruction,
@@ -386,7 +377,7 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
       setPreview(data);
     } catch (error) {
       console.error(error);
-      alert('Error en Nexa AI: No pude procesar tu solicitud. Prueba siendo más específico con las horas.');
+      alert('Error: Asegúrate de que la API_KEY esté bien configurada en Vercel.');
     } finally {
       setLoading(false);
     }
@@ -420,14 +411,14 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
         <div className="p-4 space-y-4 animate-fade-in">
           <div className="flex items-start gap-2 bg-blue-50/50 p-3 rounded-xl border border-blue-100/50">
              <Info className="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" />
-             <p className="text-[10px] text-blue-700 leading-tight font-bold">
-               Ej: "Agregame del 1/12 de 14 a 22 hasta hoy, sin los lunes y martes medio turno de 14 a 18"
+             <p className="text-[10px] text-blue-700 leading-tight font-bold italic uppercase tracking-tight">
+               Escribe tus órdenes de calendario aquí. La IA procesará las fechas y horarios automáticamente.
              </p>
           </div>
           <textarea 
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
-            placeholder="Dime qué jornadas quieres gestionar..."
+            placeholder="Ej: Agregame del 1/12 al hoy de 14 a 22, librando lunes..."
             className="w-full h-24 p-3 bg-gray-50 rounded-xl text-xs font-bold border-none focus:ring-2 focus:ring-blue-600 outline-none resize-none transition-all placeholder:text-gray-300"
           />
           
@@ -437,27 +428,26 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
             className="w-full bg-gray-900 text-white py-3.5 rounded-xl font-bold text-xs flex items-center justify-center gap-2 active:scale-95 transition-all disabled:opacity-50 shadow-md"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Terminal className="w-4 h-4" />}
-            {loading ? 'ANALIZANDO HORARIOS...' : 'EJECUTAR CON IA'}
+            {loading ? 'PROCESANDO CALENDARIO...' : 'EJECUTAR CON IA'}
           </button>
 
           {preview && (
             <div className="bg-gray-50 border border-gray-200 rounded-xl p-3 animate-slide-up">
-              <div className="flex items-center gap-2 mb-3">
-                 <CalendarRange className="w-4 h-4 text-gray-600" />
-                 <h4 className="text-[10px] font-black text-gray-800 uppercase">Resumen de Cambios:</h4>
-              </div>
+              <h4 className="text-[10px] font-black text-gray-800 uppercase mb-3 flex items-center gap-2">
+                <CalendarRange className="w-4 h-4" /> Resultados del Análisis:
+              </h4>
               <div className="grid grid-cols-2 gap-2 mb-3">
                 <div className="bg-white p-2 rounded-lg border border-gray-100">
-                  <p className="text-[8px] font-black text-gray-400 uppercase">A crear/editar</p>
-                  <p className="text-sm font-black text-blue-600">{preview.toAdd.length} <span className="text-[10px] text-gray-400">Días</span></p>
+                  <p className="text-[8px] font-black text-gray-400 uppercase">A Generar</p>
+                  <p className="text-sm font-black text-blue-600">{preview.toAdd.length} Jornadas</p>
                 </div>
                 <div className="bg-white p-2 rounded-lg border border-gray-100">
-                  <p className="text-[8px] font-black text-gray-400 uppercase">A eliminar</p>
-                  <p className="text-sm font-black text-red-600">{preview.toDeleteDates.length} <span className="text-[10px] text-gray-400">Fechas</span></p>
+                  <p className="text-[8px] font-black text-gray-400 uppercase">A Limpiar</p>
+                  <p className="text-sm font-black text-red-600">{preview.toDeleteDates.length} Fechas</p>
                 </div>
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setPreview(null)} className="flex-1 bg-white border border-gray-200 text-gray-400 py-2 rounded-lg font-bold text-[9px] uppercase">Atrás</button>
+                <button onClick={() => setPreview(null)} className="flex-1 bg-white border border-gray-200 text-gray-400 py-2 rounded-lg font-bold text-[9px] uppercase">Cancelar</button>
                 <button onClick={confirmAction} className="flex-[2] bg-blue-600 text-white py-2 rounded-lg font-bold text-[9px] uppercase shadow-sm active:scale-95">Aplicar al Historial</button>
               </div>
             </div>
@@ -506,16 +496,16 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
       <AIAssistant onApply={applyAIChanges} />
 
       <div className="flex items-center justify-between gap-3">
-        <h2 className="text-xl font-black text-gray-800 italic uppercase">Historial</h2>
+        <h2 className="text-xl font-black text-gray-800 italic uppercase tracking-tighter">Historial</h2>
         <div className="relative flex-1 max-w-[140px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
           <input 
             type="month" 
-            className="w-full pl-9 pr-2 py-2 bg-white rounded-xl border border-gray-100 text-xs font-bold"
+            className="w-full pl-9 pr-2 py-2 bg-white rounded-xl border border-gray-100 text-xs font-bold outline-none focus:border-blue-500"
             onChange={(e) => setFilter(e.target.value)}
           />
         </div>
-        <button onClick={() => { setEditingDay({ id: crypto.randomUUID(), date: new Date().toISOString().split('T')[0], status: 'complete', isHalfDay: false, allowance: 0 }); setIsModalOpen(true); }} className="p-2 bg-blue-600 text-white rounded-xl shadow-md">
+        <button onClick={() => { setEditingDay({ id: crypto.randomUUID(), date: new Date().toISOString().split('T')[0], status: 'complete', isHalfDay: false, allowance: 0 }); setIsModalOpen(true); }} className="p-2 bg-blue-600 text-white rounded-xl shadow-md active:scale-95 transition-transform">
           <Plus className="w-5 h-5" />
         </button>
       </div>
@@ -523,35 +513,36 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
       <div className="space-y-2">
         {sortedDays.map(day => {
           const fin = getDayFinancials(day, settings);
+          const date = new Date(day.date);
           return (
             <div key={day.id} className={`bg-white rounded-xl p-4 shadow-sm border-l-4 flex justify-between items-center transition-all ${fin.isSpecial ? 'border-amber-400' : 'border-blue-600'}`}>
               <div className="flex gap-3 items-center">
                 <div className="bg-gray-50 rounded-lg p-2 text-center min-w-[45px]">
-                  <span className="block text-[8px] font-black text-gray-400 uppercase">{new Date(day.date).toLocaleDateString('es-UY', { weekday: 'short' })}</span>
-                  <span className="block text-base font-black text-gray-800">{new Date(day.date).getDate()}</span>
+                  <span className="block text-[8px] font-black text-gray-400 uppercase leading-none mb-1">{date.toLocaleDateString('es-UY', { weekday: 'short' })}</span>
+                  <span className="block text-base font-black text-gray-800 leading-none">{date.getDate()}</span>
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800 text-sm uppercase tracking-tight">{new Date(day.date).toLocaleDateString('es-UY', { month: 'short' })}</p>
-                  <p className="text-[10px] font-bold text-gray-400">{getTimeValue(day.entryTime)} — {getTimeValue(day.exitTime)}</p>
+                  <p className="font-bold text-gray-800 text-xs uppercase tracking-tight">{date.toLocaleDateString('es-UY', { month: 'short', year: 'numeric' })}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase">{getTimeValue(day.entryTime)} — {getTimeValue(day.exitTime)}</p>
                 </div>
               </div>
               <div className="text-right flex items-center gap-4">
                 <div>
-                  <p className="text-lg font-black text-blue-600 tracking-tighter">{fin.duration.toFixed(1)}h</p>
-                  {day.isHalfDay && <span className="text-[7px] font-black text-green-600 uppercase">1/2 Turno</span>}
+                  <p className="text-lg font-black text-blue-600 tracking-tighter leading-none">{fin.duration.toFixed(1)}h</p>
+                  {day.isHalfDay && <span className="text-[7px] font-black text-green-600 uppercase tracking-widest italic">1/2 Turno</span>}
                 </div>
                 <div className="flex flex-col gap-1">
-                  <button onClick={() => { setEditingDay(day); setIsModalOpen(true); }} className="text-gray-300 hover:text-blue-600"><Edit2 className="w-3.5 h-3.5" /></button>
-                  <button onClick={() => { if(confirm('¿Eliminar?')) setWorkDays(p => p.filter(d => d.id !== day.id)); }} className="text-gray-300 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => { setEditingDay(day); setIsModalOpen(true); }} className="text-gray-300 hover:text-blue-600 transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                  <button onClick={() => { if(confirm('¿Eliminar?')) setWorkDays(p => p.filter(d => d.id !== day.id)); }} className="text-gray-300 hover:text-red-600 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                 </div>
               </div>
             </div>
           );
         })}
         {sortedDays.length === 0 && (
-          <div className="py-20 text-center opacity-20">
+          <div className="py-20 text-center opacity-10">
              <Calendar className="w-16 h-16 mx-auto mb-2" />
-             <p className="font-black text-xs uppercase tracking-widest italic">Sin registros</p>
+             <p className="font-black text-xs uppercase tracking-widest italic">Vacio</p>
           </div>
         )}
       </div>
@@ -563,12 +554,12 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
             <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Entrada</label><input type="time" required className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={getTimeValue(editingDay?.entryTime)} onChange={(e) => handleTimeChange('entryTime', e.target.value)} /></div>
             <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Salida</label><input type="time" required className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={getTimeValue(editingDay?.exitTime)} onChange={(e) => handleTimeChange('exitTime', e.target.value)} /></div>
           </div>
-          <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl">
+          <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-xl border border-gray-100">
              <input type="checkbox" id="editHalf" checked={editingDay?.isHalfDay || false} onChange={(e) => setEditingDay({...editingDay, isHalfDay: e.target.checked})} className="w-4 h-4 rounded text-blue-600" />
-             <label htmlFor="editHalf" className="text-[10px] font-bold text-gray-700 uppercase">Medio Turno (Sin descanso)</label>
+             <label htmlFor="editHalf" className="text-[10px] font-bold text-gray-700 uppercase tracking-wide">Medio Turno (Sin descanso)</label>
           </div>
           <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Viáticos ($)</label><input type="number" className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={editingDay?.allowance || ''} onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })} /></div>
-          <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-base shadow-lg">GUARDAR</button>
+          <button type="submit" className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold text-base shadow-lg active:scale-95 transition-transform uppercase tracking-wider">Guardar Cambios</button>
         </form>
       </Modal>
     </div>
@@ -579,36 +570,18 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
   const [isAuth, setIsAuth] = useState(false);
   const [pass, setPass] = useState('');
   const [newAdv, setNewAdv] = useState({ amt: '', note: '' });
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
-
-  useEffect(() => {
-    window.addEventListener('beforeinstallprompt', (e) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    });
-  }, []);
-
-  const installApp = async () => {
-    if (deferredPrompt) {
-      deferredPrompt.prompt();
-      const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') setDeferredPrompt(null);
-    } else {
-      alert('Para descargar: Toca el icono de compartir y selecciona "Añadir a pantalla de inicio".');
-    }
-  };
 
   if (!isAuth) return (
     <div className="py-12 px-4 flex flex-col items-center justify-center animate-fade-in">
       <div className="bg-white p-8 rounded-3xl shadow-xl w-full max-w-xs text-center space-y-6 text-gray-800">
         <div className="bg-blue-50 w-16 h-16 rounded-2xl flex items-center justify-center mx-auto"><Lock className="w-8 h-8 text-blue-600" /></div>
         <div className="space-y-1">
-          <h2 className="text-xl font-bold">ÁREA PRIVADA</h2>
-          <p className="text-gray-400 text-xs uppercase font-bold tracking-widest">Nexa Studio Secure</p>
+          <h2 className="text-xl font-bold uppercase tracking-tight leading-none">Ajustes Privados</h2>
+          <p className="text-gray-400 text-[8px] uppercase font-black tracking-widest italic leading-none">Seguridad Nexa Studio</p>
         </div>
-        <form onSubmit={(e) => { e.preventDefault(); if (pass === settings.passwordHash) setIsAuth(true); else alert('Contraseña incorrecta'); }} className="space-y-4">
-          <input type="password" placeholder="Pin" className="w-full px-4 py-4 rounded-2xl border border-gray-100 text-center text-xl font-black tracking-widest outline-none transition-all" value={pass} onChange={(e) => setPass(e.target.value)} autoFocus />
-          <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-md">ENTRAR</button>
+        <form onSubmit={(e) => { e.preventDefault(); if (pass === settings.passwordHash) setIsAuth(true); else alert('Pin incorrecto'); }} className="space-y-4">
+          <input type="password" placeholder="Pin de Acceso" className="w-full px-4 py-4 rounded-2xl border border-gray-100 text-center text-xl font-black tracking-widest outline-none focus:border-blue-500 transition-all" value={pass} onChange={(e) => setPass(e.target.value)} autoFocus />
+          <button className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold shadow-md active:scale-95 transition-transform uppercase tracking-widest text-xs">Desbloquear</button>
         </form>
       </div>
     </div>
@@ -617,59 +590,51 @@ const SettingsComp: React.FC<{ settings: UserSettings; setSettings: React.Dispat
   return (
     <div className="space-y-8 animate-fade-in pb-20 max-w-xl mx-auto relative">
       <section className="space-y-3">
-        <h3 className="text-sm font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-wider"><User className="text-blue-600 w-4 h-4" /> Perfil y Salario</h3>
+        <h3 className="text-[10px] font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-widest"><User className="text-blue-600 w-4 h-4" /> Perfil de Trabajador</h3>
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-4 text-gray-800">
-          <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block ml-1">Nombre</label><input type="text" value={settings.workerName} onChange={(e) => setSettings(p => ({ ...p, workerName: e.target.value }))} className="w-full px-4 py-2.5 bg-gray-50 rounded-xl font-bold text-sm outline-none" /></div>
-          <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl">
+          <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block ml-1">Nombre Completo</label><input type="text" value={settings.workerName} onChange={(e) => setSettings(p => ({ ...p, workerName: e.target.value }))} className="w-full px-4 py-2.5 bg-gray-50 rounded-xl font-bold text-sm outline-none border border-transparent focus:border-blue-500 transition-all" /></div>
+          <div className="flex items-center gap-3 bg-gray-50 p-4 rounded-xl border border-gray-100">
             <div className="flex-1">
-              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Cálculo</p>
+              <p className="text-[8px] font-black text-gray-400 uppercase mb-1">Cálculo de Sueldo</p>
               <div className="flex gap-1.5">
-                <button onClick={() => setSettings(p => ({ ...p, useHourlyRate: false }))} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold ${!settings.useHourlyRate ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-400'}`}>MENSUAL</button>
-                <button onClick={() => setSettings(p => ({ ...p, useHourlyRate: true }))} className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold ${settings.useHourlyRate ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-400'}`}>HORA</button>
+                <button onClick={() => setSettings(p => ({ ...p, useHourlyRate: false }))} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase ${!settings.useHourlyRate ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-400 border border-gray-100'}`}>MENSUAL</button>
+                <button onClick={() => setSettings(p => ({ ...p, useHourlyRate: true }))} className={`flex-1 py-1.5 rounded-lg text-[9px] font-black uppercase ${settings.useHourlyRate ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-gray-400 border border-gray-100'}`}>HORA</button>
               </div>
             </div>
             <div className="flex-1">
-              <label className="text-[8px] font-black text-gray-400 uppercase mb-1 block">Monto ($)</label>
-              <input type="number" value={settings.useHourlyRate ? settings.hourlyRate : settings.monthlySalary} onChange={(e) => setSettings(p => ({ ...p, [settings.useHourlyRate ? 'hourlyRate' : 'monthlySalary']: Number(e.target.value) }))} className="w-full px-3 py-1.5 bg-white rounded-lg font-bold text-sm" />
+              <label className="text-[8px] font-black text-gray-400 uppercase mb-1 block">Monto Bruto ($)</label>
+              <input type="number" value={settings.useHourlyRate ? settings.hourlyRate : settings.monthlySalary} onChange={(e) => setSettings(p => ({ ...p, [settings.useHourlyRate ? 'hourlyRate' : 'monthlySalary']: Number(e.target.value) }))} className="w-full px-3 py-1.5 bg-white rounded-lg font-bold text-sm outline-none border border-gray-100 focus:border-blue-500" />
             </div>
           </div>
         </div>
       </section>
 
       <section className="space-y-3">
-        <h3 className="text-sm font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-wider"><Wallet className="text-green-600 w-4 h-4" /> Adelantos</h3>
+        <h3 className="text-[10px] font-black text-gray-800 italic flex items-center gap-2 px-1 uppercase tracking-widest"><Wallet className="text-green-600 w-4 h-4" /> Adelantos Recibidos</h3>
         <div className="bg-white p-5 rounded-2xl shadow-sm border border-gray-50 space-y-4 text-gray-800">
           <div className="flex gap-2">
-            <input type="number" placeholder="$" className="w-20 px-3 py-2.5 bg-gray-50 rounded-xl font-bold text-sm" value={newAdv.amt} onChange={(e) => setNewAdv({...newAdv, amt: e.target.value})} />
-            <input type="text" placeholder="Nota" className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl font-bold text-sm" value={newAdv.note} onChange={(e) => setNewAdv({...newAdv, note: e.target.value})} />
-            <button onClick={() => { if(newAdv.amt) onAddAdvance({ id: crypto.randomUUID(), date: new Date().toISOString(), amount: Number(newAdv.amt), note: newAdv.note }); setNewAdv({amt:'', note:''})}} className="bg-green-600 text-white px-4 rounded-xl font-bold text-xs">OK</button>
+            <input type="number" placeholder="$" className="w-20 px-3 py-2.5 bg-gray-50 rounded-xl font-bold text-sm border border-transparent focus:border-green-500 transition-all outline-none" value={newAdv.amt} onChange={(e) => setNewAdv({...newAdv, amt: e.target.value})} />
+            <input type="text" placeholder="Nota rápida" className="flex-1 px-4 py-2.5 bg-gray-50 rounded-xl font-bold text-sm border border-transparent focus:border-green-500 transition-all outline-none" value={newAdv.note} onChange={(e) => setNewAdv({...newAdv, note: e.target.value})} />
+            <button onClick={() => { if(newAdv.amt) onAddAdvance({ id: crypto.randomUUID(), date: new Date().toISOString(), amount: Number(newAdv.amt), note: newAdv.note }); setNewAdv({amt:'', note:''})}} className="bg-green-600 text-white px-4 rounded-xl font-bold text-xs shadow-md active:scale-95">AÑADIR</button>
           </div>
-          <div className="space-y-1.5">{advances.map(a => <div key={a.id} className="flex justify-between items-center px-4 py-2.5 bg-gray-50 rounded-xl text-xs"><span className="font-bold text-gray-700">{formatCurrency(a.amount)} ({a.note || 'S/N'})</span><button onClick={() => onDeleteAdvance(a.id)} className="text-red-500"><Trash2 className="w-4 h-4" /></button></div>)}</div>
+          <div className="space-y-1.5">{advances.map(a => <div key={a.id} className="flex justify-between items-center px-4 py-2.5 bg-gray-50 rounded-xl text-xs border border-gray-50 animate-fade-in"><span className="font-bold text-gray-700">{formatCurrency(a.amount)} <span className="text-[9px] font-normal text-gray-400 italic ml-2">{a.note || 'Sin nota'}</span></span><button onClick={() => onDeleteAdvance(a.id)} className="text-red-300 hover:text-red-500 transition-colors"><Trash2 className="w-4 h-4" /></button></div>)}</div>
         </div>
       </section>
 
       <section className="p-4 flex flex-col gap-3">
         <div className="flex gap-2">
-           <button onClick={() => { if(confirm('¿Borrar todo?')) { localStorage.clear(); window.location.reload(); } }} className="flex-1 bg-red-50 text-red-600 py-4 rounded-xl font-bold text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-all">
-             <AlertCircle className="w-3 h-3" /> REINICIAR APP
+           <button onClick={() => { if(confirm('¿BORRAR TODO? No hay marcha atrás.')) { localStorage.clear(); window.location.reload(); } }} className="flex-1 bg-red-50 text-red-600 py-4 rounded-xl font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all border border-red-100/50">
+             <AlertCircle className="w-3 h-3" /> Reiniciar App
            </button>
-           <button onClick={() => { const data = localStorage.getItem('llavero_data'); if(data) { const blob = new Blob([data], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'backup_registro_laboral.json'; a.click(); } }} className="flex-1 bg-blue-50 text-blue-600 py-4 rounded-xl font-bold text-[10px] flex items-center justify-center gap-2 active:scale-95 transition-all">
-             <Download className="w-3 h-3" /> BACKUP
+           <button onClick={() => { const data = localStorage.getItem('llavero_data'); if(data) { const blob = new Blob([data], {type: 'application/json'}); const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'backup_registro_laboral.json'; a.click(); } }} className="flex-1 bg-blue-50 text-blue-600 py-4 rounded-xl font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 active:scale-95 transition-all border border-blue-100/50">
+             <Download className="w-3 h-3" /> Exportar Backup
            </button>
         </div>
-        <div className="text-center space-y-1 opacity-40 py-4">
-           <p className="text-[8px] text-gray-600 font-black tracking-widest uppercase italic">Registro laboral v1.7 • Uruguay Edition</p>
-           <p className="text-[7px] text-blue-600 font-black tracking-widest uppercase italic">Developed by Nexa Studio</p>
+        <div className="text-center space-y-1 opacity-30 py-6 border-t border-gray-100 mt-4">
+           <p className="text-[8px] text-gray-600 font-black tracking-[0.2em] uppercase italic">Registro laboral v2.0 • Pro Edition</p>
+           <p className="text-[7px] text-blue-600 font-black tracking-widest uppercase italic">Design & Dev by Nexa Studio</p>
         </div>
       </section>
-
-      <button 
-        onClick={installApp}
-        className="fixed bottom-24 right-4 bg-gray-900 text-white p-3 rounded-2xl shadow-2xl flex items-center gap-2 active:scale-95 transition-all border border-white/10 z-[60]"
-      >
-        <Smartphone className="w-4 h-4 text-blue-400" />
-        <span className="text-[10px] font-black uppercase tracking-tighter">Descargar App</span>
-      </button>
     </div>
   );
 };
@@ -701,29 +666,29 @@ const App: React.FC = () => {
   if (!settings.onboardingComplete) return <Onboarding onComplete={(n) => setSettings(s => ({ ...s, workerName: n, onboardingComplete: true }))} />;
 
   return (
-    <div className="min-h-screen pb-24 bg-gray-50 flex flex-col selection:bg-blue-100 selection:text-blue-900">
-      <header className="bg-white/80 backdrop-blur-md sticky top-0 z-50 border-b border-gray-100 px-4 py-3">
+    <div className="min-h-screen pb-24 bg-gray-50 flex flex-col selection:bg-blue-100 selection:text-blue-900 font-inter">
+      <header className="bg-white/90 backdrop-blur-xl sticky top-0 z-50 border-b border-gray-100 px-5 py-3">
         <div className="max-w-xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-2">
-            <div className="bg-blue-600 p-1.5 rounded-lg text-white shadow-sm"><ShieldCheck className="w-4 h-4" /></div>
-            <h1 className="text-lg font-black italic tracking-tighter text-gray-800 uppercase">Registro laboral</h1>
+            <div className="bg-blue-600 p-1.5 rounded-xl text-white shadow-lg shadow-blue-100"><ShieldCheck className="w-4 h-4" /></div>
+            <h1 className="text-lg font-black italic tracking-tighter text-gray-800 uppercase leading-none">Registro laboral</h1>
           </div>
           <div className="text-right">
-            <p className="text-[8px] font-bold text-gray-400 uppercase tracking-tight leading-none mb-0.5">Trabajador/a</p>
-            <p className="text-sm font-black text-blue-600 max-w-[120px] truncate leading-none">{settings.workerName}</p>
+            <p className="text-[7px] font-black text-gray-400 uppercase tracking-widest leading-none mb-1 italic">Trabajador/a</p>
+            <p className="text-xs font-black text-blue-600 max-w-[120px] truncate leading-none uppercase tracking-tighter">{settings.workerName}</p>
           </div>
         </div>
       </header>
       
-      <main className="flex-1 max-w-xl mx-auto w-full px-4 py-5">
+      <main className="flex-1 max-w-xl mx-auto w-full px-5 py-6">
         {tab === 'dash' && <Dashboard workDays={days} settings={settings} advances={advs} onAction={(d) => setDays(p => { const ex = p.find(old => new Date(old.date).toDateString() === new Date(d.date).toDateString()); return ex ? p.map(o => o.id === ex.id ? d : o) : [d, ...p]; })} />}
         {tab === 'hist' && <History workDays={days} setWorkDays={setDays} settings={settings} />}
         {tab === 'sett' && <SettingsComp settings={settings} setSettings={setSettings} advances={advs} onAddAdvance={(a) => setAdvs(p => [...p, a])} onDeleteAdvance={(id) => setAdvs(p => p.filter(a => a.id !== id))} workDays={days} setWorkDays={setDays} />}
       </main>
 
-      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur-lg px-8 py-3.5 rounded-full flex gap-10 items-center z-50 shadow-xl border border-white/5">
-        <NavBtn act={tab === 'dash'} onClick={() => setTab('dash')} icon={<Clock />} lbl="Registro" />
-        <NavBtn act={tab === 'hist'} onClick={() => setTab('hist')} icon={<HistoryIcon />} lbl="Historial" />
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-900/95 backdrop-blur-2xl px-10 py-4 rounded-full flex gap-12 items-center z-50 shadow-2xl border border-white/10">
+        <NavBtn act={tab === 'dash'} onClick={() => setTab('dash')} icon={<Clock />} lbl="Inicio" />
+        <NavBtn act={tab === 'hist'} onClick={() => setTab('hist')} icon={<HistoryIcon />} lbl="Libreta" />
         <NavBtn act={tab === 'sett'} onClick={() => setTab('sett')} icon={<SettingsIcon />} lbl="Ajustes" />
       </nav>
     </div>
@@ -731,9 +696,9 @@ const App: React.FC = () => {
 };
 
 const NavBtn = ({ act, onClick, icon, lbl }: any) => (
-  <button onClick={onClick} className={`flex flex-col items-center gap-0.5 transition-all ${act ? 'text-blue-400 scale-105' : 'text-gray-400 hover:text-white'}`}>
+  <button onClick={onClick} className={`flex flex-col items-center gap-1 transition-all duration-300 ${act ? 'text-blue-400 scale-110 drop-shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'text-gray-500 hover:text-white'}`}>
     {React.cloneElement(icon, { className: 'w-5 h-5' })}
-    <span className="text-[8px] font-black uppercase tracking-widest">{lbl}</span>
+    <span className="text-[7px] font-black uppercase tracking-[0.2em]">{lbl}</span>
   </button>
 );
 
