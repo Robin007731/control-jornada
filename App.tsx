@@ -6,7 +6,8 @@ import {
   Settings as SettingsIcon, 
   FileText, 
   Undo,
-  ShieldCheck
+  ShieldCheck,
+  TrendingUp
 } from 'lucide-react';
 import { WorkDay, UserSettings, Advance } from './types';
 import { DEFAULT_SALARY } from './constants';
@@ -38,6 +39,7 @@ const App: React.FC = () => {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e);
+      console.log('PWA Install prompt saved');
     };
     window.addEventListener('beforeinstallprompt', handler);
     return () => window.removeEventListener('beforeinstallprompt', handler);
@@ -45,7 +47,7 @@ const App: React.FC = () => {
 
   // Persistence
   useEffect(() => {
-    const savedData = localStorage.getItem('llavero_data');
+    const savedData = localStorage.getItem('llavpodes_data');
     if (savedData) {
       try {
         const parsed = JSON.parse(savedData);
@@ -59,7 +61,7 @@ const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    localStorage.setItem('llavero_data', JSON.stringify({ workDays, advances, settings }));
+    localStorage.setItem('llavpodes_data', JSON.stringify({ workDays, advances, settings }));
   }, [workDays, advances, settings]);
 
   const handleAction = useCallback((day: WorkDay) => {
@@ -93,29 +95,37 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen pb-24 bg-gray-50 flex flex-col">
-      <header className="bg-blue-600 text-white p-4 shadow-lg sticky top-0 z-50">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <h1 className="text-xl font-bold flex items-center gap-2">
-            <ShieldCheck className="w-6 h-6" />
-            Registro laboral
-          </h1>
+    <div className="min-h-screen pb-24 bg-slate-50 flex flex-col font-sans selection:bg-blue-100">
+      <header className="bg-slate-900 text-white p-4 shadow-xl sticky top-0 z-50">
+        <div className="max-w-xl mx-auto flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <div className="bg-blue-600 p-1.5 rounded-lg shadow-lg">
+              <ShieldCheck className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="text-lg font-black tracking-tighter uppercase italic leading-none">Llavpodes</h1>
+              <p className="text-[8px] font-bold text-blue-400 uppercase tracking-widest">Registro Laboral</p>
+            </div>
+          </div>
           <div className="flex items-center gap-4">
             {lastAction && (
               <button 
                 onClick={handleUndo}
-                className="bg-white/20 p-2 rounded-full hover:bg-white/30 transition-colors"
-                title="Deshacer última acción"
+                className="bg-white/10 p-2 rounded-xl hover:bg-white/20 transition-all active:scale-90"
+                title="Deshacer"
               >
                 <Undo className="w-5 h-5" />
               </button>
             )}
-            <span className="text-sm font-medium hidden sm:inline">{settings.workerName}</span>
+            <div className="text-right">
+              <p className="text-[7px] text-slate-400 font-black uppercase leading-none mb-1">Usuario</p>
+              <p className="text-[10px] font-black uppercase tracking-tighter truncate max-w-[80px]">{settings.workerName}</p>
+            </div>
           </div>
         </div>
       </header>
 
-      <main className="flex-1 max-w-4xl mx-auto w-full p-4 space-y-6">
+      <main className="flex-1 max-w-xl mx-auto w-full p-4 space-y-6">
         {activeTab === 'dashboard' && (
           <Dashboard 
             workDays={workDays} 
@@ -152,7 +162,7 @@ const App: React.FC = () => {
         )}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 px-6 py-2 flex justify-between items-center z-50">
+      <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-xl px-8 py-3 rounded-full flex gap-10 items-center z-50 shadow-2xl border border-white/10">
         <NavButton 
           active={activeTab === 'dashboard'} 
           onClick={() => setActiveTab('dashboard')} 
@@ -163,7 +173,7 @@ const App: React.FC = () => {
           active={activeTab === 'history'} 
           onClick={() => setActiveTab('history')} 
           icon={<HistoryIcon />} 
-          label="Historial" 
+          label="Libreta" 
         />
         <NavButton 
           active={activeTab === 'receipt'} 
@@ -185,11 +195,10 @@ const App: React.FC = () => {
 const NavButton: React.FC<{active: boolean, onClick: () => void, icon: React.ReactNode, label: string}> = ({ active, onClick, icon, label }) => (
   <button 
     onClick={onClick}
-    className={`flex flex-col items-center gap-1 p-2 rounded-xl transition-all ${active ? 'text-blue-600 bg-blue-50' : 'text-gray-500 hover:text-blue-400'}`}
+    className={`flex flex-col items-center gap-1 transition-all ${active ? 'text-blue-400 scale-110' : 'text-slate-500 hover:text-slate-300'}`}
   >
-    {/* Corrected: Added 'any' type to React.ReactElement to allow cloning with className */}
-    {React.cloneElement(icon as React.ReactElement<any>, { className: 'w-6 h-6' })}
-    <span className="text-xs font-semibold">{label}</span>
+    {React.cloneElement(icon as React.ReactElement<any>, { className: 'w-5 h-5' })}
+    <span className="text-[7px] font-black uppercase tracking-widest">{label}</span>
   </button>
 );
 

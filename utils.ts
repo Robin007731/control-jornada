@@ -59,17 +59,21 @@ export const getSummary = (workDays: WorkDay[], settings: UserSettings, advances
   let totalGross = 0;
   let totalNormalHours = 0;
   let totalExtraHours = 0;
+  let totalAllowances = 0; // TRACK TOTAL ALLOWANCES
 
   workDays.forEach(day => {
     const { gross, normalHours, extraHours } = getDayFinancials(day, hourlyRate);
     totalGross += gross;
     totalNormalHours += normalHours;
     totalExtraHours += extraHours;
+    // Add allowances from each workday
+    totalAllowances += (day.allowance || 0);
   });
 
   const bpsDiscount = totalGross * BPS_RATE;
   const totalAdvances = advances.reduce((acc, curr) => acc + curr.amount, 0);
-  const netPay = totalGross - bpsDiscount - totalAdvances;
+  // Net pay includes allowances (viáticos) and subtracts advances
+  const netPay = (totalGross - bpsDiscount - totalAdvances) + totalAllowances;
 
   return {
     hourlyRate,
@@ -78,12 +82,13 @@ export const getSummary = (workDays: WorkDay[], settings: UserSettings, advances
     totalExtraHours,
     bpsDiscount,
     totalAdvances,
+    totalAllowances, // RETURN TOTAL ALLOWANCES
     netPay
   };
 };
 
 export const generateCSV = (workDays: WorkDay[]) => {
-  const headers = ['Fecha', 'Entrada', 'Salida', 'Horas Totales', 'Horas Extra'];
+  const headers = ['Fecha', 'Entrada', 'Salida', 'Horas Totales', 'Horas Extra', 'Viáticos'];
   const rows = workDays.map(day => {
     const dur = calculateDuration(day);
     const extra = Math.max(0, dur - 8);
@@ -92,7 +97,8 @@ export const generateCSV = (workDays: WorkDay[]) => {
       day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
       day.exitTime ? new Date(day.exitTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
       dur.toFixed(2),
-      extra.toFixed(2)
+      extra.toFixed(2),
+      (day.allowance || 0).toString()
     ];
   });
 

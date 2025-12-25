@@ -11,7 +11,8 @@
   "dependencies": {
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "lucide-react": "0.460.0"
+    "lucide-react": "0.460.0",
+    "html2canvas": "1.4.1"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

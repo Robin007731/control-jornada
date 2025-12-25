@@ -26,7 +26,8 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
         date: new Date().toISOString(),
         isHalfDay: false,
         isManual: false,
-        status: 'incomplete'
+        status: 'incomplete',
+        allowance: 0
       });
     }
   }, [workDays]);
@@ -60,7 +61,8 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
       entryTime: currentDay.entryTime || now,
       exitTime: now,
       isHalfDay: true,
-      status: 'complete'
+      status: 'complete',
+      allowance: currentDay.allowance || 0
     };
     onAction(updated);
   };

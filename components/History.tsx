@@ -47,7 +47,8 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
         date: today,
         isManual: true,
         status: 'complete',
-        isHalfDay: false
+        isHalfDay: false,
+        allowance: 0
       };
 
       // Aplicar preajustes
@@ -191,7 +192,8 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
                     date: date.toISOString().split('T')[0],
                     status: 'complete',
                     isHalfDay: false,
-                    isManual: true
+                    isManual: true,
+                    allowance: 0
                   });
                   setIsModalOpen(true);
                 }}
@@ -243,6 +245,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
                   <div className="text-lg font-bold text-blue-600">{dur.toFixed(1)} <span className="text-xs">h</span></div>
                   {extra > 0 && <div className="text-xs font-bold text-red-500">+{extra.toFixed(1)} extra</div>}
                   {day.isHalfDay && <div className="text-[9px] font-black text-green-600 uppercase">Medio Turno</div>}
+                  {day.allowance && day.allowance > 0 ? <div className="text-[9px] font-black text-emerald-600 uppercase">Viáticos: ${day.allowance}</div> : null}
                 </div>
               </div>
 
@@ -341,15 +344,28 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
             </div>
           </div>
 
-          <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-             <input 
-                type="checkbox" 
-                id="halfday"
-                className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                checked={editingDay?.isHalfDay || false}
-                onChange={(e) => setEditingDay({ ...editingDay, isHalfDay: e.target.checked })}
-             />
-             <label htmlFor="halfday" className="text-sm font-medium text-gray-700">Marcar como medio turno (sin descanso)</label>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+               <input 
+                  type="checkbox" 
+                  id="halfday"
+                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                  checked={editingDay?.isHalfDay || false}
+                  onChange={(e) => setEditingDay({ ...editingDay, isHalfDay: e.target.checked })}
+               />
+               <label htmlFor="halfday" className="text-sm font-medium text-gray-700">Marcar como medio turno (sin descanso)</label>
+            </div>
+
+            <div className="bg-gray-50 p-3 rounded-xl">
+              <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Viáticos ($)</label>
+              <input 
+                type="number" 
+                className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800 font-bold"
+                placeholder="0"
+                value={editingDay?.allowance || ''}
+                onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })}
+              />
+            </div>
           </div>
 
           <button 

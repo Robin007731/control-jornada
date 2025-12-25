@@ -16,6 +16,8 @@ export interface WorkDay {
   isHalfDay: boolean;
   isManual: boolean;
   status: 'incomplete' | 'complete';
+  // Allowance field for extra earnings like viáticos
+  allowance?: number;
 }
 
 export interface Advance {
