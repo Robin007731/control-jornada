@@ -301,6 +301,14 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
     setLoading(true);
     setPreview(null);
     try {
+      // Intento de verificar/abrir selector de clave si existe el helper de AI Studio
+      if (typeof (window as any).aistudio?.hasSelectedApiKey === 'function') {
+        const hasKey = await (window as any).aistudio.hasSelectedApiKey();
+        if (!hasKey) {
+          await (window as any).aistudio.openSelectKey();
+        }
+      }
+
       const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const today = new Date();
       const todayFull = today.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
@@ -309,17 +317,15 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
         Eres Nexa AI, la inteligencia de gestión de 'Registro laboral'. 
         CONTEXTO TEMPORAL: Hoy es ${todayFull}.
         
-        MISION: Transformar órdenes de voz o texto en objetos JSON de jornadas laborales.
+        MISION: Transformar órdenes de voz o texto en objetos JSON de jornadas laborales precisas.
         
         REGLAS DE PROCESAMIENTO ESTRICTO:
-        1. PRECISION HORARIA: Si el usuario pide "14:00", usa exactamente "14:00" en el campo ISO "entryTime" o "exitTime". NO conviertas zonas horarias.
-        2. RANGOS: "Desde [Fecha] hasta hoy" implica crear una entrada para cada día del rango.
-        3. EXCEPCIONES: "Librando los lunes" significa filtrar los lunes del array de resultados.
-        4. TURNOS ESPECIALES: Si menciona "medio turno" o "media jornada", pon isHalfDay: true.
+        1. PRECISION HORARIA (CRÍTICO): Si el usuario pide "14:00 a 22:00", usa exactamente "14:00" para entryTime y "22:00" para exitTime en la fecha local. 
+           NO apliques desfases de zona horaria (ej: no restes 3 horas). 
+        2. RANGOS: "Desde [Fecha] hasta hoy" implica crear una entrada para cada día del rango (inclusive).
+        3. EXCEPCIONES: Filtra los días según pida el usuario (ej: "sin los lunes").
+        4. TURNOS ESPECIALES: Si menciona "medio turno", pon isHalfDay: true.
         5. FORMATO ISO: Genera strings de tiempo en formato "YYYY-MM-DDTHH:mm:00".
-
-        ORDEN ESPECIFICA DEL USUARIO A ENTENDER:
-        "agregame del 1/12/2025 de 14:00 hasta las 22:00 hasta el dia de hoy librando todos los lunes y haciendo el medio dia los martes de 14:0 a 18:00"
 
         ESTRUCTURA DE SALIDA (JSON):
         {
@@ -339,7 +345,7 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
       `;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-3-flash-preview',
         contents: prompt,
         config: {
           systemInstruction,
@@ -375,9 +381,16 @@ const AIAssistant: React.FC<{ onApply: (toAdd: WorkDay[], toDelete: string[]) =>
 
       const data = JSON.parse(response.text || '{"toAdd": [], "toDeleteDates": []}');
       setPreview(data);
-    } catch (error) {
-      console.error(error);
-      alert('Error: Asegúrate de que la API_KEY esté bien configurada en Vercel.');
+    } catch (error: any) {
+      console.error("AI Error:", error);
+      if (error.message?.includes("Requested entity was not found")) {
+        alert("Error: El modelo no está disponible. Reintentando con configuración de clave...");
+        if (typeof (window as any).aistudio?.openSelectKey === 'function') {
+          await (window as any).aistudio.openSelectKey();
+        }
+      } else {
+        alert('Error en la IA. Verifica que tu API_KEY esté bien configurada en el panel de Vercel.');
+      }
     } finally {
       setLoading(false);
     }
@@ -547,7 +560,7 @@ const History: React.FC<{ workDays: WorkDay[]; setWorkDays: React.Dispatch<React
         )}
       </div>
 
-      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title="Editar Jornada">
+      <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={editingDay?.id && workDays.some(d => d.id === editingDay.id) ? "Editar Registro" : "Nuevo Registro Manual"}>
         <form onSubmit={(e) => { e.preventDefault(); setWorkDays(p => p.some(d => d.id === editingDay!.id) ? p.map(d => d.id === editingDay!.id ? editingDay as WorkDay : d) : [editingDay as WorkDay, ...p]); setIsModalOpen(false); }} className="space-y-4">
           <div><label className="text-[9px] font-black text-gray-400 uppercase mb-1 block">Fecha</label><input type="date" required className="w-full px-4 py-3 bg-gray-50 rounded-xl font-bold text-sm" value={editingDay?.date?.split('T')[0] || ''} onChange={(e) => setEditingDay({ ...editingDay, date: e.target.value })} /></div>
           <div className="grid grid-cols-2 gap-3">
