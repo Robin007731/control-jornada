@@ -144,7 +144,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
         4. Si no puedes realizar una acción, explica por qué brevemente.`;
 
       const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-flash-latest',
         contents: [{ role: 'user', parts: [{ text: finalInput }] }],
         config: {
           systemInstruction,
@@ -230,7 +230,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                   <h3 className="font-black uppercase tracking-tight italic text-base">Llavpodes Brain</h3>
                   <div className="flex items-center gap-1.5">
                     <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></div>
-                    <p className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Estabilidad Mejorada</p>
+                    <p className="text-[7px] font-black text-blue-400 uppercase tracking-widest">Flash Engine</p>
                   </div>
                 </div>
               </div>
@@ -254,7 +254,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                     </div>
                     <div className="space-y-1">
                       <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest">Núcleo listo</h4>
-                      <p className="text-[10px] font-medium text-slate-400 max-w-[200px] mx-auto leading-relaxed italic">Sistema de gestión inteligente v4.2</p>
+                      <p className="text-[10px] font-medium text-slate-400 max-w-[200px] mx-auto leading-relaxed italic">Sistema de gestión inteligente v1.5 Flash</p>
                     </div>
                   </div>
                   
@@ -334,7 +334,7 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
                     <span className="text-[7px] font-black uppercase tracking-widest">Agenda</span>
                   </div>
                 </div>
-                <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest italic">Llavpodes PRO v4.2</p>
+                <p className="text-[7px] font-black text-slate-300 uppercase tracking-widest italic">Llavpodes PRO v1.5 Flash</p>
               </div>
             </div>
           </div>
