@@ -38,7 +38,6 @@ const App: React.FC = () => {
     const handler = (e: any) => {
       e.preventDefault();
       setDeferredPrompt(e);
-      console.log('PWA Install prompt saved');
     };
     window.addEventListener('beforeinstallprompt' as any, handler);
     return () => window.removeEventListener('beforeinstallprompt' as any, handler);
@@ -97,13 +96,13 @@ const App: React.FC = () => {
     <div className="min-h-screen pb-24 bg-slate-50 flex flex-col font-sans selection:bg-blue-100">
       <header className="bg-slate-900 text-white p-4 shadow-xl sticky top-0 z-50">
         <div className="max-w-xl mx-auto flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <div className="bg-blue-600 p-1.5 rounded-lg shadow-lg">
+          <div className="flex items-center gap-3">
+            <div className="bg-blue-600 p-2 rounded-xl shadow-lg">
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-black tracking-tighter uppercase italic leading-none">Llavpodes</h1>
-              <p className="text-[8px] font-bold text-blue-400 uppercase tracking-widest">Registro Laboral</p>
+              <h1 className="text-base font-black tracking-tight uppercase leading-none">Registro Laboral</h1>
+              <p className="text-[7px] font-bold text-blue-400 uppercase tracking-widest mt-1">Tu tiempo y tus ganancias, bajo tu control.</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -116,7 +115,7 @@ const App: React.FC = () => {
                 <Undo className="w-5 h-5" />
               </button>
             )}
-            <div className="text-right">
+            <div className="text-right hidden sm:block">
               <p className="text-[7px] text-slate-400 font-black uppercase leading-none mb-1">Usuario</p>
               <p className="text-[10px] font-black uppercase tracking-tighter truncate max-w-[80px]">{settings.workerName}</p>
             </div>
