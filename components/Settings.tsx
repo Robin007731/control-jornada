@@ -2,8 +2,13 @@
 import React, { useState, useRef } from 'react';
 import { UserSettings, Advance, WorkDay } from '../types';
 import { formatCurrency } from '../utils';
-import { Lock, Plus, Trash2, User, Wallet, Shield, AlertCircle, RefreshCw, Download, Upload, Check, Smartphone, X, Apple, ChevronRight, DownloadCloud } from 'lucide-react';
+import { 
+  Lock, Plus, Trash2, User, Wallet, Shield, AlertCircle, RefreshCw, 
+  Download, Upload, Check, Smartphone, X, Apple, ChevronRight, 
+  DownloadCloud, Video, PlayCircle, Loader2, Sparkles, Film, AlertTriangle, Database
+} from 'lucide-react';
 import Modal from './Modal';
+import { GoogleGenAI } from "@google/genai";
 
 interface SettingsProps {
   settings: UserSettings;
@@ -33,6 +38,10 @@ const Settings: React.FC<SettingsProps> = ({
   const [advAmount, setAdvAmount] = useState('');
   const [advNote, setAdvNote] = useState('');
   const [showInstallHelp, setShowInstallHelp] = useState(false);
+  const [confirmDeleteAllOpen, setConfirmDeleteAllOpen] = useState(false);
+  const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
+  const [pendingRestoreData, setPendingRestoreData] = useState<any>(null);
+  
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAuth = (e: React.FormEvent) => {
@@ -49,7 +58,6 @@ const Settings: React.FC<SettingsProps> = ({
     if (installPrompt) {
       installPrompt.prompt();
       const { outcome } = await installPrompt.userChoice;
-      console.log(`User response to install: ${outcome}`);
     } else {
       setShowInstallHelp(true);
     }
@@ -92,20 +100,30 @@ const Settings: React.FC<SettingsProps> = ({
       try {
         const json = JSON.parse(event.target?.result as string);
         if (json.workDays && json.settings) {
-          if (confirm('¿Restaurar estos datos? Se sobrescribirá todo.')) {
-            localStorage.setItem('llavpodes_data', JSON.stringify(json));
-            window.location.reload();
-          }
+          setPendingRestoreData(json);
+          setConfirmRestoreOpen(true);
         }
       } catch (err) { alert('Error al leer el archivo.'); }
     };
     reader.readAsText(file);
   };
 
+  const performRestore = () => {
+    if (pendingRestoreData) {
+      localStorage.setItem('llavpodes_data', JSON.stringify(pendingRestoreData));
+      window.location.reload();
+    }
+  };
+
+  const performDeleteAll = () => {
+    localStorage.removeItem('llavpodes_data');
+    window.location.reload();
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-6">
-        <div className="bg-white p-8 rounded-[40px] shadow-2xl w-full max-w-md border border-gray-100 text-center space-y-6">
+        <div className="bg-white p-8 rounded-[40px] shadow-2xl w-full max-w-md border border-gray-100 text-center space-y-6 animate-slide-up">
           <div className="bg-slate-900 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto shadow-xl">
             <Lock className="w-8 h-8 text-white" />
           </div>
@@ -141,33 +159,6 @@ const Settings: React.FC<SettingsProps> = ({
           <button onClick={() => setIsAuthenticated(false)} className="bg-slate-100 p-2 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"><Lock className="w-5 h-5" /></button>
         </div>
       </div>
-
-      {/* Bloque APK / PWA */}
-      <section className="bg-slate-900 p-6 rounded-[32px] shadow-2xl text-white relative overflow-hidden group">
-        <div className="absolute top-0 right-0 p-4 opacity-5">
-          <Smartphone className="w-32 h-32 rotate-12" />
-        </div>
-        <div className="relative z-10 space-y-6">
-          <div className="flex items-center gap-4">
-            <div className="bg-blue-600 p-3 rounded-2xl shadow-lg shadow-blue-500/20">
-              <DownloadCloud className="w-6 h-6" />
-            </div>
-            <div>
-              <h3 className="font-black text-lg uppercase tracking-tight italic">Versión Standalone</h3>
-              <p className="text-slate-400 text-[8px] font-bold uppercase tracking-[0.2em]">Experiencia APK • Acceso Directo</p>
-            </div>
-          </div>
-          <button 
-            onClick={handleInstallApp}
-            className="w-full bg-white text-slate-900 py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-blue-50"
-          >
-            {installPrompt ? 'Instalar Ahora' : 'Descargar Aplicación'}
-          </button>
-          <p className="text-[9px] text-center text-slate-500 font-black uppercase tracking-widest italic italic">
-            Usa Llavpodes como una app real sin barra de navegador
-          </p>
-        </div>
-      </section>
 
       <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
         <div className="flex items-center gap-2 mb-2"><User className="text-blue-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Perfil Laboral</h3></div>
@@ -219,14 +210,67 @@ const Settings: React.FC<SettingsProps> = ({
       </section>
 
       <section className="p-4 mb-10">
-        <button onClick={() => { if (confirm('¿ESTÁS SEGURO? Se borrarán todos tus registros permanentemente.')) { localStorage.removeItem('llavpodes_data'); window.location.reload(); } }} className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-red-100/50 hover:bg-red-100 transition-all flex items-center justify-center gap-2">
+        <button 
+          onClick={() => setConfirmDeleteAllOpen(true)} 
+          className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-red-100/50 hover:bg-red-100 transition-all flex items-center justify-center gap-2"
+        >
           <Trash2 className="w-4 h-4" /> Borrar toda la información
         </button>
-        <div className="text-center mt-8 opacity-20">
-          <p className="text-[7px] font-black uppercase tracking-[0.5em] italic">Llavpodes Professional v2.5.0</p>
-          <p className="text-[6px] font-black uppercase tracking-widest mt-1">Nexa Studio • Uruguay</p>
-        </div>
       </section>
+
+      {/* MODAL CONFIRMACIÓN BORRAR TODO */}
+      <Modal isOpen={confirmDeleteAllOpen} onClose={() => setConfirmDeleteAllOpen(false)} title="Limpieza Total">
+        <div className="space-y-6 text-center">
+          <div className="bg-red-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-red-600 shadow-inner">
+            <AlertTriangle className="w-10 h-10" />
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿ESTÁS SEGURO?</h4>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Esta acción borrará todos tus registros, adelantos y configuraciones permanentemente.</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={performDeleteAll}
+              className="w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all"
+            >
+              Sí, borrar todo definitivamente
+            </button>
+            <button 
+              onClick={() => setConfirmDeleteAllOpen(false)}
+              className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* MODAL CONFIRMACIÓN RESTAURAR */}
+      <Modal isOpen={confirmRestoreOpen} onClose={() => setConfirmRestoreOpen(false)} title="Restaurar Copia">
+        <div className="space-y-6 text-center">
+          <div className="bg-blue-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
+            <Database className="w-10 h-10" />
+          </div>
+          <div className="space-y-2">
+            <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿Sobrescribir datos?</h4>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Al restaurar esta copia de seguridad, perderás los datos actuales que no estén en el archivo.</p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <button 
+              onClick={performRestore}
+              className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all"
+            >
+              Sí, restaurar ahora
+            </button>
+            <button 
+              onClick={() => setConfirmRestoreOpen(false)}
+              className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
+            >
+              Cancelar
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       <Modal isOpen={showInstallHelp} onClose={() => setShowInstallHelp(false)} title="Instalar Llavpodes">
         <div className="space-y-6 text-slate-800">
@@ -238,9 +282,8 @@ const Settings: React.FC<SettingsProps> = ({
                 <h4 className="font-black text-xs uppercase">En iOS (iPhone/iPad)</h4>
              </div>
              <ol className="text-xs font-bold text-slate-500 space-y-2">
-                <li>1. Toca el botón <span className="bg-white px-2 py-0.5 rounded border">Compartir</span> (cuadrado con flecha).</li>
-                <li>2. Desliza y selecciona <span className="text-blue-600">"Añadir a pantalla de inicio"</span>.</li>
-                <li>3. Pulsa "Añadir". ¡Listo!</li>
+                <li>1. Toca el botón <span className="bg-white px-2 py-0.5 rounded border">Compartir</span>.</li>
+                <li>2. Selecciona <span className="text-blue-600">"Añadir a pantalla de inicio"</span>.</li>
              </ol>
           </div>
 
@@ -250,9 +293,8 @@ const Settings: React.FC<SettingsProps> = ({
                 <h4 className="font-black text-xs uppercase text-blue-600">En Android / Chrome</h4>
              </div>
              <ol className="text-xs font-bold text-blue-600/70 space-y-2">
-                <li>1. Toca los tres puntos <span className="font-black">⋮</span> del navegador.</li>
+                <li>1. Toca los tres puntos <span className="font-black">⋮</span>.</li>
                 <li>2. Selecciona <span className="font-black">"Instalar aplicación"</span>.</li>
-                <li>3. Confirma la instalación y aparecerá tu icono.</li>
              </ol>
           </div>
 
