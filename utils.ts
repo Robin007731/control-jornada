@@ -18,32 +18,50 @@ export const getLocalDateString = (date: Date = new Date()): string => {
   return adjustedDate.toISOString().split('T')[0];
 };
 
+/**
+ * Calcula la duración neta de la jornada (horas trabajadas - descanso no remunerado)
+ */
 export const calculateDuration = (day: WorkDay): number => {
-  if (day.isDayOff) return 0;
+  // Fix: Property 'isDayOff' does not exist on type 'WorkDay'. Use day.type !== 'work' instead.
+  if (day.type !== 'work') return 0;
   if (!day.entryTime || !day.exitTime) return 0;
 
   const start = new Date(day.entryTime).getTime();
   const end = new Date(day.exitTime).getTime();
+  
+  // Tiempo total transcurrido
   let durationMs = end - start;
 
+  // Restar el descanso (No se paga)
   if (day.breakStartTime && day.breakEndTime) {
     const breakStart = new Date(day.breakStartTime).getTime();
     const breakEnd = new Date(day.breakEndTime).getTime();
-    durationMs -= (breakEnd - breakStart);
+    const breakDuration = breakEnd - breakStart;
+    
+    // Solo restamos si el descanso tiene sentido cronológico
+    if (breakDuration > 0) {
+      durationMs -= breakDuration;
+    }
   }
 
-  return Math.max(0, durationMs / (1000 * 60 * 60)); // Horas
+  // Retornar en horas con decimales
+  const hours = durationMs / (1000 * 60 * 60);
+  return Math.max(0, hours);
 };
 
 export const getDayFinancials = (day: WorkDay, hourlyRate: number) => {
-  if (day.isDayOff) {
+  // Fix: Property 'isDayOff' does not exist on type 'WorkDay'. Use day.type !== 'work' instead.
+  if (day.type !== 'work') {
     return { duration: 0, normalHours: 0, extraHours: 0, gross: 0 };
   }
+  
   const duration = calculateDuration(day);
   const normalHours = Math.min(NORMAL_JORNADA_HOURS, duration);
   const extraHours = Math.max(0, duration - NORMAL_JORNADA_HOURS);
 
+  // El salario bruto solo considera las horas normales y las extras multiplicadas
   const gross = (normalHours * hourlyRate) + (extraHours * hourlyRate * EXTRA_HOUR_MULTIPLIER);
+  
   return {
     duration,
     normalHours,
@@ -67,7 +85,8 @@ export const isSunday = (date: Date | string) => {
 };
 
 export const getWorkDayStatus = (day: WorkDay) => {
-  if (day.isDayOff) return 'complete';
+  // Fix: Property 'isDayOff' does not exist on type 'WorkDay'. Use day.type !== 'work' instead.
+  if (day.type !== 'work') return 'complete';
   if (!day.entryTime || !day.exitTime) return 'incomplete';
   return 'complete';
 };
@@ -104,14 +123,17 @@ export const getSummary = (workDays: WorkDay[], settings: UserSettings, advances
 };
 
 export const generateCSV = (workDays: WorkDay[]) => {
-  const headers = ['Fecha', 'Estado', 'Entrada', 'Salida', 'Horas Totales', 'Horas Extra', 'Viáticos'];
+  const headers = ['Fecha', 'Estado', 'Entrada', 'Inicio Descanso', 'Fin Descanso', 'Salida', 'Horas Netas', 'Extras', 'Viáticos'];
   const rows = workDays.map(day => {
     const dur = calculateDuration(day);
     const extra = Math.max(0, dur - 8);
     return [
       day.date,
-      day.isDayOff ? 'LIBRE' : 'TRABAJO',
+      // Fix: Property 'isDayOff' does not exist on type 'WorkDay'. Use day.type !== 'work' to determine 'LIBRE' status.
+      day.type !== 'work' ? 'LIBRE' : 'TRABAJO',
       day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
+      day.breakStartTime ? new Date(day.breakStartTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
+      day.breakEndTime ? new Date(day.breakEndTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
       day.exitTime ? new Date(day.exitTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
       dur.toFixed(2),
       extra.toFixed(2),

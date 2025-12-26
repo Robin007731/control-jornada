@@ -1,8 +1,8 @@
 
 {
-  "short_name": "Llavpodes",
-  "name": "Llavpodes - Registro Laboral",
-  "description": "Tu tiempo y tus ganancias, bajo tu control total.",
+  "short_name": "Reg. Laboral",
+  "name": "Registro Laboral - Control de Jornadas",
+  "description": "Tus jornadas y ganancias bajo tu control total.",
   "icons": [
     {
       "src": "icon.png",

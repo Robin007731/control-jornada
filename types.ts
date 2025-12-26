@@ -6,19 +6,21 @@ export enum RegistrationType {
   EXIT = 'EXIT'
 }
 
+export type DayType = 'work' | 'off' | 'vacation' | 'medical';
+
 export interface WorkDay {
   id: string;
-  date: string; // ISO format
+  date: string; // ISO format YYYY-MM-DD
+  type: DayType;
   entryTime?: string;
   breakStartTime?: string;
   breakEndTime?: string;
   exitTime?: string;
   isHalfDay: boolean;
   isManual: boolean;
-  isDayOff: boolean; // Added for day off support
   status: 'incomplete' | 'complete';
-  // Allowance field for extra earnings like viáticos
   allowance?: number;
+  note?: string;
 }
 
 export interface Advance {
@@ -30,6 +32,7 @@ export interface Advance {
 
 export interface UserSettings {
   workerName: string;
+  workplaceName: string; // Nueva: Nombre de la empresa
   monthlySalary: number;
   passwordHash: string;
   onboardingComplete: boolean;
