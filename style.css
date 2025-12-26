@@ -1,0 +1,43 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+
+body { 
+    font-family: 'Inter', sans-serif; 
+    -webkit-tap-highlight-color: transparent; 
+    overflow-x: hidden;
+    background-color: #f9fafb;
+}
+
+::-webkit-scrollbar {
+    width: 4px;
+}
+::-webkit-scrollbar-track {
+    background: transparent;
+}
+::-webkit-scrollbar-thumb {
+    background: #e2e8f0;
+    border-radius: 10px;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+.animate-fade-in { animation: fadeIn 0.3s ease-out; }
+.animate-slide-up { animation: slideUp 0.4s ease-out; }
+
+/* Para que los botones no se vean raros en iOS */
+button, input {
+    appearance: none;
+    -webkit-appearance: none;
+}
+
+/* Contenedor principal limitado en tablets/PC */
+#root {
+    min-height: 100vh;
+}
+
+@media (min-width: 640px) {
+    .max-w-xl {
+        max-width: 480px; /* Un ancho más elegante para apps tipo mobile */
+    }
+}
