@@ -8,7 +8,6 @@ import {
   DownloadCloud, Video, PlayCircle, Loader2, Sparkles, Film, AlertTriangle, Database
 } from 'lucide-react';
 import Modal from './Modal';
-import { GoogleGenAI } from "@google/genai";
 
 interface SettingsProps {
   settings: UserSettings;
@@ -54,15 +53,6 @@ const Settings: React.FC<SettingsProps> = ({
     }
   };
 
-  const handleInstallApp = async () => {
-    if (installPrompt) {
-      installPrompt.prompt();
-      const { outcome } = await installPrompt.userChoice;
-    } else {
-      setShowInstallHelp(true);
-    }
-  };
-
   const notifySave = () => {
     setSaveStatus('Guardado');
     setTimeout(() => setSaveStatus(null), 2000);
@@ -103,7 +93,7 @@ const Settings: React.FC<SettingsProps> = ({
           setPendingRestoreData(json);
           setConfirmRestoreOpen(true);
         }
-      } catch (err) { alert('Error al leer el archivo.'); }
+      } catch (err) { alert('Archivo inválido'); }
     };
     reader.readAsText(file);
   };
@@ -128,8 +118,8 @@ const Settings: React.FC<SettingsProps> = ({
             <Lock className="w-8 h-8 text-white" />
           </div>
           <div>
-            <h2 className="text-xl font-black uppercase tracking-tight">Acceso Privado</h2>
-            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Introduce tu pin de seguridad</p>
+            <h2 className="text-xl font-black uppercase tracking-tight italic">Acceso Llavpodes</h2>
+            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Ingresa tu código de seguridad</p>
           </div>
           <form onSubmit={handleAuth} className="space-y-4">
             <input 
@@ -141,9 +131,7 @@ const Settings: React.FC<SettingsProps> = ({
               autoFocus
             />
             {error && <p className="text-red-500 text-xs font-bold uppercase">{error}</p>}
-            <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-all">
-              Desbloquear Panel
-            </button>
+            <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-all">Desbloquear</button>
           </form>
         </div>
       </div>
@@ -160,145 +148,65 @@ const Settings: React.FC<SettingsProps> = ({
         </div>
       </div>
 
-      <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
         <div className="flex items-center gap-2 mb-2"><User className="text-blue-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Perfil Laboral</h3></div>
         <div className="space-y-4">
           <div>
             <label className="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block tracking-widest">Nombre del Trabajador/a</label>
-            <input type="text" value={settings.workerName} onChange={(e) => { setSettings(prev => ({ ...prev, workerName: e.target.value })); notifySave(); }} className="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700 transition-all" />
+            <input type="text" value={settings.workerName} onChange={(e) => { setSettings(prev => ({ ...prev, workerName: e.target.value })); notifySave(); }} className="w-full px-4 py-3 rounded-xl bg-slate-50 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all border-none" />
           </div>
           <div>
             <label className="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block tracking-widest">Salario Nominal Mensual ($)</label>
-            <input type="number" value={settings.monthlySalary} onChange={(e) => { setSettings(prev => ({ ...prev, monthlySalary: Number(e.target.value) })); notifySave(); }} className="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-blue-500 font-bold text-slate-700 transition-all" />
+            <input type="number" value={settings.monthlySalary} onChange={(e) => { setSettings(prev => ({ ...prev, monthlySalary: Number(e.target.value) })); notifySave(); }} className="w-full px-4 py-3 rounded-xl bg-slate-50 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all border-none" />
           </div>
         </div>
       </section>
 
-      <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
+      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
         <div className="flex items-center gap-2 mb-2"><Wallet className="text-emerald-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Adelantos</h3></div>
         <div className="flex flex-col sm:flex-row gap-2">
-          <input type="number" placeholder="Monto ($)" className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-emerald-500 font-bold" value={advAmount} onChange={(e) => setAdvAmount(e.target.value)} />
-          <input type="text" placeholder="Nota" className="flex-1 px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-emerald-500 font-bold" value={advNote} onChange={(e) => setAdvNote(e.target.value)} />
+          <input type="number" placeholder="Monto" className="flex-1 px-4 py-3 rounded-xl bg-slate-50 font-bold border-none outline-none" value={advAmount} onChange={(e) => setAdvAmount(e.target.value)} />
+          <input type="text" placeholder="Nota" className="flex-1 px-4 py-3 rounded-xl bg-slate-50 font-bold border-none outline-none" value={advNote} onChange={(e) => setAdvNote(e.target.value)} />
           <button onClick={handleAddAdv} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all">Agregar</button>
         </div>
-        <div className="space-y-2 mt-4 max-h-48 overflow-y-auto pr-2 scrollbar-hide">
-          {advances.map(adv => (
-            <div key={adv.id} className="flex justify-between items-center p-3 bg-slate-50 rounded-xl border border-slate-100 animate-in slide-in-from-right-2">
-              <div><span className="font-black text-slate-700 text-sm">{formatCurrency(adv.amount)}</span>{adv.note && <span className="ml-2 text-[9px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full uppercase font-black italic">{adv.note}</span>}</div>
-              <button onClick={() => onDeleteAdvance(adv.id)} className="text-slate-300 hover:text-red-500 p-2"><Trash2 className="w-4 h-4" /></button>
-            </div>
-          ))}
-        </div>
       </section>
 
-      <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-        <div className="flex items-center gap-2 mb-2"><Shield className="text-purple-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Seguridad</h3></div>
-        <div className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100">
-          <div><p className="font-black text-slate-800 text-xs">Modo Simplificado</p><p className="text-[10px] text-slate-400 font-bold">Sin descansos automáticos</p></div>
-          <button onClick={() => { setSettings(prev => ({ ...prev, simplifiedMode: !prev.simplifiedMode })); notifySave(); }} className={`w-12 h-6 rounded-full transition-all relative ${settings.simplifiedMode ? 'bg-blue-600' : 'bg-slate-300'}`}><div className={`w-4 h-4 bg-white rounded-full absolute top-1 transition-all ${settings.simplifiedMode ? 'left-7' : 'left-1'}`} /></button>
-        </div>
-        <div><label className="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block tracking-widest">Pin de acceso</label><input type="text" value={settings.passwordHash} onChange={(e) => { setSettings(prev => ({ ...prev, passwordHash: e.target.value })); notifySave(); }} className="w-full px-4 py-3 rounded-xl bg-slate-50 border-none outline-none focus:ring-2 focus:ring-purple-500 font-black tracking-[0.4em] text-center" /></div>
-      </section>
-
-      <section className="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-        <div className="flex items-center gap-2 mb-2"><RefreshCw className="text-orange-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Backup</h3></div>
+      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
+        <div className="flex items-center gap-2 mb-2"><RefreshCw className="text-orange-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Backup de Seguridad</h3></div>
         <div className="grid grid-cols-2 gap-3">
-          <button onClick={handleBackup} className="flex items-center justify-center gap-2 bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all"><Download className="w-4 h-4" /> Respaldar</button>
-          <button onClick={() => fileInputRef.current?.click()} className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-blue-100 active:scale-95 transition-all"><Upload className="w-4 h-4" /> Restaurar</button>
+          <button onClick={handleBackup} className="flex items-center justify-center gap-2 bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all"><Download className="w-4 h-4" /> Exportar</button>
+          <button onClick={() => fileInputRef.current?.click()} className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-blue-100 active:scale-95 transition-all"><Upload className="w-4 h-4" /> Importar</button>
           <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".json" />
         </div>
       </section>
 
       <section className="p-4 mb-10">
-        <button 
-          onClick={() => setConfirmDeleteAllOpen(true)} 
-          className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-red-100/50 hover:bg-red-100 transition-all flex items-center justify-center gap-2"
-        >
-          <Trash2 className="w-4 h-4" /> Borrar toda la información
+        <button onClick={() => setConfirmDeleteAllOpen(true)} className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-red-100/50 hover:bg-red-100 transition-all flex items-center justify-center gap-2">
+          <Trash2 className="w-4 h-4" /> Borrar Toda la Información Local
         </button>
       </section>
 
-      {/* MODAL CONFIRMACIÓN BORRAR TODO */}
-      <Modal isOpen={confirmDeleteAllOpen} onClose={() => setConfirmDeleteAllOpen(false)} title="Limpieza Total">
+      <Modal isOpen={confirmDeleteAllOpen} onClose={() => setConfirmDeleteAllOpen(false)} title="Eliminar Base de Datos">
         <div className="space-y-6 text-center">
-          <div className="bg-red-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-red-600 shadow-inner">
-            <AlertTriangle className="w-10 h-10" />
-          </div>
-          <div className="space-y-2">
-            <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿ESTÁS SEGURO?</h4>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Esta acción borrará todos tus registros, adelantos y configuraciones permanentemente.</p>
-          </div>
+          <div className="bg-red-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-red-600 shadow-inner"><AlertTriangle className="w-10 h-10" /></div>
+          <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿Estás Seguro?</h4>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Esta acción borrará permanentemente todos tus registros de este dispositivo.</p>
           <div className="flex flex-col gap-3">
-            <button 
-              onClick={performDeleteAll}
-              className="w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all"
-            >
-              Sí, borrar todo definitivamente
-            </button>
-            <button 
-              onClick={() => setConfirmDeleteAllOpen(false)}
-              className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
-            >
-              Cancelar
-            </button>
+            <button onClick={performDeleteAll} className="w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Sí, eliminar todo</button>
+            <button onClick={() => setConfirmDeleteAllOpen(false)} className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px]">Cancelar</button>
           </div>
         </div>
       </Modal>
 
-      {/* MODAL CONFIRMACIÓN RESTAURAR */}
       <Modal isOpen={confirmRestoreOpen} onClose={() => setConfirmRestoreOpen(false)} title="Restaurar Copia">
         <div className="space-y-6 text-center">
-          <div className="bg-blue-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
-            <Database className="w-10 h-10" />
-          </div>
-          <div className="space-y-2">
-            <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿Sobrescribir datos?</h4>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Al restaurar esta copia de seguridad, perderás los datos actuales que no estén en el archivo.</p>
-          </div>
+          <div className="bg-blue-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner"><Database className="w-10 h-10" /></div>
+          <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿Sobrescribir Datos?</h4>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Los datos actuales serán reemplazados por la copia de seguridad.</p>
           <div className="flex flex-col gap-3">
-            <button 
-              onClick={performRestore}
-              className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all"
-            >
-              Sí, restaurar ahora
-            </button>
-            <button 
-              onClick={() => setConfirmRestoreOpen(false)}
-              className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
-            >
-              Cancelar
-            </button>
+            <button onClick={performRestore} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Restaurar ahora</button>
+            <button onClick={() => setConfirmRestoreOpen(false)} className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px]">Cancelar</button>
           </div>
-        </div>
-      </Modal>
-
-      <Modal isOpen={showInstallHelp} onClose={() => setShowInstallHelp(false)} title="Instalar Llavpodes">
-        <div className="space-y-6 text-slate-800">
-          <p className="text-sm font-bold leading-relaxed">Sigue estos pasos para instalar <span className="text-blue-600">Llavpodes</span> como una aplicación en tu dispositivo:</p>
-          
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-4">
-             <div className="flex items-center gap-3">
-                <Apple className="w-5 h-5" />
-                <h4 className="font-black text-xs uppercase">En iOS (iPhone/iPad)</h4>
-             </div>
-             <ol className="text-xs font-bold text-slate-500 space-y-2">
-                <li>1. Toca el botón <span className="bg-white px-2 py-0.5 rounded border">Compartir</span>.</li>
-                <li>2. Selecciona <span className="text-blue-600">"Añadir a pantalla de inicio"</span>.</li>
-             </ol>
-          </div>
-
-          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100 space-y-4">
-             <div className="flex items-center gap-3">
-                <Smartphone className="w-5 h-5 text-blue-600" />
-                <h4 className="font-black text-xs uppercase text-blue-600">En Android / Chrome</h4>
-             </div>
-             <ol className="text-xs font-bold text-blue-600/70 space-y-2">
-                <li>1. Toca los tres puntos <span className="font-black">⋮</span>.</li>
-                <li>2. Selecciona <span className="font-black">"Instalar aplicación"</span>.</li>
-             </ol>
-          </div>
-
-          <button onClick={() => setShowInstallHelp(false)} className="w-full bg-slate-900 text-white py-4 rounded-xl font-black uppercase tracking-widest text-xs">Entendido</button>
         </div>
       </Modal>
     </div>

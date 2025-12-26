@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Download, Trash2, Edit2, Copy, AlertCircle, Calendar, Plus, Save, Clock, ChevronDown, ListPlus, CalendarDays, CheckCircle2, Moon, AlertTriangle } from 'lucide-react';
+import { Download, Trash2, Edit2, Copy, AlertCircle, Calendar, Plus, Save, Clock, ChevronDown, ListPlus, CalendarDays, CheckCircle2, Moon, AlertTriangle, Coffee } from 'lucide-react';
 import { WorkDay } from '../types';
 import { calculateDuration, isHoliday, isSunday, getLocalDateString } from '../utils';
 import Modal from './Modal';
@@ -498,29 +498,60 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
 
           {!editingDay?.isDayOff && (
             <>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Entrada</label>
-                  <input 
-                    type="time" 
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium border-none text-gray-800"
-                    value={getTimeValue(editingDay?.entryTime)}
-                    onChange={(e) => handleTimeChange('entryTime', e.target.value)}
-                  />
+              <div className="bg-white p-4 rounded-2xl border border-slate-100 space-y-4 shadow-inner">
+                <div className="flex items-center gap-2 text-[9px] font-black uppercase text-blue-400 tracking-widest">
+                  <Clock className="w-3 h-3" /> Jornada Laboral
                 </div>
-                <div>
-                  <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Salida</label>
-                  <input 
-                    type="time" 
-                    className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium border-none text-gray-800"
-                    value={getTimeValue(editingDay?.exitTime)}
-                    onChange={(e) => handleTimeChange('exitTime', e.target.value)}
-                  />
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Hora Entrada</label>
+                    <input 
+                      type="time" 
+                      className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium border-none text-gray-800"
+                      value={getTimeValue(editingDay?.entryTime)}
+                      onChange={(e) => handleTimeChange('entryTime', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Hora Salida</label>
+                    <input 
+                      type="time" 
+                      className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium border-none text-gray-800"
+                      value={getTimeValue(editingDay?.exitTime)}
+                      onChange={(e) => handleTimeChange('exitTime', e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <div className="bg-gray-50 p-3 rounded-xl">
-                <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Viáticos ($)</label>
+              <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-4">
+                <div className="flex items-center gap-2 text-[9px] font-black uppercase text-amber-500 tracking-widest">
+                  <Coffee className="w-3 h-3" /> Tiempo de Descanso
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Inicio Descanso</label>
+                    <input 
+                      type="time" 
+                      className="w-full px-4 py-3 bg-white rounded-xl outline-none focus:ring-2 focus:ring-amber-500 font-medium border-none text-gray-800"
+                      value={getTimeValue(editingDay?.breakStartTime)}
+                      onChange={(e) => handleTimeChange('breakStartTime', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block">Fin Descanso</label>
+                    <input 
+                      type="time" 
+                      className="w-full px-4 py-3 bg-white rounded-xl outline-none focus:ring-2 focus:ring-amber-500 font-medium border-none text-gray-800"
+                      value={getTimeValue(editingDay?.breakEndTime)}
+                      onChange={(e) => handleTimeChange('breakEndTime', e.target.value)}
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-50 p-4 rounded-2xl">
+                <label className="text-[9px] font-bold text-gray-400 uppercase mb-1 block tracking-widest">Viáticos ($)</label>
                 <input 
                   type="number" 
                   className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm border-none text-gray-800 font-bold"
