@@ -138,7 +138,7 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
               onClick={registerHalfDay}
               className="flex items-center justify-center gap-2 py-4 px-4 rounded-2xl font-semibold text-green-700 bg-green-50 border-2 border-green-200 hover:bg-green-100 transition-all active:scale-95"
             >
-              Medio Turno (E -> S)
+              {"Medio Turno (E \u2192 S)"}
             </button>
           )}
 
