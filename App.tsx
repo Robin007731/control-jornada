@@ -18,7 +18,6 @@ import Dashboard from './components/Dashboard';
 import History from './components/History';
 import Settings from './components/Settings';
 import Receipt from './components/Receipt';
-import AIAssistant from './components/AIAssistant';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'settings' | 'receipt'>('dashboard');
@@ -161,16 +160,6 @@ const App: React.FC = () => {
           />
         )}
       </main>
-
-      <AIAssistant 
-        workDays={workDays}
-        setWorkDays={setWorkDays}
-        settings={settings}
-        setSettings={setSettings}
-        advances={advances}
-        onAddAdvance={handleAddAdvance}
-        onDeleteAdvance={handleDeleteAdvance}
-      />
 
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-xl px-8 py-3 rounded-full flex gap-10 items-center z-50 shadow-2xl border border-white/10">
         <NavButton 

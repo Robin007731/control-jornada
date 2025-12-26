@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Download, Trash2, Edit2, Copy, AlertCircle, Calendar, Plus, Save, Clock, ChevronDown } from 'lucide-react';
+import { Download, Trash2, Edit2, Copy, AlertCircle, Calendar, Plus, Save, Clock, ChevronDown, ListPlus, CalendarDays, CheckCircle2 } from 'lucide-react';
 import { WorkDay } from '../types';
 import { calculateDuration, isHoliday, isSunday } from '../utils';
 import Modal from './Modal';
@@ -11,10 +11,31 @@ interface HistoryProps {
   onExport: () => void;
 }
 
+const WEEKDAYS = [
+  { label: 'L', value: 1, full: 'Lunes' },
+  { label: 'M', value: 2, full: 'Martes' },
+  { label: 'M', value: 3, full: 'Miércoles' },
+  { label: 'J', value: 4, full: 'Jueves' },
+  { label: 'V', value: 5, full: 'Viernes' },
+  { label: 'S', value: 6, full: 'Sábado' },
+  { label: 'D', value: 0, full: 'Domingo' },
+];
+
 const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [editingDay, setEditingDay] = useState<Partial<WorkDay> | null>(null);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
+
+  // Bulk entry state
+  const [bulkStartDate, setBulkStartDate] = useState(new Date().toISOString().split('T')[0]);
+  const [bulkEndDate, setBulkEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [bulkSelectedDays, setBulkSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
+  const [bulkEntryTime, setBulkEntryTime] = useState('08:00');
+  const [bulkExitTime, setBulkExitTime] = useState('17:00');
+  const [bulkBreakStart, setBulkBreakStart] = useState('12:00');
+  const [bulkBreakEnd, setBulkBreakEnd] = useState('13:00');
+  const [bulkAllowance, setBulkAllowance] = useState(0);
 
   const sortedDays = useMemo(() => {
     return [...workDays].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
@@ -33,6 +54,44 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
       date: new Date().toISOString()
     };
     setWorkDays(prev => [newDay, ...prev]);
+  };
+
+  const handleBulkSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const start = new Date(bulkStartDate + 'T00:00:00');
+    const end = new Date(bulkEndDate + 'T00:00:00');
+    const newDays: WorkDay[] = [];
+
+    for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+      const dayOfWeek = d.getDay();
+      if (bulkSelectedDays.includes(dayOfWeek)) {
+        const dateStr = d.toISOString().split('T')[0];
+        // Evitar duplicados para la misma fecha
+        const alreadyExists = workDays.some(wd => wd.date.startsWith(dateStr));
+        if (alreadyExists) continue;
+
+        newDays.push({
+          id: crypto.randomUUID(),
+          date: dateStr,
+          entryTime: `${dateStr}T${bulkEntryTime}:00`,
+          breakStartTime: bulkBreakStart ? `${dateStr}T${bulkBreakStart}:00` : undefined,
+          breakEndTime: bulkBreakEnd ? `${dateStr}T${bulkBreakEnd}:00` : undefined,
+          exitTime: `${dateStr}T${bulkExitTime}:00`,
+          isHalfDay: false,
+          isManual: true,
+          status: 'complete',
+          allowance: bulkAllowance || 0
+        });
+      }
+    }
+
+    if (newDays.length > 0) {
+      setWorkDays(prev => [...newDays, ...prev]);
+      setIsBulkModalOpen(false);
+      alert(`Se han añadido ${newDays.length} jornadas correctamente.`);
+    } else {
+      alert("No se añadieron días. Verifica el rango o si ya existen registros en esas fechas.");
+    }
   };
 
   const openManualEntry = (preset?: 'FULL' | 'HALF' | 'ENTRY' | 'BREAK' | 'EXIT' | 'NONE', day?: WorkDay) => {
@@ -63,7 +122,6 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
           base.entryTime = `${today}T08:00:00`;
           base.exitTime = `${today}T12:00:00`;
           base.isHalfDay = true;
-          // Sin descanso como pidió el usuario
           break;
         case 'ENTRY':
           base.entryTime = `${today}T08:00:00`;
@@ -136,6 +194,12 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
     return missing.reverse();
   }, [workDays]);
 
+  const toggleBulkDay = (val: number) => {
+    setBulkSelectedDays(prev => 
+      prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
+    );
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -150,14 +214,20 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
             </button>
             
             {showQuickMenu && (
-              <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+              <div className="absolute right-0 mt-2 w-64 bg-white rounded-2xl shadow-2xl border border-gray-100 z-[60] overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
                 <div className="p-2 space-y-1">
+                  <div className="px-3 py-2 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-50 mb-1">Opciones rápidas</div>
                   <QuickOption onClick={() => openManualEntry('FULL')} label="Jornada Completa" sub="08:00 - 17:00" color="text-blue-600" />
                   <QuickOption onClick={() => openManualEntry('HALF')} label="Medio Turno" sub="Sin descanso" color="text-green-600" />
-                  <QuickOption onClick={() => openManualEntry('ENTRY')} label="Solo Entrada" sub="Punto de inicio" color="text-gray-600" />
-                  <QuickOption onClick={() => openManualEntry('BREAK')} label="A Descanso" sub="Registrar pausa" color="text-amber-600" />
-                  <QuickOption onClick={() => openManualEntry('EXIT')} label="Salida" sub="Cerrar jornada" color="text-red-600" />
                   <div className="border-t border-gray-50 my-1"></div>
+                  <div className="px-3 py-2 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-50 mb-1">Herramientas</div>
+                  <QuickOption 
+                    onClick={() => { setShowQuickMenu(false); setIsBulkModalOpen(true); }} 
+                    label="Relleno Masivo" 
+                    sub="Cargar rango de fechas" 
+                    color="text-indigo-600" 
+                    icon={<ListPlus className="w-3.5 h-3.5" />}
+                  />
                   <QuickOption onClick={() => openManualEntry('NONE')} label="Manual / Vacío" sub="Personalizar todo" color="text-gray-400" />
                 </div>
               </div>
@@ -174,7 +244,6 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
         </div>
       </div>
 
-      {/* Backdrop for Quick Menu */}
       {showQuickMenu && <div className="fixed inset-0 z-50" onClick={() => setShowQuickMenu(false)}></div>}
 
       {missingDays.length > 0 && (
@@ -273,6 +342,119 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
         )}
       </div>
 
+      {/* Modal Carga Masiva */}
+      <Modal 
+        isOpen={isBulkModalOpen} 
+        onClose={() => setIsBulkModalOpen(false)} 
+        title="Relleno Masivo de Jornadas"
+      >
+        <form onSubmit={handleBulkSubmit} className="space-y-4">
+          <div className="bg-indigo-50 p-4 rounded-2xl border border-indigo-100 space-y-4">
+            <div className="flex items-center gap-2 text-indigo-700 font-bold text-xs uppercase tracking-widest mb-2">
+              <CalendarDays className="w-4 h-4" /> Configuración de Rango
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-[9px] font-black uppercase text-indigo-400 mb-1 block">Desde</label>
+                <input 
+                  type="date" 
+                  className="w-full px-3 py-2 rounded-xl bg-white border-none outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                  value={bulkStartDate}
+                  onChange={(e) => setBulkStartDate(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="text-[9px] font-black uppercase text-indigo-400 mb-1 block">Hasta</label>
+                <input 
+                  type="date" 
+                  className="w-full px-3 py-2 rounded-xl bg-white border-none outline-none focus:ring-2 focus:ring-indigo-500 text-sm font-bold"
+                  value={bulkEndDate}
+                  onChange={(e) => setBulkEndDate(e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-[9px] font-black uppercase text-indigo-400 mb-2 block">Días de la semana que trabajas</label>
+              <div className="flex justify-between">
+                {WEEKDAYS.map(day => (
+                  <button
+                    key={day.value}
+                    type="button"
+                    onClick={() => toggleBulkDay(day.value)}
+                    className={`w-9 h-9 rounded-full font-black text-xs flex items-center justify-center transition-all ${
+                      bulkSelectedDays.includes(day.value) 
+                      ? 'bg-indigo-600 text-white shadow-lg scale-110' 
+                      : 'bg-white text-indigo-300 border border-indigo-100'
+                    }`}
+                  >
+                    {day.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Entrada</label>
+              <input 
+                type="time" 
+                className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium border-none text-gray-800"
+                value={bulkEntryTime}
+                onChange={(e) => setBulkEntryTime(e.target.value)}
+              />
+            </div>
+            <div>
+              <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Salida</label>
+              <input 
+                type="time" 
+                className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium border-none text-gray-800"
+                value={bulkExitTime}
+                onChange={(e) => setBulkExitTime(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+            <h4 className="text-[10px] font-bold text-blue-400 uppercase mb-3">Descanso Aplicado</h4>
+            <div className="grid grid-cols-2 gap-4">
+              <input 
+                type="time" 
+                className="w-full px-4 py-2 bg-white rounded-lg outline-none text-sm border-none text-gray-800"
+                value={bulkBreakStart}
+                onChange={(e) => setBulkBreakStart(e.target.value)}
+              />
+              <input 
+                type="time" 
+                className="w-full px-4 py-2 bg-white rounded-lg outline-none text-sm border-none text-gray-800"
+                value={bulkBreakEnd}
+                onChange={(e) => setBulkBreakEnd(e.target.value)}
+              />
+            </div>
+          </div>
+
+          <div className="bg-gray-50 p-3 rounded-xl">
+            <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Viáticos por día ($)</label>
+            <input 
+              type="number" 
+              className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm border-none text-gray-800 font-bold"
+              placeholder="0"
+              value={bulkAllowance || ''}
+              onChange={(e) => setBulkAllowance(Number(e.target.value))}
+            />
+          </div>
+
+          <button 
+            type="submit"
+            className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg active:scale-95 mt-4"
+          >
+            <CheckCircle2 className="w-5 h-5" /> Generar Jornadas
+          </button>
+        </form>
+      </Modal>
+
+      {/* Modal Registro Individual */}
       <Modal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
@@ -380,12 +562,15 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
   );
 };
 
-const QuickOption = ({ onClick, label, sub, color }: { onClick: () => void, label: string, sub: string, color: string }) => (
+const QuickOption = ({ onClick, label, sub, color, icon }: { onClick: () => void, label: string, sub: string, color: string, icon?: React.ReactNode }) => (
   <button 
     onClick={onClick}
     className="w-full flex flex-col items-start p-3 rounded-xl hover:bg-gray-50 transition-colors text-left group"
   >
-    <span className={`text-xs font-bold uppercase tracking-tight ${color}`}>{label}</span>
+    <div className="flex items-center gap-2">
+      <span className={`text-xs font-bold uppercase tracking-tight ${color}`}>{label}</span>
+      {icon && <span className={color}>{icon}</span>}
+    </div>
     <span className="text-[10px] text-gray-400 group-hover:text-gray-500">{sub}</span>
   </button>
 );
