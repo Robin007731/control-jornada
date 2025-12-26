@@ -3,9 +3,8 @@ import React, { useState, useRef } from 'react';
 import { UserSettings, Advance, WorkDay } from '../types';
 import { formatCurrency } from '../utils';
 import { 
-  Lock, Plus, Trash2, User, Wallet, Shield, AlertCircle, RefreshCw, 
-  Download, Upload, Check, Smartphone, X, Apple, ChevronRight, 
-  DownloadCloud, Video, PlayCircle, Loader2, Sparkles, Film, AlertTriangle, Database
+  Lock, Plus, Trash2, User, Wallet, RefreshCw, 
+  Download, Upload, Check, Database, Briefcase, ChevronRight
 } from 'lucide-react';
 import Modal from './Modal';
 
@@ -17,7 +16,6 @@ interface SettingsProps {
   onDeleteAdvance: (id: string) => void;
   workDays: WorkDay[];
   setWorkDays: React.Dispatch<React.SetStateAction<WorkDay[]>>;
-  installPrompt: any;
 }
 
 const Settings: React.FC<SettingsProps> = ({ 
@@ -28,7 +26,6 @@ const Settings: React.FC<SettingsProps> = ({
   onDeleteAdvance,
   workDays,
   setWorkDays,
-  installPrompt
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -36,10 +33,6 @@ const Settings: React.FC<SettingsProps> = ({
   const [saveStatus, setSaveStatus] = useState<string | null>(null);
   const [advAmount, setAdvAmount] = useState('');
   const [advNote, setAdvNote] = useState('');
-  const [showInstallHelp, setShowInstallHelp] = useState(false);
-  const [confirmDeleteAllOpen, setConfirmDeleteAllOpen] = useState(false);
-  const [confirmRestoreOpen, setConfirmRestoreOpen] = useState(false);
-  const [pendingRestoreData, setPendingRestoreData] = useState<any>(null);
   
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -54,8 +47,8 @@ const Settings: React.FC<SettingsProps> = ({
   };
 
   const notifySave = () => {
-    setSaveStatus('Guardado');
-    setTimeout(() => setSaveStatus(null), 2000);
+    setSaveStatus('Configuración Actualizada');
+    setTimeout(() => setSaveStatus(null), 2500);
   };
 
   const handleAddAdv = () => {
@@ -77,61 +70,33 @@ const Settings: React.FC<SettingsProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `backup_llavpodes_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `backup_llavpodes_pro_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const json = JSON.parse(event.target?.result as string);
-        if (json.workDays && json.settings) {
-          setPendingRestoreData(json);
-          setConfirmRestoreOpen(true);
-        }
-      } catch (err) { alert('Archivo inválido'); }
-    };
-    reader.readAsText(file);
-  };
-
-  const performRestore = () => {
-    if (pendingRestoreData) {
-      localStorage.setItem('llavpodes_data', JSON.stringify(pendingRestoreData));
-      window.location.reload();
-    }
-  };
-
-  const performDeleteAll = () => {
-    localStorage.removeItem('llavpodes_data');
-    window.location.reload();
-  };
-
   if (!isAuthenticated) {
     return (
-      <div className="flex flex-col items-center justify-center py-12 px-6">
-        <div className="bg-white p-8 rounded-[40px] shadow-2xl w-full max-w-md border border-gray-100 text-center space-y-6 animate-slide-up">
-          <div className="bg-slate-900 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto shadow-xl">
-            <Lock className="w-8 h-8 text-white" />
+      <div className="flex flex-col items-center justify-center py-12 px-4 animate-in fade-in zoom-in duration-500">
+        <div className="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md border border-slate-100 text-center space-y-8">
+          <div className="bg-slate-900 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl rotate-3">
+            <Lock className="w-10 h-10 text-blue-400" />
           </div>
-          <div>
-            <h2 className="text-xl font-black uppercase tracking-tight italic">Acceso Llavpodes</h2>
-            <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest mt-1">Ingresa tu código de seguridad</p>
+          <div className="space-y-2">
+            <h2 className="text-2xl font-black uppercase tracking-tighter italic text-slate-900">Security Gate</h2>
+            <p className="text-slate-400 text-[10px] font-bold uppercase tracking-[0.3em]">Autenticación de Propietario</p>
           </div>
-          <form onSubmit={handleAuth} className="space-y-4">
+          <form onSubmit={handleAuth} className="space-y-6">
             <input 
               type="password" 
-              placeholder="Pin"
-              className="w-full px-4 py-5 rounded-2xl bg-slate-50 border-2 border-transparent focus:border-blue-500 outline-none transition-all text-center text-3xl font-black tracking-[0.5em] text-slate-800"
+              placeholder="••••"
+              className="w-full px-6 py-6 rounded-3xl bg-slate-50 border-2 border-transparent focus:border-blue-600 outline-none transition-all text-center text-4xl font-black tracking-[1em] text-slate-800 shadow-inner"
               value={passwordInput}
               onChange={(e) => setPasswordInput(e.target.value)}
               autoFocus
             />
-            {error && <p className="text-red-500 text-xs font-bold uppercase">{error}</p>}
-            <button className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg active:scale-95 transition-all">Desbloquear</button>
+            {error && <p className="text-rose-500 text-[10px] font-black uppercase tracking-widest animate-bounce">{error}</p>}
+            <button className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all hover:bg-black">Desbloquear Panel</button>
           </form>
         </div>
       </div>
@@ -139,78 +104,90 @@ const Settings: React.FC<SettingsProps> = ({
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-      <div className="flex justify-between items-center px-1">
-        <h2 className="text-xl font-black italic uppercase tracking-tighter">Ajustes</h2>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-500">
+      <div className="flex justify-between items-center px-2">
+        <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">Panel de Control</h2>
         <div className="flex items-center gap-3">
-          {saveStatus && <span className="text-green-600 text-[9px] font-black uppercase flex items-center gap-1 animate-pulse"><Check className="w-3 h-3" /> {saveStatus}</span>}
-          <button onClick={() => setIsAuthenticated(false)} className="bg-slate-100 p-2 rounded-xl text-slate-400 hover:text-slate-600 transition-colors"><Lock className="w-5 h-5" /></button>
+          {saveStatus && <span className="text-emerald-600 text-[9px] font-black uppercase tracking-widest bg-emerald-50 px-3 py-1.5 rounded-full border border-emerald-100 animate-fade-in">{saveStatus}</span>}
+          <button onClick={() => setIsAuthenticated(false)} className="bg-white border border-slate-100 p-2.5 rounded-2xl text-slate-400 hover:text-slate-900 transition-all shadow-sm"><Lock className="w-5 h-5" /></button>
         </div>
       </div>
 
-      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
-        <div className="flex items-center gap-2 mb-2"><User className="text-blue-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Perfil Laboral</h3></div>
-        <div className="space-y-4">
-          <div>
-            <label className="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block tracking-widest">Nombre del Trabajador/a</label>
-            <input type="text" value={settings.workerName} onChange={(e) => { setSettings(prev => ({ ...prev, workerName: e.target.value })); notifySave(); }} className="w-full px-4 py-3 rounded-xl bg-slate-50 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all border-none" />
-          </div>
-          <div>
-            <label className="text-[9px] font-bold text-slate-400 uppercase ml-1 mb-1 block tracking-widest">Salario Nominal Mensual ($)</label>
-            <input type="number" value={settings.monthlySalary} onChange={(e) => { setSettings(prev => ({ ...prev, monthlySalary: Number(e.target.value) })); notifySave(); }} className="w-full px-4 py-3 rounded-xl bg-slate-50 font-bold text-slate-700 outline-none focus:ring-2 focus:ring-blue-500 transition-all border-none" />
-          </div>
+      <section className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+           <Briefcase className="text-blue-600 w-6 h-6" />
+           <h3 className="font-black text-sm uppercase tracking-widest italic text-slate-800">Perfil del Profesional</h3>
+        </div>
+        <div className="space-y-5">
+          <InputGroup label="Nombre del Profesional" value={settings.workerName} onChange={(val) => { setSettings(s => ({...s, workerName: val})); notifySave(); }} />
+          <InputGroup label="Lugar de Trabajo / Empresa" value={settings.workplaceName} placeholder="Ej: Nexa Studio S.A." onChange={(val) => { setSettings(s => ({...s, workplaceName: val})); notifySave(); }} />
+          <InputGroup label="Sueldo Nominal Mensual ($)" type="number" value={settings.monthlySalary} onChange={(val) => { setSettings(s => ({...s, monthlySalary: Number(val)})); notifySave(); }} />
         </div>
       </section>
 
-      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
-        <div className="flex items-center gap-2 mb-2"><Wallet className="text-emerald-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Adelantos</h3></div>
-        <div className="flex flex-col sm:flex-row gap-2">
-          <input type="number" placeholder="Monto" className="flex-1 px-4 py-3 rounded-xl bg-slate-50 font-bold border-none outline-none" value={advAmount} onChange={(e) => setAdvAmount(e.target.value)} />
-          <input type="text" placeholder="Nota" className="flex-1 px-4 py-3 rounded-xl bg-slate-50 font-bold border-none outline-none" value={advNote} onChange={(e) => setAdvNote(e.target.value)} />
-          <button onClick={handleAddAdv} className="bg-emerald-600 text-white px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest active:scale-95 transition-all">Agregar</button>
+      <section className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+           <Wallet className="text-emerald-600 w-6 h-6" />
+           <h3 className="font-black text-sm uppercase tracking-widest italic text-slate-800">Gestión de Adelantos</h3>
         </div>
-      </section>
-
-      <section className="bg-white p-6 rounded-[2.5rem] shadow-sm border border-slate-100 space-y-4">
-        <div className="flex items-center gap-2 mb-2"><RefreshCw className="text-orange-500 w-5 h-5" /><h3 className="font-bold text-sm uppercase tracking-tight">Backup de Seguridad</h3></div>
-        <div className="grid grid-cols-2 gap-3">
-          <button onClick={handleBackup} className="flex items-center justify-center gap-2 bg-slate-900 text-white p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-lg active:scale-95 transition-all"><Download className="w-4 h-4" /> Exportar</button>
-          <button onClick={() => fileInputRef.current?.click()} className="flex items-center justify-center gap-2 bg-blue-50 text-blue-600 p-4 rounded-2xl font-black text-[10px] uppercase tracking-widest border border-blue-100 active:scale-95 transition-all"><Upload className="w-4 h-4" /> Importar</button>
-          <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept=".json" />
-        </div>
-      </section>
-
-      <section className="p-4 mb-10">
-        <button onClick={() => setConfirmDeleteAllOpen(true)} className="w-full bg-red-50 text-red-600 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] border border-red-100/50 hover:bg-red-100 transition-all flex items-center justify-center gap-2">
-          <Trash2 className="w-4 h-4" /> Borrar Toda la Información Local
-        </button>
-      </section>
-
-      <Modal isOpen={confirmDeleteAllOpen} onClose={() => setConfirmDeleteAllOpen(false)} title="Eliminar Base de Datos">
-        <div className="space-y-6 text-center">
-          <div className="bg-red-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-red-600 shadow-inner"><AlertTriangle className="w-10 h-10" /></div>
-          <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿Estás Seguro?</h4>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Esta acción borrará permanentemente todos tus registros de este dispositivo.</p>
-          <div className="flex flex-col gap-3">
-            <button onClick={performDeleteAll} className="w-full bg-red-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Sí, eliminar todo</button>
-            <button onClick={() => setConfirmDeleteAllOpen(false)} className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px]">Cancelar</button>
+        <div className="flex flex-col gap-4">
+          <div className="grid grid-cols-2 gap-3">
+             <input type="number" placeholder="Monto" className="px-5 py-4 rounded-2xl bg-slate-50 font-bold text-sm outline-none border-none shadow-inner" value={advAmount} onChange={(e) => setAdvAmount(e.target.value)} />
+             <input type="text" placeholder="Concepto" className="px-5 py-4 rounded-2xl bg-slate-50 font-bold text-sm outline-none border-none shadow-inner" value={advNote} onChange={(e) => setAdvNote(e.target.value)} />
           </div>
+          <button onClick={handleAddAdv} className="bg-emerald-600 text-white w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/10 active:scale-95 transition-all">Registrar Adelanto</button>
         </div>
-      </Modal>
+      </section>
 
-      <Modal isOpen={confirmRestoreOpen} onClose={() => setConfirmRestoreOpen(false)} title="Restaurar Copia">
-        <div className="space-y-6 text-center">
-          <div className="bg-blue-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner"><Database className="w-10 h-10" /></div>
-          <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿Sobrescribir Datos?</h4>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Los datos actuales serán reemplazados por la copia de seguridad.</p>
-          <div className="flex flex-col gap-3">
-            <button onClick={performRestore} className="w-full bg-slate-900 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Restaurar ahora</button>
-            <button onClick={() => setConfirmRestoreOpen(false)} className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px]">Cancelar</button>
-          </div>
+      <section className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
+        <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
+           <RefreshCw className="text-indigo-600 w-6 h-6" />
+           <h3 className="font-black text-sm uppercase tracking-widest italic text-slate-800">Integridad de Datos</h3>
         </div>
-      </Modal>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <ActionButton onClick={handleBackup} icon={<Download />} label="Exportar Backup" color="bg-slate-900" />
+          <ActionButton onClick={() => fileInputRef.current?.click()} icon={<Upload />} label="Restaurar Backup" color="bg-blue-600" />
+          <input type="file" ref={fileInputRef} className="hidden" accept=".json" onChange={(e) => {
+             const file = e.target.files?.[0];
+             if (file) {
+                const reader = new FileReader();
+                reader.onload = (ev) => {
+                   try {
+                      const json = JSON.parse(ev.target?.result as string);
+                      localStorage.setItem('llavpodes_data_pro', JSON.stringify(json));
+                      window.location.reload();
+                   } catch(err) { alert('Error en el archivo'); }
+                };
+                reader.readAsText(file);
+             }
+          }} />
+        </div>
+      </section>
     </div>
   );
 };
+
+const InputGroup = ({ label, value, onChange, type = "text", placeholder = "" }: { label: string, value: any, onChange: (val: string) => void, type?: string, placeholder?: string }) => (
+  <div>
+    <label className="text-[9px] font-black text-slate-400 uppercase ml-2 mb-2 block tracking-widest">{label}</label>
+    <input 
+      type={type} 
+      placeholder={placeholder}
+      value={value} 
+      onChange={(e) => onChange(e.target.value)} 
+      className="w-full px-5 py-4 rounded-2xl bg-slate-50 font-bold text-slate-700 outline-none border-none focus:ring-2 focus:ring-blue-500 transition-all shadow-inner" 
+    />
+  </div>
+);
+
+const ActionButton = ({ onClick, icon, label, color }: { onClick: () => void, icon: React.ReactNode, label: string, color: string }) => (
+  <button 
+    onClick={onClick} 
+    className={`${color} text-white flex items-center justify-center gap-3 py-5 rounded-[2rem] font-black text-[10px] uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-all`}
+  >
+    {React.cloneElement(icon as React.ReactElement<any>, { className: 'w-4 h-4' })}
+    {label}
+  </button>
+);
 
 export default Settings;

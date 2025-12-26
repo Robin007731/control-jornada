@@ -1,8 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
-import { Play, Coffee, LogOut, CheckCircle, AlertCircle, Clock, Moon, Sparkles, Coffee as RelaxIcon, X } from 'lucide-react';
-import { WorkDay, UserSettings, Advance } from '../types';
-import { getSummary, formatCurrency, isHoliday, getLocalDateString } from '../utils';
+import { 
+  Play, Coffee, LogOut, CheckCircle, AlertCircle, Clock, 
+  Moon, Sparkles, Coffee as RelaxIcon, Timer, 
+  Calendar as CalIcon, Briefcase, HeartPulse, Palmtree
+} from 'lucide-react';
+import { WorkDay, UserSettings, Advance, DayType } from '../types';
+import { getSummary, formatCurrency, isHoliday, getLocalDateString, calculateDuration } from '../utils';
 import Modal from './Modal';
 
 interface DashboardProps {
@@ -14,7 +18,7 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onAction }) => {
   const [currentDay, setCurrentDay] = useState<WorkDay | null>(null);
-  const [isConfirmDayOffOpen, setIsConfirmDayOffOpen] = useState(false);
+  const [isTypeModalOpen, setIsTypeModalOpen] = useState(false);
   
   useEffect(() => {
     const todayStr = getLocalDateString();
@@ -25,21 +29,26 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
       setCurrentDay({
         id: crypto.randomUUID(),
         date: todayStr,
+        type: 'work',
         isHalfDay: false,
         isManual: false,
-        isDayOff: false,
         status: 'incomplete',
         allowance: 0
       });
     }
   }, [workDays]);
 
+  if (!currentDay) return null;
+
   const summary = getSummary(workDays, settings, advances);
+  const netHoursToday = calculateDuration(currentDay);
+  
+  // Progreso mensual (Asumiendo 22 días laborables como meta)
+  const workProgress = Math.min(100, (workDays.filter(d => d.type === 'work' && d.status === 'complete').length / 22) * 100);
 
   const registerAction = () => {
-    if (!currentDay) return;
     const now = new Date().toISOString();
-    let updated: WorkDay = { ...currentDay, isDayOff: false };
+    let updated: WorkDay = { ...currentDay, type: 'work' };
 
     if (!updated.entryTime) {
       updated.entryTime = now;
@@ -55,214 +64,237 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
     onAction(updated);
   };
 
-  const registerHalfDay = () => {
-    if (!currentDay) return;
-    const now = new Date().toISOString();
+  const setDayType = (type: DayType) => {
     const updated: WorkDay = {
       ...currentDay,
-      entryTime: currentDay.entryTime || now,
-      exitTime: now,
-      isHalfDay: true,
-      isDayOff: false,
-      status: 'complete',
-      allowance: currentDay.allowance || 0
-    };
-    onAction(updated);
-  };
-
-  const confirmDayOff = () => {
-    if (!currentDay) return;
-    const updated: WorkDay = {
-      ...currentDay,
+      type,
       entryTime: undefined,
       breakStartTime: undefined,
       breakEndTime: undefined,
       exitTime: undefined,
-      isHalfDay: false,
-      isDayOff: true,
       status: 'complete',
       allowance: 0
     };
     onAction(updated);
-    setIsConfirmDayOffOpen(false);
+    setIsTypeModalOpen(false);
   };
 
   const getNextAction = () => {
-    if (currentDay?.isDayOff) return { label: 'Día Libre', icon: <Moon /> };
-    if (!currentDay?.entryTime) return { label: 'Entrada', icon: <Play /> };
+    if (currentDay.type !== 'work') return { label: 'Día Especial', icon: <CalIcon /> };
+    if (!currentDay.entryTime) return { label: 'Iniciar Jornada', icon: <Play /> };
     if (!settings.simplifiedMode) {
-      if (!currentDay.breakStartTime) return { label: 'Descanso (I)', icon: <Coffee /> };
-      if (!currentDay.breakEndTime) return { label: 'Descanso (F)', icon: <Coffee /> };
+      if (!currentDay.breakStartTime) return { label: 'Tomar Descanso', icon: <Coffee /> };
+      if (!currentDay.breakEndTime) return { label: 'Fin de Descanso', icon: <Coffee /> };
     }
-    if (!currentDay.exitTime) return { label: 'Salida Final', icon: <LogOut /> };
-    return { label: 'Jornada Completa', icon: <CheckCircle /> };
+    if (!currentDay.exitTime) return { label: 'Finalizar Salida', icon: <LogOut /> };
+    return { label: 'Jornada Cerrada', icon: <CheckCircle /> };
   };
 
   const nextAction = getNextAction();
-  const isDone = currentDay?.status === 'complete' || currentDay?.isDayOff;
-  const todayHoliday = isHoliday(getLocalDateString());
+  const isDone = currentDay.status === 'complete' && currentDay.type === 'work' && !!currentDay.exitTime;
+  const isSpecialDay = currentDay.type !== 'work';
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Resumen de Ganancias */}
-      <div className="bg-gradient-to-br from-slate-900 to-slate-800 rounded-[2.5rem] p-8 text-white shadow-2xl relative overflow-hidden">
-        <div className="relative z-10 space-y-2">
-          <p className="text-blue-400 text-[10px] font-black uppercase tracking-[0.2em] italic">Líquido Estimado</p>
-          <h2 className="text-4xl font-black tracking-tighter italic">{formatCurrency(summary.netPay)}</h2>
-          <div className="mt-6 flex gap-6 border-t border-white/5 pt-6">
-            <div className="space-y-1">
-              <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">Normales</p>
-              <p className="font-black text-sm">{summary.totalNormalHours.toFixed(1)}h</p>
-            </div>
-            <div className="space-y-1">
-              <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">Extras</p>
-              <p className="font-black text-sm text-amber-400">+{summary.totalExtraHours.toFixed(1)}h</p>
-            </div>
-            <div className="space-y-1 ml-auto text-right">
-              <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest">Viáticos</p>
-              <p className="font-black text-sm text-emerald-400">{formatCurrency(summary.totalAllowances)}</p>
+      {/* Tarjeta de Ganancias VIP */}
+      <div className="bg-slate-900 rounded-[3rem] p-8 text-white shadow-[0_25px_60px_-15px_rgba(15,23,42,0.5)] relative overflow-hidden border border-white/5">
+        <div className="relative z-10">
+          <div className="flex justify-between items-center mb-6">
+            <span className="bg-blue-600/20 text-blue-400 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-blue-500/20 italic">
+              Balance Mensual Estimado
+            </span>
+            <div className="flex items-center gap-1.5">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Live Sync</span>
             </div>
           </div>
-        </div>
-        <div className="absolute -right-8 -bottom-8 opacity-5 transform rotate-12">
-          <Clock className="w-48 h-48" />
+          
+          <h2 className="text-5xl font-black tracking-tighter italic mb-8">{formatCurrency(summary.netPay)}</h2>
+          
+          <div className="space-y-4">
+             <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-500">
+               <span>Progreso de Jornadas</span>
+               <span>{Math.round(workProgress)}%</span>
+             </div>
+             <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+               <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-1000" style={{ width: `${workProgress}%` }}></div>
+             </div>
+          </div>
+
+          <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-white/5">
+            <StatSmall label="Horas" value={`${summary.totalNormalHours.toFixed(1)}h`} />
+            <StatSmall label="Extras" value={`+${summary.totalExtraHours.toFixed(1)}h`} color="text-blue-400" />
+            <StatSmall label="Viáticos" value={formatCurrency(summary.totalAllowances)} color="text-emerald-400" />
+          </div>
         </div>
       </div>
 
-      {/* Control de Jornada */}
-      <div className="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100">
-        <div className="flex justify-between items-start mb-8">
-          <div>
-            <h3 className="text-sm font-black uppercase tracking-widest text-slate-400 mb-1 italic">Control de Hoy</h3>
-            <p className="text-xl font-black text-slate-800 capitalize leading-none">
-              {new Date().toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </p>
-          </div>
-          {todayHoliday && !currentDay?.isDayOff && (
-            <span className="bg-amber-100 text-amber-700 text-[9px] px-3 py-1.5 rounded-full font-black uppercase tracking-widest flex items-center gap-1 border border-amber-200">
-              <AlertCircle className="w-3 h-3" /> Feriado
-            </span>
-          )}
+      {/* Control Pro de Jornada */}
+      <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-100">
+        <div className="flex justify-between items-center mb-8">
+           <div className="flex items-center gap-4">
+              <div className="bg-slate-50 p-3 rounded-2xl">
+                 <CalIcon className="w-6 h-6 text-slate-400" />
+              </div>
+              <div>
+                 <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mb-1">Hoy</p>
+                 <p className="text-base font-black text-slate-800 uppercase italic leading-none">
+                    {new Date().toLocaleDateString('es-UY', { weekday: 'long', day: 'numeric', month: 'long' })}
+                 </p>
+              </div>
+           </div>
+           <button 
+             onClick={() => setIsTypeModalOpen(true)}
+             className="bg-slate-900 text-white p-2.5 rounded-2xl shadow-lg active:scale-90 transition-all"
+           >
+              <Briefcase className="w-5 h-5" />
+           </button>
         </div>
 
-        <div className="flex flex-col gap-4">
-          {currentDay?.isDayOff ? (
-            <div className="bg-slate-50 border-2 border-dashed border-blue-100 py-12 rounded-3xl flex flex-col items-center justify-center gap-4 text-slate-400 relative overflow-hidden group">
-              <div className="bg-white p-5 rounded-full shadow-inner text-blue-500 relative z-10 scale-110">
-                <RelaxIcon className="w-12 h-12 animate-bounce duration-[4000ms]" />
-              </div>
-              <div className="text-center space-y-2 relative z-10 px-4">
-                <p className="font-black uppercase tracking-[0.2em] text-[12px] text-slate-800">¡Hoy es tu día libre!</p>
-                <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest flex items-center justify-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Disfruta tu descanso <Sparkles className="w-4 h-4" />
-                </p>
-              </div>
-              <button 
-                onClick={() => onAction({...currentDay, isDayOff: false, status: 'incomplete'})}
-                className="mt-6 text-[9px] font-black text-slate-400 underline uppercase tracking-[0.2em] hover:text-blue-600 transition-all relative z-10"
-              >
-                ¿Cambio de planes? Volver a modo trabajo
-              </button>
-              <div className="absolute inset-0 bg-blue-50/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-            </div>
+        <div className="flex flex-col gap-5">
+          {isSpecialDay ? (
+             <SpecialDayCard type={currentDay.type} onReset={() => onAction({...currentDay, type: 'work', status: 'incomplete'})} />
           ) : (
-            <div className="space-y-4">
+            <>
               <button 
                 disabled={isDone}
                 onClick={registerAction}
-                className={`group flex items-center justify-center gap-4 py-8 px-6 rounded-3xl font-black text-xl italic uppercase tracking-tighter shadow-xl transition-all active:scale-95 ${
+                className={`flex items-center justify-center gap-4 py-8 rounded-[2rem] font-black text-2xl italic uppercase tracking-tighter shadow-xl transition-all active:scale-95 ${
                   isDone 
-                  ? 'bg-slate-50 text-slate-300 cursor-not-allowed shadow-none border-2 border-slate-100' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-600/20'
+                  ? 'bg-slate-100 text-slate-300 shadow-none' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-blue-500/30'
                 }`}
               >
-                {React.cloneElement(nextAction.icon as React.ReactElement<any>, { className: 'w-6 h-6' })}
+                {React.cloneElement(nextAction.icon as React.ReactElement<any>, { className: 'w-7 h-7' })}
                 {nextAction.label}
               </button>
 
-              {!isDone && !currentDay?.entryTime && (
-                <div className="grid grid-cols-2 gap-4">
-                  <button 
-                    onClick={registerHalfDay}
-                    className="flex items-center justify-center gap-2 py-5 px-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-emerald-700 bg-emerald-50 border-2 border-emerald-100 hover:bg-emerald-100 transition-all active:scale-95"
-                  >
-                    Medio Turno
-                  </button>
-                  <button 
-                    onClick={() => setIsConfirmDayOffOpen(true)}
-                    className="flex items-center justify-center gap-2 py-5 px-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] text-blue-700 bg-blue-50 border-2 border-blue-100 hover:bg-blue-100 transition-all active:scale-95 shadow-sm"
-                  >
-                    <Moon className="w-3.5 h-3.5" /> Día Libre
-                  </button>
+              {currentDay.entryTime && (
+                <div className="mt-4 space-y-4 animate-in fade-in slide-in-from-top-2 duration-500">
+                   <div className="flex justify-between items-center bg-slate-50 p-5 rounded-[2rem] border border-slate-100">
+                      <div className="flex items-center gap-3">
+                         <Timer className="w-5 h-5 text-blue-600" />
+                         <span className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Cálculo de Horas Netas</span>
+                      </div>
+                      <span className="text-2xl font-black italic text-slate-900">{netHoursToday.toFixed(2)}h</span>
+                   </div>
+
+                  <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                    <TimeBadge label="Entrada" time={currentDay.entryTime} active={true} />
+                    {!settings.simplifiedMode && (
+                      <>
+                        <TimeBadge label="D. Inicio" time={currentDay.breakStartTime} active={!!currentDay.breakStartTime} color="amber" />
+                        <TimeBadge label="D. Fin" time={currentDay.breakEndTime} active={!!currentDay.breakEndTime} color="amber" />
+                      </>
+                    )}
+                    <TimeBadge label="Salida" time={currentDay.exitTime} active={!!currentDay.exitTime} />
+                  </div>
                 </div>
               )}
-            </div>
-          )}
-
-          {currentDay?.entryTime && !currentDay?.isDayOff && (
-            <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
-              <TimeBadge label="Entrada" time={currentDay.entryTime} active={true} />
-              {!settings.simplifiedMode && (
-                <>
-                  <TimeBadge label="D. Inicio" time={currentDay.breakStartTime} active={!!currentDay.breakStartTime} />
-                  <TimeBadge label="D. Fin" time={currentDay.breakEndTime} active={!!currentDay.breakEndTime} />
-                </>
-              )}
-              <TimeBadge label="Salida" time={currentDay.exitTime} active={!!currentDay.exitTime} />
-            </div>
+            </>
           )}
         </div>
       </div>
 
+      {/* Modal Tipo de Jornada */}
       <Modal 
-        isOpen={isConfirmDayOffOpen} 
-        onClose={() => setIsConfirmDayOffOpen(false)} 
-        title="Confirmar Día Libre"
+        isOpen={isTypeModalOpen} 
+        onClose={() => setIsTypeModalOpen(false)} 
+        title="Tipo de Jornada"
       >
-        <div className="space-y-6 text-center">
-          <div className="bg-blue-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-blue-600 shadow-inner">
-            <Moon className="w-10 h-10" />
-          </div>
-          <div className="space-y-2">
-            <h4 className="font-black text-slate-900 uppercase tracking-tight text-lg">¿Marcar hoy como libre?</h4>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-relaxed">Esto bloqueará el registro de horas para hoy. Podrás deshacerlo si cambias de opinión.</p>
-          </div>
-          <div className="flex flex-col gap-3">
-            <button 
-              onClick={confirmDayOff}
-              className="w-full bg-blue-600 text-white py-5 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all"
-            >
-              Sí, marcar como libre
-            </button>
-            <button 
-              onClick={() => setIsConfirmDayOffOpen(false)}
-              className="w-full bg-slate-50 text-slate-400 py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-100 transition-all"
-            >
-              Cancelar
-            </button>
-          </div>
+        <div className="grid grid-cols-1 gap-4">
+           <TypeOption 
+             onClick={() => setDayType('work')} 
+             label="Trabajo Normal" 
+             sub="Registro horario activo" 
+             icon={<Briefcase />} 
+             color="bg-blue-600" 
+           />
+           <TypeOption 
+             onClick={() => setDayType('off')} 
+             label="Descanso / Libre" 
+             sub="Día no laborable" 
+             icon={<Moon />} 
+             color="bg-slate-900" 
+           />
+           <TypeOption 
+             onClick={() => setDayType('vacation')} 
+             label="Licencia Ordinaria" 
+             sub="Vacaciones pagas" 
+             icon={<Palmtree />} 
+             color="bg-emerald-600" 
+           />
+           <TypeOption 
+             onClick={() => setDayType('medical')} 
+             label="Licencia Médica" 
+             sub="Justificado por BPS/Mutual" 
+             icon={<HeartPulse />} 
+             color="bg-rose-600" 
+           />
         </div>
       </Modal>
-
-      {summary.totalAdvances > 0 && (
-        <div className="bg-amber-50 border border-amber-100 p-5 rounded-3xl flex items-center gap-4 animate-slide-up">
-          <div className="bg-amber-100 p-2 rounded-xl text-amber-600"><AlertCircle className="w-5 h-5" /></div>
-          <div className="text-[10px] font-bold text-amber-800 leading-relaxed uppercase tracking-widest">
-            Hay <span className="font-black text-amber-950 underline">{formatCurrency(summary.totalAdvances)}</span> en adelantos que se descontarán del reporte.
-          </div>
-        </div>
-      )}
     </div>
   );
 };
 
-const TimeBadge = ({ label, time, active }: { label: string, time?: string, active: boolean }) => (
-  <div className={`p-3 rounded-2xl text-center border transition-all ${active ? 'bg-blue-50 border-blue-100 shadow-sm' : 'bg-slate-50 border-slate-100 opacity-40'}`}>
-    <span className={`block text-[8px] uppercase font-black mb-1 tracking-widest ${active ? 'text-blue-400' : 'text-slate-400'}`}>{label}</span>
-    <span className={`text-xs font-black italic ${active ? 'text-blue-900' : 'text-slate-400'}`}>
-      {time ? new Date(time).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
-    </span>
+const StatSmall = ({ label, value, color = "text-white" }: { label: string, value: string, color?: string }) => (
+  <div className="space-y-1">
+    <p className="text-[8px] text-slate-500 font-black uppercase tracking-widest leading-none">{label}</p>
+    <p className={`font-black text-sm uppercase italic ${color}`}>{value}</p>
   </div>
+);
+
+const TimeBadge = ({ label, time, active, color = 'blue' }: { label: string, time?: string, active: boolean, color?: 'blue' | 'amber' }) => {
+  const bgColor = active ? (color === 'blue' ? 'bg-blue-50 border-blue-100' : 'bg-amber-50 border-amber-100') : 'bg-slate-50 border-slate-100 opacity-40';
+  const labelColor = active ? (color === 'blue' ? 'text-blue-400' : 'text-amber-500') : 'text-slate-400';
+  const timeColor = active ? (color === 'blue' ? 'text-slate-900' : 'text-amber-900') : 'text-slate-400';
+
+  return (
+    <div className={`p-4 rounded-2xl text-center border transition-all ${bgColor}`}>
+      <span className={`block text-[8px] uppercase font-black mb-1.5 tracking-widest ${labelColor}`}>{label}</span>
+      <span className={`text-xs font-black italic ${timeColor}`}>
+        {time ? new Date(time).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}
+      </span>
+    </div>
+  );
+};
+
+const SpecialDayCard = ({ type, onReset }: { type: DayType, onReset: () => void }) => {
+  const configs = {
+    off: { label: 'Día Libre', icon: <Moon />, color: 'text-blue-500', bg: 'bg-blue-50' },
+    vacation: { label: 'Vacaciones', icon: <Palmtree />, color: 'text-emerald-500', bg: 'bg-emerald-50' },
+    medical: { label: 'Licencia Médica', icon: <HeartPulse />, color: 'text-rose-500', bg: 'bg-rose-50' },
+    work: { label: '', icon: null, color: '', bg: '' }
+  };
+  const config = configs[type as keyof typeof configs];
+
+  return (
+    <div className={`${config.bg} border-2 border-dashed border-slate-200 py-12 rounded-[2.5rem] flex flex-col items-center justify-center gap-5 text-center px-6 animate-in zoom-in duration-500`}>
+      <div className={`bg-white p-6 rounded-full shadow-xl ${config.color} scale-125`}>
+        {React.cloneElement(config.icon as React.ReactElement<any>, { className: 'w-10 h-10' })}
+      </div>
+      <div className="space-y-2">
+        <h4 className="font-black uppercase tracking-widest text-lg text-slate-800 italic">Hoy: {config.label}</h4>
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sin registros horarios necesarios</p>
+      </div>
+      <button onClick={onReset} className="mt-4 text-[9px] font-black text-slate-400 hover:text-blue-600 uppercase tracking-widest underline transition-colors">Volver a modo trabajo</button>
+    </div>
+  );
+};
+
+const TypeOption = ({ onClick, label, sub, icon, color }: { onClick: () => void, label: string, sub: string, icon: React.ReactNode, color: string }) => (
+  <button 
+    onClick={onClick}
+    className="w-full flex items-center gap-4 p-5 rounded-3xl bg-slate-50 hover:bg-white hover:shadow-xl hover:border-blue-100 border border-transparent transition-all group text-left"
+  >
+    <div className={`${color} p-3 rounded-2xl text-white shadow-lg transition-transform group-hover:scale-110`}>
+      {React.cloneElement(icon as React.ReactElement<any>, { className: 'w-6 h-6' })}
+    </div>
+    <div>
+      <p className="font-black text-sm text-slate-900 uppercase italic tracking-tight">{label}</p>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{sub}</p>
+    </div>
+  </button>
 );
 
 export default Dashboard;

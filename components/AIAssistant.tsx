@@ -117,16 +117,19 @@ const AIAssistant: React.FC<AIAssistantProps> = ({
     setIsLoading(true);
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY as string });
+      // Fix: Ensure initialization follows the guidelines
+      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const now = new Date();
       const summary = getSummary(workDays, settings, advances);
 
       const systemInstruction = `Eres Llavpodes Brain, gestor experto de registros laborales en Uruguay.
 TIENES CONTROL TOTAL para modificar la base de datos local del usuario mediante herramientas. 
+REGLA DE HORAS: El descanso NO es pago y suele ser de 30 minutos (0.5h). 
+Si el usuario pide una "Jornada Completa", regístrala de 08:00 a 16:30 con descanso de 12:00 a 12:30 para que el Neto sea exactamente 8hs.
 Hoy: ${now.toLocaleDateString('es-UY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-Usuario: ${settings.workerName}. Sueldo: ${formatCurrency(settings.monthlySalary)}.
-Estado Actual: Neto ${formatCurrency(summary.netPay)}, ${workDays.length} días registrados.
-Responde siempre en español de Uruguay, sé breve, directo y servicial.`;
+Usuario: ${settings.workerName}.
+Estado Actual: Neto ${formatCurrency(summary.netPay)}.
+Responde siempre en español de Uruguay, sé breve y directo.`;
 
       const response = await ai.models.generateContent({
         model: 'gemini-3-pro-preview',
@@ -147,9 +150,11 @@ Responde siempre en español de Uruguay, sé breve, directo y servicial.`;
               const updated = [...prev];
               args.days.forEach((d: any) => {
                 const existingIdx = updated.findIndex(ex => ex.date === d.date);
-                const newEntry = {
+                // Fix: Properly map d.isDayOff to WorkDay.type and remove isDayOff from the object.
+                const newEntry: WorkDay = {
                   id: crypto.randomUUID(),
                   date: d.date,
+                  type: d.isDayOff ? 'off' : 'work',
                   entryTime: d.entryTime ? `${d.date}T${d.entryTime}:00` : undefined,
                   breakStartTime: d.breakStartTime ? `${d.date}T${d.breakStartTime}:00` : undefined,
                   breakEndTime: d.breakEndTime ? `${d.date}T${d.breakEndTime}:00` : undefined,
@@ -157,9 +162,8 @@ Responde siempre en español de Uruguay, sé breve, directo y servicial.`;
                   status: (d.isDayOff || (d.entryTime && d.exitTime)) ? 'complete' : 'incomplete',
                   isManual: true,
                   isHalfDay: !!d.isHalfDay,
-                  isDayOff: !!d.isDayOff,
                   allowance: d.allowance || 0
-                } as WorkDay;
+                };
                 if (existingIdx > -1) updated[existingIdx] = newEntry;
                 else updated.unshift(newEntry);
               });
@@ -170,18 +174,17 @@ Responde siempre en español de Uruguay, sé breve, directo y servicial.`;
             setWorkDays(prev => prev.filter(d => !args.dates.includes(d.date)));
           }
         }
-        setMessages(prev => [...prev, { role: 'ai', text: "Entendido. Registros actualizados correctamente." }]);
+        setMessages(prev => [...prev, { role: 'ai', text: "Entendido. He ajustado tus jornadas descontando los descansos correspondientes." }]);
       } else {
         setMessages(prev => [...prev, { role: 'ai', text: response.text || "Operación completada." }]);
       }
 
     } catch (error: any) {
       console.error(error);
-      let msg = "Hubo un problema. Revisa tu conexión o API Key.";
-      if (error.message?.includes('404') || error.message?.includes('not found')) {
-        msg = "Error 404: No se encontró el recurso o la API Key es inválida. Por favor, vuelve a seleccionar tu Llave de Pago.";
+      let msg = "Hubo un problema con el cerebro. Revisa tu conexión.";
+      if (error.message?.includes('404') || error.message?.includes('Requested entity was not found')) {
+        msg = "Error de conexión con la IA. Por favor, re-selecciona tu llave.";
         setHasKey(false);
-        if (window.aistudio) window.aistudio.openSelectKey().then(() => setHasKey(true));
       }
       setMessages(prev => [...prev, { role: 'error', text: msg }]);
     } finally {
@@ -206,7 +209,7 @@ Responde siempre en español de Uruguay, sé breve, directo y servicial.`;
                 <div className="bg-blue-600 p-2 rounded-xl shadow-lg"><Bot className="w-5 h-5" /></div>
                 <div>
                   <h3 className="font-black uppercase tracking-tight text-sm">Llavpodes Brain</h3>
-                  <p className="text-[7px] font-bold text-blue-400 uppercase tracking-widest leading-none">Asistente Inteligente Nativo</p>
+                  <p className="text-[7px] font-bold text-blue-400 uppercase tracking-widest leading-none">Asistente de Horas Netas</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -221,9 +224,9 @@ Responde siempre en español de Uruguay, sé breve, directo y servicial.`;
                   <div className="w-20 h-20 bg-amber-50 rounded-[32px] flex items-center justify-center text-amber-500 shadow-inner"><Key className="w-10 h-10" /></div>
                   <div className="space-y-2">
                     <h4 className="font-black text-slate-800 uppercase text-xs tracking-widest italic">IA Offline</h4>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase leading-relaxed max-w-[200px]">Debes vincular una API Key de Google Cloud de pago para activar el cerebro.</p>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase leading-relaxed max-w-[200px]">Necesitas tu API Key para que pueda calcular tus horas netas.</p>
                   </div>
-                  <button onClick={handleOpenKeySelector} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl active:scale-95 transition-all">Seleccionar Llave</button>
+                  <button onClick={handleOpenKeySelector} className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-[10px] shadow-xl active:scale-95 transition-all">Configurar Llave</button>
                 </div>
               ) : (
                 messages.map((m, i) => (
@@ -242,7 +245,7 @@ Responde siempre en español de Uruguay, sé breve, directo y servicial.`;
                 <div className="flex justify-start">
                   <div className="bg-white p-4 rounded-3xl rounded-tl-none border border-slate-100 flex items-center gap-3">
                     <Loader2 className="w-4 h-4 animate-spin text-blue-500" />
-                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Procesando...</span>
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400">Calculando horas...</span>
                   </div>
                 </div>
               )}
@@ -254,7 +257,7 @@ Responde siempre en español de Uruguay, sé breve, directo y servicial.`;
                   type="text" 
                   disabled={!hasKey}
                   className="flex-1 bg-transparent px-4 py-2 font-bold text-sm outline-none placeholder:text-slate-400"
-                  placeholder="Ej: Registra 8hs hoy"
+                  placeholder="Ej: Registra jornada completa hoy"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}

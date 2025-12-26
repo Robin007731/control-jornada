@@ -24,8 +24,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
           <div className="bg-blue-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-blue-500/20 border border-white/10 rotate-3">
             <ShieldCheck className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none">Registro laboral</h1>
-          <p className="text-blue-400 text-[9px] font-black uppercase tracking-[0.3em]">Tu tiempo y tus ganancias, bajo tu control.</p>
+          <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none">Registro Laboral</h1>
+          <p className="text-blue-400 text-[9px] font-black uppercase tracking-[0.3em]">Tus jornadas y ganancias bajo control</p>
         </div>
 
         <div className="bg-white text-gray-900 p-8 rounded-[3rem] shadow-2xl space-y-8 border border-white/10">
@@ -66,7 +66,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                       <span>1. Soberanía de Datos</span>
                     </div>
                     <p className="pl-6 border-l-2 border-blue-100">
-                      Llavpodes es una aplicación de arquitectura **Local-First**. Esto significa que el 100% de tus registros, salarios y fotos se almacenan exclusivamente en la base de datos interna de tu navegador (LocalStorage/IndexedDB). Ningún dato es transmitido a servidores externos de Nexa Studio.
+                      Registro Laboral es una aplicación de arquitectura **Local-First**. Esto significa que el 100% de tus registros, salarios y fotos se almacenan exclusivamente en la base de datos interna de tu navegador (LocalStorage/IndexedDB). Ningún dato es transmitido a servidores externos.
                     </p>
                   </div>
 
@@ -96,7 +96,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                       <span>4. Validez Legal</span>
                     </div>
                     <p className="pl-6 border-l-2 border-red-100">
-                      Los cálculos financieros (deducciones del 22%, horas extra, etc.) son estimaciones basadas en la normativa general de Uruguay. Llavpodes es una herramienta de **control personal** y no sustituye los recibos oficiales emitidos por su empleador ni los registros ante el MTSS o BPS.
+                      Los cálculos financieros (deducciones del 22%, horas extra, etc.) son estimaciones basadas en la normativa general de Uruguay. Esta aplicación es una herramienta de **control personal** y no sustituye los recibos oficiales emitidos por su empleador ni los registros ante el MTSS o BPS.
                     </p>
                   </div>
 
@@ -150,7 +150,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
         </div>
 
         <p className="text-center text-[7px] text-slate-500 uppercase font-black tracking-[0.4em] italic opacity-40">
-          Enterprise Security v4.0 • Uruguay • Nexa Studio
+          Professional Security v5.0 • Uruguay • Control Independiente
         </p>
       </div>
     </div>

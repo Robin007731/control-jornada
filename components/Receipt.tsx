@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import { WorkDay, UserSettings, Advance } from '../types';
 import { getSummary, formatCurrency, getDayFinancials } from '../utils';
-import { Download, Share2, Loader2, Check, ShieldCheck, FileText, Smartphone } from 'lucide-react';
+import { Share2, Loader2, Check, ShieldCheck, FileText, Download } from 'lucide-react';
 import html2canvas from 'html2canvas';
 
 interface ReceiptProps {
@@ -20,112 +20,113 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
     .filter(d => d.status === 'complete')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
-  const dateRange = sortedDays.length > 0 
-    ? `${new Date(sortedDays[0].date).toLocaleDateString('es-UY', { day: '2-digit', month: 'short' })} - ${new Date(sortedDays[sortedDays.length - 1].date).toLocaleDateString('es-UY', { day: '2-digit', month: 'short', year: 'numeric' })}`
-    : 'Período vacío';
-
   const handleDownload = async () => {
-    const element = document.getElementById('receipt-capture-area');
+    const element = document.getElementById('receipt-capture-area-pro');
     if (!element) return;
 
     setIsExporting(true);
     try {
       const canvas = await html2canvas(element, {
-        scale: 3,
+        scale: 4,
         backgroundColor: '#ffffff',
         logging: false,
         useCORS: true,
-        windowWidth: 800
       });
 
       const dataUrl = canvas.toDataURL('image/png', 1.0);
       const link = document.createElement('a');
-      link.download = `Reporte_Laboral_${settings.workerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
+      link.download = `Reporte_${settings.workerName.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.png`;
       link.href = dataUrl;
       link.click();
       
       setExported(true);
       setTimeout(() => setExported(false), 3000);
     } catch (error) {
-      console.error('Error al exportar recibo:', error);
-      alert('Error al generar la imagen. Inténtalo de nuevo.');
+      console.error('Export error:', error);
     } finally {
       setIsExporting(false);
     }
   };
 
   return (
-    <div className="space-y-6 animate-fade-in max-w-xl mx-auto pb-10">
-      <div className="flex justify-between items-center px-1">
-        <div>
-          <h2 className="text-xl font-black italic uppercase tracking-tighter">Reporte</h2>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest leading-none">Detalle de Haberes</p>
+    <div className="space-y-6 animate-fade-in max-w-xl mx-auto pb-12">
+      <div className="flex justify-between items-center px-2">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">Report Center</h2>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none">Generador de Reportes Profesionales</p>
         </div>
         <button 
           onClick={handleDownload}
           disabled={isExporting || sortedDays.length === 0}
-          className={`flex items-center gap-2 px-6 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest shadow-xl transition-all active:scale-95 disabled:opacity-50 ${
-            exported ? 'bg-emerald-500 text-white' : 'bg-slate-900 text-white'
+          className={`flex items-center gap-3 px-6 py-4 rounded-[2rem] font-black text-[11px] uppercase tracking-widest shadow-2xl transition-all active:scale-95 disabled:opacity-50 ${
+            exported ? 'bg-emerald-600 text-white' : 'bg-slate-900 text-white'
           }`}
         >
-          {isExporting ? (
-            <Loader2 className="w-3.5 h-3.5 animate-spin" />
-          ) : exported ? (
-            <Check className="w-3.5 h-3.5" />
-          ) : (
-            <FileText className="w-3.5 h-3.5" />
-          )}
-          {isExporting ? 'Generando...' : exported ? '¡Listo!' : 'Exportar PNG'}
+          {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : exported ? <Check className="w-4 h-4" /> : <Download className="w-4 h-4 text-blue-400" />}
+          {isExporting ? 'Procesando...' : exported ? 'Exportado' : 'Bajar PNG'}
         </button>
       </div>
 
       {sortedDays.length === 0 ? (
-        <div className="bg-white p-16 rounded-[40px] border-2 border-dashed border-slate-100 text-center space-y-4">
-          <div className="bg-slate-50 w-16 h-16 rounded-3xl flex items-center justify-center mx-auto text-slate-200">
-             <FileText className="w-8 h-8" />
+        <div className="bg-white p-20 rounded-[3rem] border-4 border-dashed border-slate-100 text-center space-y-5">
+          <div className="bg-slate-50 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto text-slate-200">
+             <FileText className="w-10 h-10" />
           </div>
-          <p className="text-slate-400 font-black text-[10px] uppercase tracking-widest leading-relaxed">No hay registros completados<br/>para generar el reporte.</p>
+          <p className="text-slate-400 font-black text-[11px] uppercase tracking-widest leading-relaxed">Sin registros confirmados para<br/>generar el reporte maestro.</p>
         </div>
       ) : (
-        <div className="overflow-hidden rounded-[40px] shadow-2xl border border-slate-100 bg-white">
+        <div className="overflow-hidden rounded-[3rem] shadow-[0_30px_70px_-20px_rgba(0,0,0,0.15)] border border-slate-100 bg-white">
           <div 
-            id="receipt-capture-area" 
-            className="bg-white p-8 sm:p-12 text-slate-800"
+            id="receipt-capture-area-pro" 
+            className="bg-white p-10 sm:p-14 text-slate-800"
           >
-            <div className="flex justify-between items-start border-b-4 border-slate-900 pb-8 mb-10">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <div className="bg-slate-900 p-1 rounded text-white"><ShieldCheck className="w-4 h-4" /></div>
-                  <h1 className="text-2xl font-black italic uppercase tracking-tighter leading-none">Registro Laboral</h1>
+            <div className="flex justify-between items-start border-b-8 border-slate-900 pb-10 mb-12">
+              <div className="space-y-2">
+                <div className="flex items-center gap-3">
+                  <div className="bg-slate-900 p-2 rounded-xl text-white shadow-xl rotate-6"><ShieldCheck className="w-6 h-6" /></div>
+                  <h1 className="text-3xl font-black italic uppercase tracking-tighter leading-none text-slate-900">Reporte Laboral</h1>
                 </div>
-                <p className="text-[8px] font-black text-slate-400 uppercase tracking-[0.2em]">Tu tiempo y tus ganancias, bajo tu control.</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Compliance & Salary Management Tool</p>
               </div>
               <div className="text-right">
-                <p className="text-[9px] uppercase font-black text-slate-400 tracking-widest mb-1">Período</p>
-                <p className="font-black text-sm uppercase tracking-tighter">{dateRange}</p>
+                <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Status</p>
+                <div className="bg-blue-600 text-white px-4 py-1.5 rounded-full font-black text-[10px] uppercase tracking-tighter">Verified Private</div>
               </div>
             </div>
 
-            <div className="mb-12 grid grid-cols-2 gap-8">
-              <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                <p className="text-[8px] uppercase font-black text-slate-400 mb-2 tracking-widest">Trabajador/a</p>
-                <p className="font-black text-lg text-slate-900 leading-none uppercase tracking-tight">{settings.workerName}</p>
+            <div className="grid grid-cols-2 gap-10 mb-12">
+              <div className="space-y-6">
+                <div>
+                   <p className="text-[10px] uppercase font-black text-slate-400 mb-2 tracking-widest">Profesional</p>
+                   <p className="font-black text-2xl text-slate-900 leading-none uppercase italic tracking-tighter">{settings.workerName}</p>
+                </div>
+                <div>
+                   <p className="text-[10px] uppercase font-black text-slate-400 mb-2 tracking-widest">Establecimiento</p>
+                   <p className="font-black text-base text-slate-600 leading-none uppercase tracking-tight">{settings.workplaceName || 'Empresa No Definida'}</p>
+                </div>
               </div>
-              <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100 text-right">
-                <p className="text-[8px] uppercase font-black text-slate-400 mb-2 tracking-widest">Sueldo Base</p>
-                <p className="font-black text-lg text-slate-700 leading-none">{formatCurrency(settings.monthlySalary)}</p>
+              <div className="text-right space-y-6">
+                <div>
+                   <p className="text-[10px] uppercase font-black text-slate-400 mb-2 tracking-widest">Sueldo Base (Nominal)</p>
+                   <p className="font-black text-2xl text-blue-600 leading-none italic">{formatCurrency(settings.monthlySalary)}</p>
+                </div>
+                <div>
+                   <p className="text-[10px] uppercase font-black text-slate-400 mb-2 tracking-widest">Generado</p>
+                   <p className="font-black text-xs text-slate-400 uppercase tracking-widest">{new Date().toLocaleDateString('es-UY')}</p>
+                </div>
               </div>
             </div>
 
-            <div className="mb-12">
-               <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 border-b border-slate-100 pb-2 italic">Detalle Mensual</h4>
+            <div className="mb-14">
+               <h4 className="text-[11px] font-black uppercase tracking-widest text-slate-900 mb-6 border-b-2 border-slate-100 pb-3 italic">Registro de Actividad Mensual</h4>
                <table className="w-full text-xs border-collapse">
                  <thead>
-                   <tr className="text-slate-400">
-                     <th className="text-left py-2 font-black uppercase tracking-widest text-[9px]">Día</th>
-                     <th className="text-center py-2 font-black uppercase tracking-widest text-[9px]">Horas</th>
-                     <th className="text-center py-2 font-black uppercase tracking-widest text-[9px]">Extras</th>
-                     <th className="text-right py-2 font-black uppercase tracking-widest text-[9px]">Subtotal</th>
+                   <tr className="text-slate-400 border-b border-slate-50">
+                     <th className="text-left py-4 font-black uppercase tracking-widest text-[10px]">Fecha</th>
+                     <th className="text-center py-4 font-black uppercase tracking-widest text-[10px]">Tipo</th>
+                     <th className="text-center py-4 font-black uppercase tracking-widest text-[10px]">Horas</th>
+                     <th className="text-center py-4 font-black uppercase tracking-widest text-[10px]">Extras</th>
+                     <th className="text-right py-4 font-black uppercase tracking-widest text-[10px]">Bruto</th>
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-slate-50">
@@ -133,10 +134,17 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                      const { gross, duration, extraHours } = getDayFinancials(day, summary.hourlyRate);
                      return (
                        <tr key={day.id} className="font-bold">
-                         <td className="py-3 text-slate-600">{new Date(day.date).toLocaleDateString('es-UY', { day: '2-digit', month: 'short' })}</td>
-                         <td className="py-3 text-center text-slate-800">{duration.toFixed(1)}h</td>
-                         <td className="py-3 text-center text-amber-600">{extraHours > 0 ? `${extraHours.toFixed(1)}h` : '-'}</td>
-                         <td className="py-3 text-right text-slate-900">{formatCurrency(gross)}</td>
+                         <td className="py-5 text-slate-600 text-[11px]">{new Date(day.date + 'T00:00:00').toLocaleDateString('es-UY', { day: '2-digit', month: 'short' })}</td>
+                         <td className="py-5 text-center">
+                            <span className={`text-[8px] px-2 py-1 rounded-full uppercase font-black border ${
+                               day.type === 'work' ? 'bg-blue-50 text-blue-600 border-blue-100' :
+                               day.type === 'vacation' ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                               'bg-slate-50 text-slate-600 border-slate-100'
+                            }`}>{day.type}</span>
+                         </td>
+                         <td className="py-5 text-center text-slate-900 text-[11px]">{duration.toFixed(1)}h</td>
+                         <td className="py-5 text-center text-blue-600 text-[11px]">{extraHours > 0 ? `+${extraHours.toFixed(1)}` : '-'}</td>
+                         <td className="py-5 text-right text-slate-900 text-[11px]">{formatCurrency(gross)}</td>
                        </tr>
                      );
                    })}
@@ -144,48 +152,46 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                </table>
             </div>
 
-            <div className="space-y-4 bg-slate-900 text-white p-8 rounded-[2.5rem] shadow-2xl relative overflow-hidden">
-              <div className="absolute top-0 right-0 p-4 opacity-5">
-                 <ShieldCheck className="w-24 h-24" />
+            <div className="space-y-6 bg-slate-900 text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden border-t-8 border-blue-600">
+              <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
+                 <ShieldCheck className="w-32 h-32" />
               </div>
-              <div className="flex justify-between items-center text-xs opacity-60">
-                <span className="font-black uppercase tracking-widest text-[9px]">Bruto Acumulado</span>
-                <span className="font-black">{formatCurrency(summary.totalGross)}</span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="font-black uppercase tracking-widest text-[9px] text-red-400">Descuentos Ley (22%)</span>
-                <span className="font-black text-red-400">-{formatCurrency(summary.bpsDiscount)}</span>
-              </div>
-              {summary.totalAdvances > 0 && (
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-black uppercase tracking-widest text-[9px] text-amber-400">Adelantos</span>
-                  <span className="font-black text-amber-400">-{formatCurrency(summary.totalAdvances)}</span>
-                </div>
-              )}
-              {summary.totalAllowances > 0 && (
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-black uppercase tracking-widest text-[9px] text-emerald-400">Viáticos (+)</span>
-                  <span className="font-black text-emerald-400">+{formatCurrency(summary.totalAllowances)}</span>
-                </div>
-              )}
               
-              <div className="flex justify-between items-end pt-6 border-t border-white/10 mt-6">
+              <div className="grid grid-cols-2 gap-y-3 gap-x-12">
+                 <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                   <span className="font-black uppercase tracking-widest text-[9px] opacity-60">Suma de Haberes</span>
+                   <span className="font-black">{formatCurrency(summary.totalGross)}</span>
+                 </div>
+                 <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                   <span className="font-black uppercase tracking-widest text-[9px] text-rose-400">Deducción Ley (22%)</span>
+                   <span className="font-black text-rose-400">-{formatCurrency(summary.bpsDiscount)}</span>
+                 </div>
+                 {summary.totalAdvances > 0 && (
+                   <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                     <span className="font-black uppercase tracking-widest text-[9px] text-amber-400">Adelantos</span>
+                     <span className="font-black text-amber-400">-{formatCurrency(summary.totalAdvances)}</span>
+                   </div>
+                 )}
+                 <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                   <span className="font-black uppercase tracking-widest text-[9px] text-emerald-400">Viáticos Acumulados</span>
+                   <span className="font-black text-emerald-400">+{formatCurrency(summary.totalAllowances)}</span>
+                 </div>
+              </div>
+              
+              <div className="flex justify-between items-end pt-10 mt-6">
                 <div>
-                  <p className="font-black text-blue-400 uppercase tracking-[0.2em] text-[10px] italic">Líquido Estimado</p>
-                  <p className="text-[7px] font-bold text-slate-500 uppercase">A cobrar en mano</p>
+                  <p className="font-black text-blue-400 uppercase tracking-[0.4em] text-xs italic mb-1">Neto Liquido Final</p>
+                  <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Total Estimado a Percibir</p>
                 </div>
-                <span className="text-4xl font-black italic tracking-tighter leading-none">{formatCurrency(summary.netPay)}</span>
+                <span className="text-5xl font-black italic tracking-tighter leading-none text-white">{formatCurrency(summary.netPay)}</span>
               </div>
             </div>
 
-            <div className="mt-12 pt-8 border-t border-slate-50 flex justify-between items-end opacity-20">
-              <div className="space-y-1">
-                <p className="text-[8px] font-black uppercase tracking-[0.3em]">Control Laboral Privado</p>
-                <p className="text-[7px] font-bold italic">Bajo control del trabajador</p>
+            <div className="mt-14 pt-10 border-t-2 border-slate-50 flex justify-between items-center opacity-30">
+              <div className="flex items-center gap-3">
+                 <p className="text-[10px] font-black italic text-slate-900">Registro Laboral Pro</p>
               </div>
-              <div className="text-right">
-                <p className="text-[10px] font-black italic">Generado en Llavpodes</p>
-              </div>
+              <p className="text-[9px] font-black uppercase tracking-widest text-slate-400">Uruguay • BPS Standard Calculation</p>
             </div>
           </div>
         </div>
