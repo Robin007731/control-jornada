@@ -1,6 +1,6 @@
 
 import React, { useMemo, useState } from 'react';
-import { Download, Trash2, Edit2, Copy, AlertCircle, Calendar, Plus, Save, Clock, ChevronDown, ListPlus, CalendarDays, CheckCircle2 } from 'lucide-react';
+import { Download, Trash2, Edit2, Copy, AlertCircle, Calendar, Plus, Save, Clock, ChevronDown, ListPlus, CalendarDays, CheckCircle2, Moon } from 'lucide-react';
 import { WorkDay } from '../types';
 import { calculateDuration, isHoliday, isSunday } from '../utils';
 import Modal from './Modal';
@@ -66,7 +66,6 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
       const dayOfWeek = d.getDay();
       if (bulkSelectedDays.includes(dayOfWeek)) {
         const dateStr = d.toISOString().split('T')[0];
-        // Evitar duplicados para la misma fecha
         const alreadyExists = workDays.some(wd => wd.date.startsWith(dateStr));
         if (alreadyExists) continue;
 
@@ -79,6 +78,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
           exitTime: `${dateStr}T${bulkExitTime}:00`,
           isHalfDay: false,
           isManual: true,
+          isDayOff: false,
           status: 'complete',
           allowance: bulkAllowance || 0
         });
@@ -94,7 +94,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
     }
   };
 
-  const openManualEntry = (preset?: 'FULL' | 'HALF' | 'ENTRY' | 'BREAK' | 'EXIT' | 'NONE', day?: WorkDay) => {
+  const openManualEntry = (preset?: 'FULL' | 'HALF' | 'ENTRY' | 'BREAK' | 'EXIT' | 'NONE' | 'LIBRE', day?: WorkDay) => {
     setShowQuickMenu(false);
     const today = new Date().toISOString().split('T')[0];
     
@@ -105,12 +105,12 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
         id: crypto.randomUUID(),
         date: today,
         isManual: true,
+        isDayOff: false,
         status: 'complete',
         isHalfDay: false,
         allowance: 0
       };
 
-      // Aplicar preajustes
       switch (preset) {
         case 'FULL':
           base.entryTime = `${today}T08:00:00`;
@@ -122,6 +122,10 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
           base.entryTime = `${today}T08:00:00`;
           base.exitTime = `${today}T12:00:00`;
           base.isHalfDay = true;
+          break;
+        case 'LIBRE':
+          base.isDayOff = true;
+          base.status = 'complete';
           break;
         case 'ENTRY':
           base.entryTime = `${today}T08:00:00`;
@@ -149,7 +153,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
 
     const finalDay = {
         ...editingDay,
-        status: (editingDay.entryTime && editingDay.exitTime) ? 'complete' : 'incomplete'
+        status: editingDay.isDayOff ? 'complete' : ((editingDay.entryTime && editingDay.exitTime) ? 'complete' : 'incomplete')
     } as WorkDay;
 
     setWorkDays(prev => {
@@ -219,6 +223,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
                   <div className="px-3 py-2 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-50 mb-1">Opciones rápidas</div>
                   <QuickOption onClick={() => openManualEntry('FULL')} label="Jornada Completa" sub="08:00 - 17:00" color="text-blue-600" />
                   <QuickOption onClick={() => openManualEntry('HALF')} label="Medio Turno" sub="Sin descanso" color="text-green-600" />
+                  <QuickOption onClick={() => openManualEntry('LIBRE')} label="Día Libre" sub="Hoy no se trabaja" color="text-slate-500" icon={<Moon className="w-3.5 h-3.5" />} />
                   <div className="border-t border-gray-50 my-1"></div>
                   <div className="px-3 py-2 text-[10px] font-black uppercase text-gray-400 tracking-widest border-b border-gray-50 mb-1">Herramientas</div>
                   <QuickOption 
@@ -261,6 +266,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
                     date: date.toISOString().split('T')[0],
                     status: 'complete',
                     isHalfDay: false,
+                    isDayOff: false,
                     isManual: true,
                     allowance: 0
                   });
@@ -287,12 +293,12 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
             <div 
               key={day.id}
               className={`bg-white rounded-2xl p-4 shadow-sm border-l-4 transition-all hover:shadow-md ${
-                day.status === 'incomplete' ? 'border-red-400' : holiday ? 'border-amber-400' : 'border-blue-400'
+                day.isDayOff ? 'border-slate-300 opacity-80' : day.status === 'incomplete' ? 'border-red-400' : holiday ? 'border-amber-400' : 'border-blue-400'
               }`}
             >
               <div className="flex justify-between items-start">
                 <div className="flex gap-4 items-center">
-                  <div className="text-center bg-gray-50 rounded-xl p-2 min-w-[50px]">
+                  <div className={`text-center rounded-xl p-2 min-w-[50px] ${day.isDayOff ? 'bg-slate-100' : 'bg-gray-50'}`}>
                     <span className="block text-[10px] font-bold text-gray-400 uppercase">{dateObj.toLocaleDateString('es-UY', { weekday: 'short' })}</span>
                     <span className="block text-lg font-bold text-gray-700">{dateObj.getDate()}</span>
                   </div>
@@ -300,21 +306,32 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-gray-800">{dateObj.toLocaleDateString('es-UY', { month: 'long', year: 'numeric' })}</span>
                       {holiday && <span className="bg-amber-100 text-amber-700 text-[10px] font-bold px-2 py-0.5 rounded-full">Feriado</span>}
+                      {day.isDayOff && <span className="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"><Moon className="w-2 h-2" /> Libre</span>}
                       {day.isManual && <span className="text-gray-300" title="Registro Manual"><Edit2 className="w-3 h-3" /></span>}
                     </div>
-                    <div className="text-xs text-gray-500 flex gap-2 mt-1">
-                      <span>{day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
-                      <span>→</span>
-                      <span>{day.exitTime ? new Date(day.exitTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
-                    </div>
+                    {!day.isDayOff ? (
+                      <div className="text-xs text-gray-500 flex gap-2 mt-1">
+                        <span>{day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                        <span>→</span>
+                        <span>{day.exitTime ? new Date(day.exitTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                      </div>
+                    ) : (
+                      <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">Sin actividad laboral</div>
+                    )}
                   </div>
                 </div>
 
                 <div className="text-right">
-                  <div className="text-lg font-bold text-blue-600">{dur.toFixed(1)} <span className="text-xs">h</span></div>
-                  {extra > 0 && <div className="text-xs font-bold text-red-500">+{extra.toFixed(1)} extra</div>}
-                  {day.isHalfDay && <div className="text-[9px] font-black text-green-600 uppercase">Medio Turno</div>}
-                  {day.allowance && day.allowance > 0 ? <div className="text-[9px] font-black text-emerald-600 uppercase">Viáticos: ${day.allowance}</div> : null}
+                  {!day.isDayOff ? (
+                    <>
+                      <div className="text-lg font-bold text-blue-600">{dur.toFixed(1)} <span className="text-xs">h</span></div>
+                      {extra > 0 && <div className="text-xs font-bold text-red-500">+{extra.toFixed(1)} extra</div>}
+                      {day.isHalfDay && <div className="text-[9px] font-black text-green-600 uppercase">Medio Turno</div>}
+                      {day.allowance && day.allowance > 0 ? <div className="text-[9px] font-black text-emerald-600 uppercase">Viáticos: ${day.allowance}</div> : null}
+                    </>
+                  ) : (
+                    <div className="text-slate-300 font-bold">0.0 h</div>
+                  )}
                 </div>
               </div>
 
@@ -475,80 +492,97 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Entrada</label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input 
-                  type="time" 
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium border-none text-gray-800"
-                  value={getTimeValue(editingDay?.entryTime)}
-                  onChange={(e) => handleTimeChange('entryTime', e.target.value)}
-                />
-              </div>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Salida</label>
-              <div className="relative">
-                <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                <input 
-                  type="time" 
-                  className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium border-none text-gray-800"
-                  value={getTimeValue(editingDay?.exitTime)}
-                  onChange={(e) => handleTimeChange('exitTime', e.target.value)}
-                />
-              </div>
-            </div>
+          <div className="flex items-center gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100 transition-all">
+            <input 
+              type="checkbox" 
+              id="isdayoff"
+              className="w-5 h-5 rounded text-blue-600 focus:ring-blue-500"
+              checked={editingDay?.isDayOff || false}
+              onChange={(e) => setEditingDay({ ...editingDay, isDayOff: e.target.checked })}
+            />
+            <label htmlFor="isdayoff" className="text-sm font-black uppercase tracking-tight text-slate-700 flex items-center gap-2">
+              <Moon className="w-4 h-4 text-slate-400" /> ¿Es día libre?
+            </label>
           </div>
 
-          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-            <h4 className="text-[10px] font-bold text-blue-400 uppercase mb-3">Descansos (Opcional)</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <input 
-                  type="time" 
-                  className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800"
-                  value={getTimeValue(editingDay?.breakStartTime)}
-                  onChange={(e) => handleTimeChange('breakStartTime', e.target.value)}
-                />
-                <span className="text-[9px] text-blue-300 mt-1 block">Inicio Descanso</span>
+          {!editingDay?.isDayOff && (
+            <>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Entrada</label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <input 
+                      type="time" 
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium border-none text-gray-800"
+                      value={getTimeValue(editingDay?.entryTime)}
+                      onChange={(e) => handleTimeChange('entryTime', e.target.value)}
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Salida</label>
+                  <div className="relative">
+                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
+                    <input 
+                      type="time" 
+                      className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium border-none text-gray-800"
+                      value={getTimeValue(editingDay?.exitTime)}
+                      onChange={(e) => handleTimeChange('exitTime', e.target.value)}
+                    />
+                  </div>
+                </div>
               </div>
-              <div>
-                <input 
-                  type="time" 
-                  className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800"
-                  value={getTimeValue(editingDay?.breakEndTime)}
-                  onChange={(e) => handleTimeChange('breakEndTime', e.target.value)}
-                />
-                <span className="text-[9px] text-blue-300 mt-1 block">Fin Descanso</span>
+
+              <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+                <h4 className="text-[10px] font-bold text-blue-400 uppercase mb-3">Descansos (Opcional)</h4>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <input 
+                      type="time" 
+                      className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800"
+                      value={getTimeValue(editingDay?.breakStartTime)}
+                      onChange={(e) => handleTimeChange('breakStartTime', e.target.value)}
+                    />
+                    <span className="text-[9px] text-blue-300 mt-1 block">Inicio Descanso</span>
+                  </div>
+                  <div>
+                    <input 
+                      type="time" 
+                      className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800"
+                      value={getTimeValue(editingDay?.breakEndTime)}
+                      onChange={(e) => handleTimeChange('breakEndTime', e.target.value)}
+                    />
+                    <span className="text-[9px] text-blue-300 mt-1 block">Fin Descanso</span>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div className="space-y-3">
-            <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-               <input 
-                  type="checkbox" 
-                  id="halfday"
-                  className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                  checked={editingDay?.isHalfDay || false}
-                  onChange={(e) => setEditingDay({ ...editingDay, isHalfDay: e.target.checked })}
-               />
-               <label htmlFor="halfday" className="text-sm font-medium text-gray-700">Marcar como medio turno (sin descanso)</label>
-            </div>
+              <div className="space-y-3">
+                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
+                  <input 
+                      type="checkbox" 
+                      id="halfday"
+                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
+                      checked={editingDay?.isHalfDay || false}
+                      onChange={(e) => setEditingDay({ ...editingDay, isHalfDay: e.target.checked })}
+                  />
+                  <label htmlFor="halfday" className="text-sm font-medium text-gray-700">Marcar como medio turno (sin descanso)</label>
+                </div>
 
-            <div className="bg-gray-50 p-3 rounded-xl">
-              <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Viáticos ($)</label>
-              <input 
-                type="number" 
-                className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800 font-bold"
-                placeholder="0"
-                value={editingDay?.allowance || ''}
-                onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })}
-              />
-            </div>
-          </div>
+                <div className="bg-gray-50 p-3 rounded-xl">
+                  <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Viáticos ($)</label>
+                  <input 
+                    type="number" 
+                    className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800 font-bold"
+                    placeholder="0"
+                    value={editingDay?.allowance || ''}
+                    onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })}
+                  />
+                </div>
+              </div>
+            </>
+          )}
 
           <button 
             type="submit"

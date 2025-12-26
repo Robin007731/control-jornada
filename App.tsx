@@ -33,16 +33,6 @@ const App: React.FC = () => {
   const [lastAction, setLastAction] = useState<WorkDay[] | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  // PWA Install Prompt Logic
-  useEffect(() => {
-    const handler = (e: any) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-    window.addEventListener('beforeinstallprompt' as any, handler);
-    return () => window.removeEventListener('beforeinstallprompt' as any, handler);
-  }, []);
-
   // Persistence
   useEffect(() => {
     const savedData = localStorage.getItem('llavpodes_data');
@@ -65,9 +55,11 @@ const App: React.FC = () => {
   const handleAction = useCallback((day: WorkDay) => {
     setLastAction([...workDays]);
     setWorkDays(prev => {
-      const existing = prev.find(d => new Date(d.date).toDateString() === new Date(day.date).toDateString());
-      if (existing) {
-        return prev.map(d => d.id === existing.id ? { ...day } : d);
+      const existingIdx = prev.findIndex(d => new Date(d.date).toDateString() === new Date(day.date).toDateString());
+      if (existingIdx > -1) {
+        const newArr = [...prev];
+        newArr[existingIdx] = day;
+        return newArr;
       }
       return [day, ...prev];
     });
@@ -116,7 +108,7 @@ const App: React.FC = () => {
               </button>
             )}
             <div className="text-right hidden sm:block">
-              <p className="text-[7px] text-slate-400 font-black uppercase leading-none mb-1">Usuario</p>
+              <p className="text-[7px] text-slate-400 font-black uppercase leading-none mb-1 text-right">Usuario</p>
               <p className="text-[10px] font-black uppercase tracking-tighter truncate max-w-[80px]">{settings.workerName}</p>
             </div>
           </div>

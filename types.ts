@@ -15,6 +15,7 @@ export interface WorkDay {
   exitTime?: string;
   isHalfDay: boolean;
   isManual: boolean;
+  isDayOff: boolean; // Added for day off support
   status: 'incomplete' | 'complete';
   // Allowance field for extra earnings like viáticos
   allowance?: number;

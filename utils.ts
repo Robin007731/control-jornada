@@ -10,6 +10,7 @@ import {
 } from './constants';
 
 export const calculateDuration = (day: WorkDay): number => {
+  if (day.isDayOff) return 0; // Days off have 0 duration
   if (!day.entryTime || !day.exitTime) return 0;
 
   const start = new Date(day.entryTime).getTime();
@@ -26,6 +27,9 @@ export const calculateDuration = (day: WorkDay): number => {
 };
 
 export const getDayFinancials = (day: WorkDay, hourlyRate: number) => {
+  if (day.isDayOff) {
+    return { duration: 0, normalHours: 0, extraHours: 0, gross: 0 };
+  }
   const duration = calculateDuration(day);
   const normalHours = Math.min(NORMAL_JORNADA_HOURS, duration);
   const extraHours = Math.max(0, duration - NORMAL_JORNADA_HOURS);
@@ -50,6 +54,7 @@ export const isHoliday = (date: Date) => {
 export const isSunday = (date: Date) => date.getDay() === 0;
 
 export const getWorkDayStatus = (day: WorkDay) => {
+  if (day.isDayOff) return 'complete';
   if (!day.entryTime || !day.exitTime) return 'incomplete';
   return 'complete';
 };
@@ -59,20 +64,18 @@ export const getSummary = (workDays: WorkDay[], settings: UserSettings, advances
   let totalGross = 0;
   let totalNormalHours = 0;
   let totalExtraHours = 0;
-  let totalAllowances = 0; // TRACK TOTAL ALLOWANCES
+  let totalAllowances = 0;
 
   workDays.forEach(day => {
     const { gross, normalHours, extraHours } = getDayFinancials(day, hourlyRate);
     totalGross += gross;
     totalNormalHours += normalHours;
     totalExtraHours += extraHours;
-    // Add allowances from each workday
     totalAllowances += (day.allowance || 0);
   });
 
   const bpsDiscount = totalGross * BPS_RATE;
   const totalAdvances = advances.reduce((acc, curr) => acc + curr.amount, 0);
-  // Net pay includes allowances (viáticos) and subtracts advances
   const netPay = (totalGross - bpsDiscount - totalAdvances) + totalAllowances;
 
   return {
@@ -82,18 +85,19 @@ export const getSummary = (workDays: WorkDay[], settings: UserSettings, advances
     totalExtraHours,
     bpsDiscount,
     totalAdvances,
-    totalAllowances, // RETURN TOTAL ALLOWANCES
+    totalAllowances,
     netPay
   };
 };
 
 export const generateCSV = (workDays: WorkDay[]) => {
-  const headers = ['Fecha', 'Entrada', 'Salida', 'Horas Totales', 'Horas Extra', 'Viáticos'];
+  const headers = ['Fecha', 'Estado', 'Entrada', 'Salida', 'Horas Totales', 'Horas Extra', 'Viáticos'];
   const rows = workDays.map(day => {
     const dur = calculateDuration(day);
     const extra = Math.max(0, dur - 8);
     return [
       new Date(day.date).toLocaleDateString('es-UY'),
+      day.isDayOff ? 'LIBRE' : 'TRABAJO',
       day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
       day.exitTime ? new Date(day.exitTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
       dur.toFixed(2),
