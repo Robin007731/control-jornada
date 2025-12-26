@@ -2,7 +2,7 @@
 import React, { useMemo, useState } from 'react';
 import { Download, Trash2, Edit2, Copy, AlertCircle, Calendar, Plus, Save, Clock, ChevronDown, ListPlus, CalendarDays, CheckCircle2, Moon } from 'lucide-react';
 import { WorkDay } from '../types';
-import { calculateDuration, isHoliday, isSunday } from '../utils';
+import { calculateDuration, isHoliday, isSunday, getLocalDateString } from '../utils';
 import Modal from './Modal';
 
 interface HistoryProps {
@@ -28,8 +28,8 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
   const [showQuickMenu, setShowQuickMenu] = useState(false);
 
   // Bulk entry state
-  const [bulkStartDate, setBulkStartDate] = useState(new Date().toISOString().split('T')[0]);
-  const [bulkEndDate, setBulkEndDate] = useState(new Date().toISOString().split('T')[0]);
+  const [bulkStartDate, setBulkStartDate] = useState(getLocalDateString());
+  const [bulkEndDate, setBulkEndDate] = useState(getLocalDateString());
   const [bulkSelectedDays, setBulkSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [bulkEntryTime, setBulkEntryTime] = useState('08:00');
   const [bulkExitTime, setBulkExitTime] = useState('17:00');
@@ -38,7 +38,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
   const [bulkAllowance, setBulkAllowance] = useState(0);
 
   const sortedDays = useMemo(() => {
-    return [...workDays].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    return [...workDays].sort((a, b) => b.date.localeCompare(a.date));
   }, [workDays]);
 
   const handleDelete = (id: string) => {
@@ -51,7 +51,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
     const newDay: WorkDay = {
       ...day,
       id: crypto.randomUUID(),
-      date: new Date().toISOString()
+      date: getLocalDateString()
     };
     setWorkDays(prev => [newDay, ...prev]);
   };
@@ -65,8 +65,8 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
       const dayOfWeek = d.getDay();
       if (bulkSelectedDays.includes(dayOfWeek)) {
-        const dateStr = d.toISOString().split('T')[0];
-        const alreadyExists = workDays.some(wd => wd.date.startsWith(dateStr));
+        const dateStr = getLocalDateString(d);
+        const alreadyExists = workDays.some(wd => wd.date === dateStr);
         if (alreadyExists) continue;
 
         newDays.push({
@@ -90,13 +90,13 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
       setIsBulkModalOpen(false);
       alert(`Se han añadido ${newDays.length} jornadas correctamente.`);
     } else {
-      alert("No se añadieron días. Verifica el rango o si ya existen registros en esas fechas.");
+      alert("No se añadieron días. Verifica el rango o si ya existen registros.");
     }
   };
 
   const openManualEntry = (preset?: 'FULL' | 'HALF' | 'ENTRY' | 'BREAK' | 'EXIT' | 'NONE' | 'LIBRE', day?: WorkDay) => {
     setShowQuickMenu(false);
-    const today = new Date().toISOString().split('T')[0];
+    const today = getLocalDateString();
     
     if (day) {
       setEditingDay(day);
@@ -161,6 +161,12 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
       if (exists) {
         return prev.map(d => d.id === finalDay.id ? finalDay : d);
       }
+      // Evitar duplicados por fecha si es nuevo registro
+      const dateExists = prev.find(d => d.date === finalDay.date);
+      if (dateExists) {
+        alert("Ya existe un registro para esta fecha. Edita el registro existente.");
+        return prev;
+      }
       return [finalDay, ...prev];
     });
     setIsModalOpen(false);
@@ -169,7 +175,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
 
   const handleTimeChange = (field: keyof WorkDay, time: string) => {
     if (!editingDay || !editingDay.date) return;
-    const datePart = editingDay.date.split('T')[0];
+    const datePart = editingDay.date;
     const newDateTime = time ? `${datePart}T${time}:00` : undefined;
     setEditingDay(prev => ({ ...prev, [field]: newDateTime }));
   };
@@ -177,22 +183,24 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
   const getTimeValue = (isoString?: string) => {
     if (!isoString) return '';
     try {
-        return new Date(isoString).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false });
+        const d = new Date(isoString);
+        return d.toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false });
     } catch(e) { return ''; }
   };
 
   const missingDays = useMemo(() => {
     if (workDays.length === 0) return [];
-    const missing: Date[] = [];
+    const missing: string[] = [];
     const now = new Date();
-    const start = new Date(now);
+    const start = new Date();
     start.setMonth(now.getMonth() - 1);
 
     for (let d = new Date(start); d <= now; d.setDate(d.getDate() + 1)) {
-      if (isSunday(d) || isHoliday(d)) continue;
-      const exists = workDays.some(wd => new Date(wd.date).toDateString() === d.toDateString());
+      const dateStr = getLocalDateString(d);
+      if (isSunday(dateStr) || isHoliday(dateStr)) continue;
+      const exists = workDays.some(wd => wd.date === dateStr);
       if (!exists) {
-        missing.push(new Date(d));
+        missing.push(dateStr);
       }
     }
     return missing.reverse();
@@ -254,16 +262,16 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
       {missingDays.length > 0 && (
         <div className="bg-red-50 border border-red-100 rounded-2xl p-4">
           <h4 className="text-red-800 font-bold text-sm flex items-center gap-2 mb-2">
-            <AlertCircle className="w-4 h-4" /> Días laborables sin registro
+            <AlertCircle className="w-4 h-4" /> Días laborales sin registro
           </h4>
           <div className="flex flex-wrap gap-2">
-            {missingDays.slice(0, 5).map(date => (
+            {missingDays.slice(0, 5).map(dateStr => (
               <span 
-                key={date.toISOString()} 
+                key={dateStr} 
                 onClick={() => {
                   setEditingDay({
                     id: crypto.randomUUID(),
-                    date: date.toISOString().split('T')[0],
+                    date: dateStr,
                     status: 'complete',
                     isHalfDay: false,
                     isDayOff: false,
@@ -274,7 +282,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
                 }}
                 className="bg-red-200 text-red-800 text-[10px] font-bold px-2 py-1 rounded-full cursor-pointer hover:bg-red-300 transition-colors"
               >
-                {date.toLocaleDateString('es-UY', { day: '2-digit', month: 'short' })}
+                {new Date(dateStr + 'T00:00:00').toLocaleDateString('es-UY', { day: '2-digit', month: 'short' })}
               </span>
             ))}
             {missingDays.length > 5 && <span className="text-red-600 text-[10px] font-bold">+{missingDays.length - 5} más</span>}
@@ -286,8 +294,8 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
         {sortedDays.map(day => {
           const dur = calculateDuration(day);
           const extra = Math.max(0, dur - 8);
-          const dateObj = new Date(day.date);
-          const holiday = isHoliday(dateObj);
+          const dateObj = new Date(day.date + 'T00:00:00');
+          const holiday = isHoliday(day.date);
           
           return (
             <div 
@@ -311,9 +319,9 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
                     </div>
                     {!day.isDayOff ? (
                       <div className="text-xs text-gray-500 flex gap-2 mt-1">
-                        <span>{day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                        <span>{day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}</span>
                         <span>→</span>
-                        <span>{day.exitTime ? new Date(day.exitTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '--:--'}</span>
+                        <span>{day.exitTime ? new Date(day.exitTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--'}</span>
                       </div>
                     ) : (
                       <div className="text-[10px] font-bold text-slate-400 mt-1 uppercase tracking-tight">Sin actividad laboral</div>
@@ -354,7 +362,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
           <div className="text-center py-12 px-6">
             <Calendar className="w-12 h-12 text-gray-200 mx-auto mb-4" />
             <h3 className="text-gray-400 font-semibold">No hay registros aún</h3>
-            <p className="text-gray-300 text-sm">Empieza a marcar tu jornada desde el tablero principal o añade uno manual.</p>
+            <p className="text-gray-300 text-sm">Empieza a marcar tu jornada hoy o añade una manual.</p>
           </div>
         )}
       </div>
@@ -392,7 +400,7 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
             </div>
 
             <div>
-              <label className="text-[9px] font-black uppercase text-indigo-400 mb-2 block">Días de la semana que trabajas</label>
+              <label className="text-[9px] font-black uppercase text-indigo-400 mb-2 block">Días de trabajo</label>
               <div className="flex justify-between">
                 {WEEKDAYS.map(day => (
                   <button
@@ -433,35 +441,6 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
             </div>
           </div>
 
-          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-            <h4 className="text-[10px] font-bold text-blue-400 uppercase mb-3">Descanso Aplicado</h4>
-            <div className="grid grid-cols-2 gap-4">
-              <input 
-                type="time" 
-                className="w-full px-4 py-2 bg-white rounded-lg outline-none text-sm border-none text-gray-800"
-                value={bulkBreakStart}
-                onChange={(e) => setBulkBreakStart(e.target.value)}
-              />
-              <input 
-                type="time" 
-                className="w-full px-4 py-2 bg-white rounded-lg outline-none text-sm border-none text-gray-800"
-                value={bulkBreakEnd}
-                onChange={(e) => setBulkBreakEnd(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <div className="bg-gray-50 p-3 rounded-xl">
-            <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Viáticos por día ($)</label>
-            <input 
-              type="number" 
-              className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm border-none text-gray-800 font-bold"
-              placeholder="0"
-              value={bulkAllowance || ''}
-              onChange={(e) => setBulkAllowance(Number(e.target.value))}
-            />
-          </div>
-
           <button 
             type="submit"
             className="w-full bg-indigo-600 text-white py-4 rounded-2xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 hover:bg-indigo-700 transition-all shadow-lg active:scale-95 mt-4"
@@ -479,14 +458,14 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
       >
         <form onSubmit={saveManualEntry} className="space-y-4">
           <div>
-            <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Fecha de la Jornada</label>
+            <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Fecha</label>
             <div className="relative">
               <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
               <input 
                 type="date" 
                 required
                 className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium border-none text-gray-800"
-                value={editingDay?.date?.split('T')[0] || ''}
+                value={editingDay?.date || ''}
                 onChange={(e) => setEditingDay({ ...editingDay, date: e.target.value })}
               />
             </div>
@@ -510,76 +489,54 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Entrada</label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    <input 
-                      type="time" 
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium border-none text-gray-800"
-                      value={getTimeValue(editingDay?.entryTime)}
-                      onChange={(e) => handleTimeChange('entryTime', e.target.value)}
-                    />
-                  </div>
+                  <input 
+                    type="time" 
+                    className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium border-none text-gray-800"
+                    value={getTimeValue(editingDay?.entryTime)}
+                    onChange={(e) => handleTimeChange('entryTime', e.target.value)}
+                  />
                 </div>
                 <div>
                   <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Hora Salida</label>
-                  <div className="relative">
-                    <Clock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-                    <input 
-                      type="time" 
-                      className="w-full pl-10 pr-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all font-medium border-none text-gray-800"
-                      value={getTimeValue(editingDay?.exitTime)}
-                      onChange={(e) => handleTimeChange('exitTime', e.target.value)}
-                    />
-                  </div>
+                  <input 
+                    type="time" 
+                    className="w-full px-4 py-3 bg-gray-50 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 font-medium border-none text-gray-800"
+                    value={getTimeValue(editingDay?.exitTime)}
+                    onChange={(e) => handleTimeChange('exitTime', e.target.value)}
+                  />
                 </div>
               </div>
 
-              <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
-                <h4 className="text-[10px] font-bold text-blue-400 uppercase mb-3">Descansos (Opcional)</h4>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <input 
-                      type="time" 
-                      className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800"
-                      value={getTimeValue(editingDay?.breakStartTime)}
-                      onChange={(e) => handleTimeChange('breakStartTime', e.target.value)}
-                    />
-                    <span className="text-[9px] text-blue-300 mt-1 block">Inicio Descanso</span>
-                  </div>
-                  <div>
-                    <input 
-                      type="time" 
-                      className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800"
-                      value={getTimeValue(editingDay?.breakEndTime)}
-                      onChange={(e) => handleTimeChange('breakEndTime', e.target.value)}
-                    />
-                    <span className="text-[9px] text-blue-300 mt-1 block">Fin Descanso</span>
-                  </div>
-                </div>
+              <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Descanso Inicio</label>
+                   <input 
+                    type="time" 
+                    className="w-full px-3 py-2 bg-gray-50 rounded-lg text-xs"
+                    value={getTimeValue(editingDay?.breakStartTime)}
+                    onChange={(e) => handleTimeChange('breakStartTime', e.target.value)}
+                  />
+                 </div>
+                 <div>
+                   <label className="text-[9px] font-black uppercase text-slate-400 mb-1 block">Descanso Fin</label>
+                   <input 
+                    type="time" 
+                    className="w-full px-3 py-2 bg-gray-50 rounded-lg text-xs"
+                    value={getTimeValue(editingDay?.breakEndTime)}
+                    onChange={(e) => handleTimeChange('breakEndTime', e.target.value)}
+                  />
+                 </div>
               </div>
 
-              <div className="space-y-3">
-                <div className="flex items-center gap-3 p-3 bg-gray-50 rounded-xl">
-                  <input 
-                      type="checkbox" 
-                      id="halfday"
-                      className="w-4 h-4 rounded text-blue-600 focus:ring-blue-500"
-                      checked={editingDay?.isHalfDay || false}
-                      onChange={(e) => setEditingDay({ ...editingDay, isHalfDay: e.target.checked })}
-                  />
-                  <label htmlFor="halfday" className="text-sm font-medium text-gray-700">Marcar como medio turno (sin descanso)</label>
-                </div>
-
-                <div className="bg-gray-50 p-3 rounded-xl">
-                  <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Viáticos ($)</label>
-                  <input 
-                    type="number" 
-                    className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 transition-all text-sm border-none text-gray-800 font-bold"
-                    placeholder="0"
-                    value={editingDay?.allowance || ''}
-                    onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })}
-                  />
-                </div>
+              <div className="bg-gray-50 p-3 rounded-xl">
+                <label className="text-xs font-bold text-gray-400 uppercase mb-1 block">Viáticos ($)</label>
+                <input 
+                  type="number" 
+                  className="w-full px-4 py-2 bg-white rounded-lg outline-none focus:ring-2 focus:ring-blue-500 text-sm border-none text-gray-800 font-bold"
+                  placeholder="0"
+                  value={editingDay?.allowance || ''}
+                  onChange={(e) => setEditingDay({ ...editingDay, allowance: Number(e.target.value) })}
+                />
               </div>
             </>
           )}

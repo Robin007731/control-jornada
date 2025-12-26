@@ -9,8 +9,17 @@ import {
   URUGUAY_HOLIDAYS
 } from './constants';
 
+/**
+ * Retorna la fecha en formato YYYY-MM-DD local
+ */
+export const getLocalDateString = (date: Date = new Date()): string => {
+  const offset = date.getTimezoneOffset();
+  const adjustedDate = new Date(date.getTime() - (offset * 60 * 1000));
+  return adjustedDate.toISOString().split('T')[0];
+};
+
 export const calculateDuration = (day: WorkDay): number => {
-  if (day.isDayOff) return 0; // Days off have 0 duration
+  if (day.isDayOff) return 0;
   if (!day.entryTime || !day.exitTime) return 0;
 
   const start = new Date(day.entryTime).getTime();
@@ -23,7 +32,7 @@ export const calculateDuration = (day: WorkDay): number => {
     durationMs -= (breakEnd - breakStart);
   }
 
-  return Math.max(0, durationMs / (1000 * 60 * 60)); // Hours
+  return Math.max(0, durationMs / (1000 * 60 * 60)); // Horas
 };
 
 export const getDayFinancials = (day: WorkDay, hourlyRate: number) => {
@@ -47,11 +56,15 @@ export const formatCurrency = (amount: number) => {
   return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount);
 };
 
-export const isHoliday = (date: Date) => {
-  return URUGUAY_HOLIDAYS.some(h => h.month === date.getMonth() && h.day === date.getDate());
+export const isHoliday = (date: Date | string) => {
+  const d = typeof date === 'string' ? new Date(date + 'T00:00:00') : date;
+  return URUGUAY_HOLIDAYS.some(h => h.month === d.getMonth() && h.day === d.getDate());
 };
 
-export const isSunday = (date: Date) => date.getDay() === 0;
+export const isSunday = (date: Date | string) => {
+  const d = typeof date === 'string' ? new Date(date + 'T00:00:00') : date;
+  return d.getDay() === 0;
+};
 
 export const getWorkDayStatus = (day: WorkDay) => {
   if (day.isDayOff) return 'complete';
@@ -96,7 +109,7 @@ export const generateCSV = (workDays: WorkDay[]) => {
     const dur = calculateDuration(day);
     const extra = Math.max(0, dur - 8);
     return [
-      new Date(day.date).toLocaleDateString('es-UY'),
+      day.date,
       day.isDayOff ? 'LIBRE' : 'TRABAJO',
       day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
       day.exitTime ? new Date(day.exitTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
@@ -111,6 +124,6 @@ export const generateCSV = (workDays: WorkDay[]) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `registros_laborales_${new Date().toISOString().split('T')[0]}.csv`);
+  link.setAttribute('download', `registros_llavpodes_${getLocalDateString()}.csv`);
   link.click();
 };

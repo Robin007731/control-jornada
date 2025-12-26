@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Play, Coffee, LogOut, CheckCircle, AlertCircle, Clock, Moon, Sparkles, Coffee as RelaxIcon } from 'lucide-react';
 import { WorkDay, UserSettings, Advance } from '../types';
-import { getSummary, formatCurrency, isHoliday } from '../utils';
+import { getSummary, formatCurrency, isHoliday, getLocalDateString } from '../utils';
 
 interface DashboardProps {
   workDays: WorkDay[];
@@ -15,14 +15,14 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
   const [currentDay, setCurrentDay] = useState<WorkDay | null>(null);
   
   useEffect(() => {
-    const todayStr = new Date().toDateString();
-    const todayData = workDays.find(d => new Date(d.date).toDateString() === todayStr);
+    const todayStr = getLocalDateString();
+    const todayData = workDays.find(d => d.date === todayStr);
     if (todayData) {
       setCurrentDay(todayData);
     } else {
       setCurrentDay({
         id: crypto.randomUUID(),
-        date: new Date().toISOString(),
+        date: todayStr,
         isHalfDay: false,
         isManual: false,
         isDayOff: false,
@@ -90,8 +90,8 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
     if (currentDay?.isDayOff) return { label: 'Día Libre', icon: <Moon /> };
     if (!currentDay?.entryTime) return { label: 'Entrada', icon: <Play /> };
     if (!settings.simplifiedMode) {
-      if (!currentDay.breakStartTime) return { label: 'Descanso (Inicio)', icon: <Coffee /> };
-      if (!currentDay.breakEndTime) return { label: 'Descanso (Fin)', icon: <Coffee /> };
+      if (!currentDay.breakStartTime) return { label: 'Descanso (I)', icon: <Coffee /> };
+      if (!currentDay.breakEndTime) return { label: 'Descanso (F)', icon: <Coffee /> };
     }
     if (!currentDay.exitTime) return { label: 'Salida Final', icon: <LogOut /> };
     return { label: 'Jornada Completa', icon: <CheckCircle /> };
@@ -99,7 +99,7 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
 
   const nextAction = getNextAction();
   const isDone = currentDay?.status === 'complete' || currentDay?.isDayOff;
-  const todayHoliday = isHoliday(new Date());
+  const todayHoliday = isHoliday(getLocalDateString());
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -153,12 +153,12 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
               <div className="text-center space-y-2 relative z-10 px-4">
                 <p className="font-black uppercase tracking-[0.2em] text-[12px] text-slate-800">¡Hoy es tu día libre!</p>
                 <p className="text-[10px] font-bold text-blue-500 uppercase tracking-widest flex items-center justify-center gap-2">
-                  <Sparkles className="w-4 h-4" /> Disfruta tu merecido descanso <Sparkles className="w-4 h-4" />
+                  <Sparkles className="w-4 h-4" /> Disfruta tu descanso <Sparkles className="w-4 h-4" />
                 </p>
               </div>
               <button 
                 onClick={() => onAction({...currentDay, isDayOff: false, status: 'incomplete'})}
-                className="mt-6 text-[9px] font-black text-slate-400 underline uppercase tracking-[0.2em] hover:text-blue-600 transition-all hover:scale-105 active:scale-95 relative z-10"
+                className="mt-6 text-[9px] font-black text-slate-400 underline uppercase tracking-[0.2em] hover:text-blue-600 transition-all relative z-10"
               >
                 ¿Cambio de planes? Volver a modo trabajo
               </button>
