@@ -18,6 +18,7 @@ import Dashboard from './components/Dashboard';
 import History from './components/History';
 import Settings from './components/Settings';
 import Receipt from './components/Receipt';
+import AIAssistant from './components/AIAssistant';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'settings' | 'receipt'>('dashboard');
@@ -33,7 +34,6 @@ const App: React.FC = () => {
   const [lastAction, setLastAction] = useState<WorkDay[] | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  // Persistence
   useEffect(() => {
     const savedData = localStorage.getItem('llavpodes_data');
     if (savedData) {
@@ -55,7 +55,7 @@ const App: React.FC = () => {
   const handleAction = useCallback((day: WorkDay) => {
     setLastAction([...workDays]);
     setWorkDays(prev => {
-      const existingIdx = prev.findIndex(d => new Date(d.date).toDateString() === new Date(day.date).toDateString());
+      const existingIdx = prev.findIndex(d => d.date === day.date);
       if (existingIdx > -1) {
         const newArr = [...prev];
         newArr[existingIdx] = day;
@@ -93,8 +93,8 @@ const App: React.FC = () => {
               <ShieldCheck className="w-5 h-5 text-white" />
             </div>
             <div>
-              <h1 className="text-base font-black tracking-tight uppercase leading-none">Registro Laboral</h1>
-              <p className="text-[7px] font-bold text-blue-400 uppercase tracking-widest mt-1">Tu tiempo y tus ganancias, bajo tu control.</p>
+              <h1 className="text-base font-black tracking-tight uppercase leading-none italic">Llavpodes</h1>
+              <p className="text-[7px] font-bold text-blue-400 uppercase tracking-widest mt-1">Control Laboral Pro</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -151,6 +151,16 @@ const App: React.FC = () => {
           />
         )}
       </main>
+
+      <AIAssistant 
+        workDays={workDays}
+        setWorkDays={setWorkDays}
+        settings={settings}
+        setSettings={setSettings}
+        advances={advances}
+        onAddAdvance={handleAddAdvance}
+        onDeleteAdvance={handleDeleteAdvance}
+      />
 
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-xl px-8 py-3 rounded-full flex gap-10 items-center z-50 shadow-2xl border border-white/10">
         <NavButton 
