@@ -1,8 +1,8 @@
 
 {
-  "short_name": "Llavpodes",
-  "name": "Llavpodes - Control Laboral Profesional",
-  "description": "Tu tiempo y tus ganancias bajo tu control absoluto.",
+  "short_name": "Registro laboral",
+  "name": "Registro laboral",
+  "description": "tu jornada y ganancias en tus manos",
   "icons": [
     {
       "src": "icon.png",

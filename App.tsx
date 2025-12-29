@@ -30,9 +30,11 @@ const App: React.FC = () => {
     onboardingComplete: false,
     simplifiedMode: false,
     notificationsEnabled: false,
+    standardJornadaHours: 8,
+    privacyMode: false,
+    bpsRate: 22,
   });
   const [lastAction, setLastAction] = useState<WorkDay[] | null>(null);
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
   const playSoftChime = () => {
     try {
@@ -60,19 +62,17 @@ const App: React.FC = () => {
         const parsed = JSON.parse(savedData);
         setWorkDays(parsed.workDays || []);
         setAdvances(parsed.advances || []);
-        setSettings(prev => ({ ...prev, ...parsed.settings }));
+        setSettings(prev => ({ 
+          ...prev, 
+          ...parsed.settings,
+          standardJornadaHours: parsed.settings.standardJornadaHours ?? 8,
+          privacyMode: parsed.settings.privacyMode ?? false,
+          bpsRate: parsed.settings.bpsRate ?? 22
+        }));
       } catch (e) {
         console.error("Error loading data", e);
       }
     }
-
-    const handleBeforeInstall = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e);
-    };
-
-    window.addEventListener('beforeinstallprompt', handleBeforeInstall);
-    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
   }, []);
 
   useEffect(() => {
@@ -87,10 +87,10 @@ const App: React.FC = () => {
         const now = new Date();
         const diffHours = (now.getTime() - entryDate.getTime()) / (1000 * 60 * 60);
 
-        if (diffHours >= 8) {
+        if (diffHours >= settings.standardJornadaHours) {
           if (Notification.permission === 'granted') {
-            new Notification("Llavpodes: Fin de Jornada", {
-              body: `${settings.workerName}, ya pasaron 8 horas. ¿Marcamos la salida?`,
+            new Notification("Registro laboral: Fin de Jornada", {
+              body: `${settings.workerName}, ya pasaron ${settings.standardJornadaHours} horas. ¿Marcamos la salida?`,
               icon: '/icon.png',
               silent: true
             });
@@ -129,23 +129,6 @@ const App: React.FC = () => {
     }
   };
 
-  const installApp = async () => {
-    if (!deferredPrompt) {
-      const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !(window as any).MSStream;
-      if (isIOS) {
-        alert("En iPhone: Toca 'Compartir' y luego 'Añadir a pantalla de inicio'.");
-      } else {
-        alert("Para instalar en Android: Ve al menú del navegador (tres puntos) y selecciona 'Instalar aplicación' o 'Añadir a pantalla de inicio'.");
-      }
-      return;
-    }
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') {
-      setDeferredPrompt(null);
-    }
-  };
-
   if (!settings.onboardingComplete) {
     return (
       <Onboarding 
@@ -154,7 +137,10 @@ const App: React.FC = () => {
           workerName: name, 
           monthlySalary: salary, 
           onboardingComplete: true,
-          notificationsEnabled: false
+          notificationsEnabled: false,
+          standardJornadaHours: 8,
+          privacyMode: false,
+          bpsRate: 22
         }))} 
       />
     );
@@ -169,8 +155,8 @@ const App: React.FC = () => {
               <ShieldCheck className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-lg font-black tracking-tighter uppercase leading-none italic">Llavpodes</h1>
-              <p className="text-[8px] font-bold text-blue-400 uppercase tracking-[0.2em] mt-1">Soberanía Laboral</p>
+              <h1 className="text-lg font-black tracking-tighter uppercase leading-none italic">Registro laboral</h1>
+              <p className="text-[8px] font-bold text-blue-400 uppercase tracking-[0.2em] mt-1 text-balance">tu jornada y ganancias en tus manos</p>
             </div>
           </div>
           <div className="flex items-center gap-4">
@@ -221,7 +207,6 @@ const App: React.FC = () => {
             onDeleteAdvance={(id) => setAdvances(prev => prev.filter(a => a.id !== id))}
             workDays={workDays}
             setWorkDays={setWorkDays}
-            onInstall={installApp}
             onTestSound={playSoftChime}
           />
         )}

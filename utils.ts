@@ -5,7 +5,6 @@ import {
   HOURS_IN_MONTH, 
   BPS_RATE, 
   EXTRA_HOUR_MULTIPLIER, 
-  NORMAL_JORNADA_HOURS,
   URUGUAY_HOLIDAYS
 } from './constants';
 
@@ -22,44 +21,37 @@ export const getLocalDateString = (date: Date = new Date()): string => {
  * Calcula la duración neta de la jornada (horas trabajadas - descanso no remunerado)
  */
 export const calculateDuration = (day: WorkDay): number => {
-  // Fix: Property 'isDayOff' does not exist on type 'WorkDay'. Use day.type !== 'work' instead.
   if (day.type !== 'work') return 0;
   if (!day.entryTime || !day.exitTime) return 0;
 
   const start = new Date(day.entryTime).getTime();
   const end = new Date(day.exitTime).getTime();
   
-  // Tiempo total transcurrido
   let durationMs = end - start;
 
-  // Restar el descanso (No se paga)
   if (day.breakStartTime && day.breakEndTime) {
     const breakStart = new Date(day.breakStartTime).getTime();
     const breakEnd = new Date(day.breakEndTime).getTime();
     const breakDuration = breakEnd - breakStart;
     
-    // Solo restamos si el descanso tiene sentido cronológico
     if (breakDuration > 0) {
       durationMs -= breakDuration;
     }
   }
 
-  // Retornar en horas con decimales
   const hours = durationMs / (1000 * 60 * 60);
   return Math.max(0, hours);
 };
 
-export const getDayFinancials = (day: WorkDay, hourlyRate: number) => {
-  // Fix: Property 'isDayOff' does not exist on type 'WorkDay'. Use day.type !== 'work' instead.
+export const getDayFinancials = (day: WorkDay, hourlyRate: number, standardHours: number = 8) => {
   if (day.type !== 'work') {
     return { duration: 0, normalHours: 0, extraHours: 0, gross: 0 };
   }
   
   const duration = calculateDuration(day);
-  const normalHours = Math.min(NORMAL_JORNADA_HOURS, duration);
-  const extraHours = Math.max(0, duration - NORMAL_JORNADA_HOURS);
+  const normalHours = Math.min(standardHours, duration);
+  const extraHours = Math.max(0, duration - standardHours);
 
-  // El salario bruto solo considera las horas normales y las extras multiplicadas
   const gross = (normalHours * hourlyRate) + (extraHours * hourlyRate * EXTRA_HOUR_MULTIPLIER);
   
   return {
@@ -70,7 +62,8 @@ export const getDayFinancials = (day: WorkDay, hourlyRate: number) => {
   };
 };
 
-export const formatCurrency = (amount: number) => {
+export const formatCurrency = (amount: number, privacyMode: boolean = false) => {
+  if (privacyMode) return '••••••';
   return new Intl.NumberFormat('es-UY', { style: 'currency', currency: 'UYU' }).format(amount);
 };
 
@@ -85,7 +78,6 @@ export const isSunday = (date: Date | string) => {
 };
 
 export const getWorkDayStatus = (day: WorkDay) => {
-  // Fix: Property 'isDayOff' does not exist on type 'WorkDay'. Use day.type !== 'work' instead.
   if (day.type !== 'work') return 'complete';
   if (!day.entryTime || !day.exitTime) return 'incomplete';
   return 'complete';
@@ -99,14 +91,16 @@ export const getSummary = (workDays: WorkDay[], settings: UserSettings, advances
   let totalAllowances = 0;
 
   workDays.forEach(day => {
-    const { gross, normalHours, extraHours } = getDayFinancials(day, hourlyRate);
+    const { gross, normalHours, extraHours } = getDayFinancials(day, hourlyRate, settings.standardJornadaHours);
     totalGross += gross;
     totalNormalHours += normalHours;
     totalExtraHours += extraHours;
     totalAllowances += (day.allowance || 0);
   });
 
-  const bpsDiscount = totalGross * BPS_RATE;
+  // Usar el bpsRate personalizado desde ajustes. Si no existe, usar el estándar.
+  const rate = (settings.bpsRate ?? 22) / 100;
+  const bpsDiscount = totalGross * rate;
   const totalAdvances = advances.reduce((acc, curr) => acc + curr.amount, 0);
   const netPay = (totalGross - bpsDiscount - totalAdvances) + totalAllowances;
 
@@ -129,7 +123,6 @@ export const generateCSV = (workDays: WorkDay[]) => {
     const extra = Math.max(0, dur - 8);
     return [
       day.date,
-      // Fix: Property 'isDayOff' does not exist on type 'WorkDay'. Use day.type !== 'work' to determine 'LIBRE' status.
       day.type !== 'work' ? 'LIBRE' : 'TRABAJO',
       day.entryTime ? new Date(day.entryTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
       day.breakStartTime ? new Date(day.breakStartTime).toLocaleTimeString('es-UY', { hour: '2-digit', minute: '2-digit' }) : '-',
@@ -146,6 +139,6 @@ export const generateCSV = (workDays: WorkDay[]) => {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');
   link.setAttribute('href', url);
-  link.setAttribute('download', `registros_llavpodes_${getLocalDateString()}.csv`);
+  link.setAttribute('download', `registros_laboral_${getLocalDateString()}.csv`);
   link.click();
 };

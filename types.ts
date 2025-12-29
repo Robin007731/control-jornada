@@ -38,6 +38,9 @@ export interface UserSettings {
   onboardingComplete: boolean;
   simplifiedMode: boolean;
   notificationsEnabled?: boolean;
+  standardJornadaHours: number;
+  privacyMode: boolean;
+  bpsRate: number; // Porcentaje de descuento (ej: 22)
 }
 
 export interface AppState {

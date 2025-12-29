@@ -1,5 +1,5 @@
 
-const CACHE_NAME = 'llavpodes-pwa-v3';
+const CACHE_NAME = 'registro-laboral-v1';
 const ASSETS = [
   './',
   './index.html',
