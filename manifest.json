@@ -1,8 +1,8 @@
 
 {
-  "short_name": "Reg. Laboral",
-  "name": "Registro Laboral - Control de Jornadas",
-  "description": "Tus jornadas y ganancias bajo tu control total.",
+  "short_name": "Llavpodes",
+  "name": "Llavpodes - Control Laboral Profesional",
+  "description": "Tu tiempo y tus ganancias bajo tu control absoluto.",
   "icons": [
     {
       "src": "icon.png",
@@ -21,5 +21,7 @@
   "display": "standalone",
   "theme_color": "#0f172a",
   "background_color": "#0f172a",
-  "orientation": "portrait"
+  "orientation": "portrait",
+  "prefer_related_applications": false,
+  "categories": ["productivity", "finance"]
 }

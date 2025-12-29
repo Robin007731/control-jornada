@@ -1,18 +1,15 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
-  Clock, 
   History as HistoryIcon, 
   Settings as SettingsIcon, 
   FileText, 
   Undo,
   ShieldCheck,
-  TrendingUp,
-  Bell
+  TrendingUp
 } from 'lucide-react';
 import { WorkDay, UserSettings, Advance } from './types';
-import { DEFAULT_SALARY } from './constants';
-import { generateCSV, getLocalDateString } from './utils';
+import { getLocalDateString } from './utils';
 
 // Components
 import Onboarding from './components/Onboarding';
@@ -20,7 +17,6 @@ import Dashboard from './components/Dashboard';
 import History from './components/History';
 import Settings from './components/Settings';
 import Receipt from './components/Receipt';
-import AIAssistant from './components/AIAssistant';
 
 const App: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'dashboard' | 'history' | 'settings' | 'receipt'>('dashboard');
@@ -38,23 +34,18 @@ const App: React.FC = () => {
   const [lastAction, setLastAction] = useState<WorkDay[] | null>(null);
   const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
 
-  // Motor de sonido sintético suave (Chime Aura)
   const playSoftChime = () => {
     try {
       const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
       const oscillator = audioCtx.createOscillator();
       const gainNode = audioCtx.createGain();
-
       oscillator.type = 'sine';
-      oscillator.frequency.setValueAtTime(528, audioCtx.currentTime); // Frecuencia de calma
-      
+      oscillator.frequency.setValueAtTime(528, audioCtx.currentTime);
       gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.1); // Ataque suave
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5); // Desvanecimiento largo
-
+      gainNode.gain.linearRampToValueAtTime(0.2, audioCtx.currentTime + 0.1);
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 1.5);
       oscillator.connect(gainNode);
       gainNode.connect(audioCtx.destination);
-
       oscillator.start();
       oscillator.stop(audioCtx.currentTime + 1.5);
     } catch (e) {
@@ -84,7 +75,6 @@ const App: React.FC = () => {
     return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall);
   }, []);
 
-  // Lógica de recordatorio de salida (8 horas)
   useEffect(() => {
     if (!settings.notificationsEnabled) return;
 
@@ -97,13 +87,12 @@ const App: React.FC = () => {
         const now = new Date();
         const diffHours = (now.getTime() - entryDate.getTime()) / (1000 * 60 * 60);
 
-        // Si pasaron 8 horas y la app está activa, avisar con el sonido
         if (diffHours >= 8) {
           if (Notification.permission === 'granted') {
             new Notification("Llavpodes: Fin de Jornada", {
               body: `${settings.workerName}, ya pasaron 8 horas. ¿Marcamos la salida?`,
               icon: '/icon.png',
-              silent: true // Usamos nuestro sonido manual
+              silent: true
             });
             playSoftChime();
             if ('vibrate' in navigator) navigator.vibrate([100, 50, 100]);
@@ -112,7 +101,7 @@ const App: React.FC = () => {
       }
     };
 
-    const interval = setInterval(checkJornada, 1000 * 60 * 15); // Chequear cada 15 min
+    const interval = setInterval(checkJornada, 1000 * 60 * 15);
     return () => clearInterval(interval);
   }, [workDays, settings]);
 
@@ -146,7 +135,7 @@ const App: React.FC = () => {
       if (isIOS) {
         alert("En iPhone: Toca 'Compartir' y luego 'Añadir a pantalla de inicio'.");
       } else {
-        alert("La aplicación ya está instalada o tu navegador no soporta instalación directa.");
+        alert("Para instalar en Android: Ve al menú del navegador (tres puntos) y selecciona 'Instalar aplicación' o 'Añadir a pantalla de inicio'.");
       }
       return;
     }
@@ -237,16 +226,6 @@ const App: React.FC = () => {
           />
         )}
       </main>
-
-      <AIAssistant 
-        workDays={workDays}
-        setWorkDays={setWorkDays}
-        settings={settings}
-        setSettings={setSettings}
-        advances={advances}
-        onAddAdvance={(adv) => setAdvances(prev => [...prev, adv])}
-        onDeleteAdvance={(id) => setAdvances(prev => prev.filter(a => a.id !== id))}
-      />
 
       <nav className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-900/95 backdrop-blur-2xl px-10 py-4 rounded-[2.5rem] flex gap-12 items-center z-50 shadow-[0_20px_50px_rgba(0,0,0,0.3)] border border-white/10">
         <NavButton 
