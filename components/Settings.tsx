@@ -4,7 +4,8 @@ import { UserSettings, Advance, WorkDay } from '../types';
 import { formatCurrency } from '../utils';
 import { 
   Lock, Plus, Trash2, User, Wallet, RefreshCw, 
-  Download, Upload, Check, Database, Briefcase, ChevronRight
+  Download, Upload, Check, Database, Briefcase, ChevronRight,
+  Smartphone, Trash, Bell, BellOff, Volume2
 } from 'lucide-react';
 import Modal from './Modal';
 
@@ -16,6 +17,8 @@ interface SettingsProps {
   onDeleteAdvance: (id: string) => void;
   workDays: WorkDay[];
   setWorkDays: React.Dispatch<React.SetStateAction<WorkDay[]>>;
+  onInstall: () => void;
+  onTestSound: () => void;
 }
 
 const Settings: React.FC<SettingsProps> = ({ 
@@ -26,6 +29,8 @@ const Settings: React.FC<SettingsProps> = ({
   onDeleteAdvance,
   workDays,
   setWorkDays,
+  onInstall,
+  onTestSound
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [passwordInput, setPasswordInput] = useState('');
@@ -43,6 +48,22 @@ const Settings: React.FC<SettingsProps> = ({
       setError('');
     } else {
       setError('Pin incorrecto');
+    }
+  };
+
+  const toggleNotifications = async () => {
+    if (!settings.notificationsEnabled) {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setSettings(s => ({ ...s, notificationsEnabled: true }));
+        onTestSound();
+        notifySave();
+      } else {
+        alert("Para activar recordatorios debes permitir las notificaciones en tu navegador.");
+      }
+    } else {
+      setSettings(s => ({ ...s, notificationsEnabled: false }));
+      notifySave();
     }
   };
 
@@ -75,10 +96,16 @@ const Settings: React.FC<SettingsProps> = ({
     URL.revokeObjectURL(url);
   };
 
+  const clearSystemCache = () => {
+    if (confirm("Esto limpiará la memoria técnica para corregir errores visuales. ¿Continuar?")) {
+      window.location.reload();
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="flex flex-col items-center justify-center py-12 px-4 animate-in fade-in zoom-in duration-500">
-        <div className="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-w-md border border-slate-100 text-center space-y-8">
+        <div className="bg-white p-10 rounded-[3rem] shadow-2xl w-full max-md border border-slate-100 text-center space-y-8">
           <div className="bg-slate-900 w-20 h-20 rounded-[2.5rem] flex items-center justify-center mx-auto shadow-2xl rotate-3">
             <Lock className="w-10 h-10 text-blue-400" />
           </div>
@@ -104,7 +131,7 @@ const Settings: React.FC<SettingsProps> = ({
   }
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-500">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-6 duration-500 pb-12">
       <div className="flex justify-between items-center px-2">
         <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-900">Panel de Control</h2>
         <div className="flex items-center gap-3">
@@ -112,6 +139,63 @@ const Settings: React.FC<SettingsProps> = ({
           <button onClick={() => setIsAuthenticated(false)} className="bg-white border border-slate-100 p-2.5 rounded-2xl text-slate-400 hover:text-slate-900 transition-all shadow-sm"><Lock className="w-5 h-5" /></button>
         </div>
       </div>
+
+      {/* Sección de Instalación y Notificaciones */}
+      <section className="bg-slate-900 p-8 rounded-[3rem] shadow-xl space-y-6 text-white overflow-hidden relative border border-white/5">
+        <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 pointer-events-none">
+           <Smartphone className="w-32 h-32" />
+        </div>
+        <div className="flex items-center gap-3 border-b border-white/10 pb-4 relative z-10">
+           <Smartphone className="text-blue-400 w-6 h-6" />
+           <h3 className="font-black text-sm uppercase tracking-widest italic">Soberanía y Acceso</h3>
+        </div>
+        <div className="space-y-4 relative z-10">
+          <div className="grid grid-cols-1 gap-4">
+            <button 
+              onClick={onInstall} 
+              className="w-full bg-blue-600 text-white py-5 rounded-[2rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all"
+            >
+              <Download className="w-4 h-4" /> Instalar App
+            </button>
+            
+            {/* Control de Notificaciones */}
+            <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] space-y-4">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl ${settings.notificationsEnabled ? 'bg-blue-600' : 'bg-slate-700'}`}>
+                    {settings.notificationsEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest">Avisos de Salida</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Chime Suave a las 8hs</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={toggleNotifications}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${settings.notificationsEnabled ? 'bg-blue-600' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.notificationsEnabled ? 'left-7' : 'left-1'}`} />
+                </button>
+              </div>
+              {settings.notificationsEnabled && (
+                <button 
+                  onClick={onTestSound}
+                  className="w-full flex items-center justify-center gap-2 py-2.5 bg-white/10 rounded-xl text-[9px] font-black uppercase tracking-widest hover:bg-white/20 transition-all"
+                >
+                  <Volume2 className="w-3.5 h-3.5" /> Probar Sonido Aura
+                </button>
+              )}
+            </div>
+
+            <button 
+              onClick={clearSystemCache}
+              className="w-full text-white/30 py-2 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:text-white/50 transition-all"
+            >
+              <Trash className="w-3 h-3" /> Resetear Memoria Técnica
+            </button>
+          </div>
+        </div>
+      </section>
 
       <section className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
