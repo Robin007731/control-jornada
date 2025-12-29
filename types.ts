@@ -32,11 +32,12 @@ export interface Advance {
 
 export interface UserSettings {
   workerName: string;
-  workplaceName: string; // Nueva: Nombre de la empresa
+  workplaceName: string;
   monthlySalary: number;
   passwordHash: string;
   onboardingComplete: boolean;
   simplifiedMode: boolean;
+  notificationsEnabled?: boolean;
 }
 
 export interface AppState {

@@ -3,8 +3,14 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
 
-// El archivo index.tsx ahora actúa como el punto de entrada principal
-// que renderiza el componente App modularizado.
+// Registro del Service Worker para modo PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./sw.js')
+      .then(reg => console.log('Llavpodes SW registrado'))
+      .catch(err => console.log('Error registrando SW', err));
+  });
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root')!);
 root.render(
