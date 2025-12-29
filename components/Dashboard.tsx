@@ -42,6 +42,7 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
 
   const summary = getSummary(workDays, settings, advances);
   const netHoursToday = calculateDuration(currentDay);
+  const hasFinancialData = settings.monthlySalary > 0;
   
   // Progreso mensual (Asumiendo 22 días laborables como meta)
   const workProgress = Math.min(100, (workDays.filter(d => d.type === 'work' && d.status === 'complete').length / 22) * 100);
@@ -96,38 +97,56 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Tarjeta de Ganancias VIP */}
-      <div className="bg-slate-900 rounded-[3rem] p-8 text-white shadow-[0_25px_60px_-15px_rgba(15,23,42,0.5)] relative overflow-hidden border border-white/5">
-        <div className="relative z-10">
-          <div className="flex justify-between items-center mb-6">
-            <span className="bg-blue-600/20 text-blue-400 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-blue-500/20 italic">
-              Balance Mensual Estimado
-            </span>
-            <div className="flex items-center gap-1.5">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Live Sync</span>
+      {/* Tarjeta de Ganancias VIP - Solo se muestra si hay sueldo configurado */}
+      {hasFinancialData ? (
+        <div className="bg-slate-900 rounded-[3rem] p-8 text-white shadow-[0_25px_60px_-15px_rgba(15,23,42,0.5)] relative overflow-hidden border border-white/5">
+          <div className="relative z-10">
+            <div className="flex justify-between items-center mb-6">
+              <span className="bg-blue-600/20 text-blue-400 px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] border border-blue-500/20 italic">
+                Balance Mensual Estimado
+              </span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Live Sync</span>
+              </div>
+            </div>
+            
+            <h2 className="text-5xl font-black tracking-tighter italic mb-8">{formatCurrency(summary.netPay)}</h2>
+            
+            <div className="space-y-4">
+              <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-500">
+                <span>Progreso de Jornadas</span>
+                <span>{Math.round(workProgress)}%</span>
+              </div>
+              <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-1000" style={{ width: `${workProgress}%` }}></div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-white/5">
+              <StatSmall label="Horas" value={`${summary.totalNormalHours.toFixed(1)}h`} />
+              <StatSmall label="Extras" value={`+${summary.totalExtraHours.toFixed(1)}h`} color="text-blue-400" />
+              <StatSmall label="Viáticos" value={formatCurrency(summary.totalAllowances)} color="text-emerald-400" />
             </div>
           </div>
-          
-          <h2 className="text-5xl font-black tracking-tighter italic mb-8">{formatCurrency(summary.netPay)}</h2>
-          
-          <div className="space-y-4">
-             <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-500">
-               <span>Progreso de Jornadas</span>
-               <span>{Math.round(workProgress)}%</span>
-             </div>
-             <div className="w-full h-2.5 bg-white/5 rounded-full overflow-hidden">
-               <div className="h-full bg-gradient-to-r from-blue-600 to-indigo-500 transition-all duration-1000" style={{ width: `${workProgress}%` }}></div>
-             </div>
+        </div>
+      ) : (
+        <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-100 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="bg-blue-50 p-4 rounded-2xl text-blue-600">
+              <Clock className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Total Acumulado</p>
+              <p className="text-2xl font-black text-slate-900 italic">{(summary.totalNormalHours + summary.totalExtraHours).toFixed(1)} Horas</p>
+            </div>
           </div>
-
-          <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-white/5">
-            <StatSmall label="Horas" value={`${summary.totalNormalHours.toFixed(1)}h`} />
-            <StatSmall label="Extras" value={`+${summary.totalExtraHours.toFixed(1)}h`} color="text-blue-400" />
-            <StatSmall label="Viáticos" value={formatCurrency(summary.totalAllowances)} color="text-emerald-400" />
+          <div className="text-right">
+             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Días Logs</p>
+             <p className="text-xl font-black text-blue-600">{workDays.length}</p>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Control Pro de Jornada */}
       <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-100">

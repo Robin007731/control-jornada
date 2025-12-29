@@ -15,6 +15,7 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
   const [isExporting, setIsExporting] = useState(false);
   const [exported, setExported] = useState(false);
   const summary = getSummary(workDays, settings, advances);
+  const hasFinancialData = settings.monthlySalary > 0;
   
   const sortedDays = [...workDays]
     .filter(d => d.status === 'complete')
@@ -86,7 +87,7 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                   <div className="bg-slate-900 p-2 rounded-xl text-white shadow-xl rotate-6"><ShieldCheck className="w-6 h-6" /></div>
                   <h1 className="text-3xl font-black italic uppercase tracking-tighter leading-none text-slate-900">Reporte Laboral</h1>
                 </div>
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Compliance & Salary Management Tool</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Compliance & Time Management Tool</p>
               </div>
               <div className="text-right">
                 <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mb-1">Status</p>
@@ -106,10 +107,12 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                 </div>
               </div>
               <div className="text-right space-y-6">
-                <div>
-                   <p className="text-[10px] uppercase font-black text-slate-400 mb-2 tracking-widest">Sueldo Base (Nominal)</p>
-                   <p className="font-black text-2xl text-blue-600 leading-none italic">{formatCurrency(settings.monthlySalary)}</p>
-                </div>
+                {hasFinancialData && (
+                  <div>
+                    <p className="text-[10px] uppercase font-black text-slate-400 mb-2 tracking-widest">Sueldo Base (Nominal)</p>
+                    <p className="font-black text-2xl text-blue-600 leading-none italic">{formatCurrency(settings.monthlySalary)}</p>
+                  </div>
+                )}
                 <div>
                    <p className="text-[10px] uppercase font-black text-slate-400 mb-2 tracking-widest">Generado</p>
                    <p className="font-black text-xs text-slate-400 uppercase tracking-widest">{new Date().toLocaleDateString('es-UY')}</p>
@@ -125,8 +128,8 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                      <th className="text-left py-4 font-black uppercase tracking-widest text-[10px]">Fecha</th>
                      <th className="text-center py-4 font-black uppercase tracking-widest text-[10px]">Tipo</th>
                      <th className="text-center py-4 font-black uppercase tracking-widest text-[10px]">Horas</th>
-                     <th className="text-center py-4 font-black uppercase tracking-widest text-[10px]">Extras</th>
-                     <th className="text-right py-4 font-black uppercase tracking-widest text-[10px]">Bruto</th>
+                     <th className="text-center py-4 font-black uppercase tracking-widest text-[10px]">Extras {hasFinancialData && '(h)'}</th>
+                     {hasFinancialData && <th className="text-right py-4 font-black uppercase tracking-widest text-[10px]">Bruto</th>}
                    </tr>
                  </thead>
                  <tbody className="divide-y divide-slate-50">
@@ -144,7 +147,7 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                          </td>
                          <td className="py-5 text-center text-slate-900 text-[11px]">{duration.toFixed(1)}h</td>
                          <td className="py-5 text-center text-blue-600 text-[11px]">{extraHours > 0 ? `+${extraHours.toFixed(1)}` : '-'}</td>
-                         <td className="py-5 text-right text-slate-900 text-[11px]">{formatCurrency(gross)}</td>
+                         {hasFinancialData && <td className="py-5 text-right text-slate-900 text-[11px]">{formatCurrency(gross)}</td>}
                        </tr>
                      );
                    })}
@@ -152,40 +155,49 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                </table>
             </div>
 
-            <div className="space-y-6 bg-slate-900 text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden border-t-8 border-blue-600">
-              <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
-                 <ShieldCheck className="w-32 h-32" />
-              </div>
-              
-              <div className="grid grid-cols-2 gap-y-3 gap-x-12">
-                 <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
-                   <span className="font-black uppercase tracking-widest text-[9px] opacity-60">Suma de Haberes</span>
-                   <span className="font-black">{formatCurrency(summary.totalGross)}</span>
-                 </div>
-                 <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
-                   <span className="font-black uppercase tracking-widest text-[9px] text-rose-400">Deducción Ley (22%)</span>
-                   <span className="font-black text-rose-400">-{formatCurrency(summary.bpsDiscount)}</span>
-                 </div>
-                 {summary.totalAdvances > 0 && (
-                   <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
-                     <span className="font-black uppercase tracking-widest text-[9px] text-amber-400">Adelantos</span>
-                     <span className="font-black text-amber-400">-{formatCurrency(summary.totalAdvances)}</span>
-                   </div>
-                 )}
-                 <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
-                   <span className="font-black uppercase tracking-widest text-[9px] text-emerald-400">Viáticos Acumulados</span>
-                   <span className="font-black text-emerald-400">+{formatCurrency(summary.totalAllowances)}</span>
-                 </div>
-              </div>
-              
-              <div className="flex justify-between items-end pt-10 mt-6">
-                <div>
-                  <p className="font-black text-blue-400 uppercase tracking-[0.4em] text-xs italic mb-1">Neto Liquido Final</p>
-                  <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Total Estimado a Percibir</p>
+            {hasFinancialData && (
+              <div className="space-y-6 bg-slate-900 text-white p-10 rounded-[3rem] shadow-2xl relative overflow-hidden border-t-8 border-blue-600">
+                <div className="absolute top-0 right-0 p-6 opacity-5 rotate-12">
+                   <ShieldCheck className="w-32 h-32" />
                 </div>
-                <span className="text-5xl font-black italic tracking-tighter leading-none text-white">{formatCurrency(summary.netPay)}</span>
+                
+                <div className="grid grid-cols-2 gap-y-3 gap-x-12">
+                   <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                     <span className="font-black uppercase tracking-widest text-[9px] opacity-60">Suma de Haberes</span>
+                     <span className="font-black">{formatCurrency(summary.totalGross)}</span>
+                   </div>
+                   <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                     <span className="font-black uppercase tracking-widest text-[9px] text-rose-400">Deducción Ley (22%)</span>
+                     <span className="font-black text-rose-400">-{formatCurrency(summary.bpsDiscount)}</span>
+                   </div>
+                   {summary.totalAdvances > 0 && (
+                     <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                       <span className="font-black uppercase tracking-widest text-[9px] text-amber-400">Adelantos</span>
+                       <span className="font-black text-amber-400">-{formatCurrency(summary.totalAdvances)}</span>
+                     </div>
+                   )}
+                   <div className="flex justify-between items-center text-xs border-b border-white/5 pb-2">
+                     <span className="font-black uppercase tracking-widest text-[9px] text-emerald-400">Viáticos Acumulados</span>
+                     <span className="font-black text-emerald-400">+{formatCurrency(summary.totalAllowances)}</span>
+                   </div>
+                </div>
+                
+                <div className="flex justify-between items-end pt-10 mt-6">
+                  <div>
+                    <p className="font-black text-blue-400 uppercase tracking-[0.4em] text-xs italic mb-1">Neto Liquido Final</p>
+                    <p className="text-[8px] font-bold text-slate-500 uppercase tracking-widest">Total Estimado a Percibir</p>
+                  </div>
+                  <span className="text-5xl font-black italic tracking-tighter leading-none text-white">{formatCurrency(summary.netPay)}</span>
+                </div>
               </div>
-            </div>
+            )}
+
+            {!hasFinancialData && (
+              <div className="bg-slate-50 p-8 rounded-[2rem] text-center border-2 border-dashed border-slate-200">
+                 <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Resumen de Tiempo Mensual</p>
+                 <p className="text-4xl font-black italic text-slate-900 mt-2">{(summary.totalNormalHours + summary.totalExtraHours).toFixed(1)} <span className="text-lg">Horas</span></p>
+              </div>
+            )}
 
             <div className="mt-14 pt-10 border-t-2 border-slate-50 flex justify-between items-center opacity-30">
               <div className="flex items-center gap-3">

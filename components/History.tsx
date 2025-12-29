@@ -2,36 +2,59 @@
 import React, { useMemo, useState } from 'react';
 import { 
   Download, Trash2, Edit2, Copy, Plus, Save, Clock, ChevronDown, 
-  ListPlus, CalendarDays, CheckCircle2, Moon, Coffee, HeartPulse, Palmtree, Briefcase 
+  ListPlus, CalendarDays, CheckCircle2, Moon, Coffee, HeartPulse, Palmtree, Briefcase,
+  Loader2, Image as ImageIcon
 } from 'lucide-react';
 import { WorkDay, DayType } from '../types';
 import { calculateDuration, isHoliday, isSunday, getLocalDateString } from '../utils';
 import Modal from './Modal';
+import html2canvas from 'html2canvas';
 
 interface HistoryProps {
   workDays: WorkDay[];
   setWorkDays: React.Dispatch<React.SetStateAction<WorkDay[]>>;
-  onExport: () => void;
+  onExport?: () => void;
 }
 
-const WEEKDAYS = [
-  { label: 'L', value: 1 }, { label: 'M', value: 2 }, { label: 'M', value: 3 }, 
-  { label: 'J', value: 4 }, { label: 'V', value: 5 }, { label: 'S', value: 6 }, { label: 'D', value: 0 },
-];
-
-const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) => {
+const History: React.FC<HistoryProps> = ({ workDays, setWorkDays }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingDay, setEditingDay] = useState<Partial<WorkDay> | null>(null);
   const [showQuickMenu, setShowQuickMenu] = useState(false);
   const [deleteConfirmationId, setDeleteConfirmationId] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState(false);
 
   const sortedDays = useMemo(() => {
     return [...workDays].sort((a, b) => b.date.localeCompare(a.date));
   }, [workDays]);
 
-  const handleDuplicate = (day: WorkDay) => {
-    const newDay: WorkDay = { ...day, id: crypto.randomUUID(), date: getLocalDateString() };
-    setWorkDays(prev => [newDay, ...prev]);
+  const handleExportImage = async () => {
+    const element = document.getElementById('history-list-capture');
+    if (!element || sortedDays.length === 0) return;
+
+    setIsExporting(true);
+    try {
+      // Pequeña espera para asegurar que los estilos estén aplicados
+      await new Promise(r => setTimeout(r, 100));
+      
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#f8fafc', // slate-50
+        logging: false,
+        useCORS: true,
+        windowWidth: element.scrollWidth,
+        windowHeight: element.scrollHeight
+      });
+
+      const dataUrl = canvas.toDataURL('image/png', 1.0);
+      const link = document.createElement('a');
+      link.download = `Historial_Jornadas_${new Date().toISOString().split('T')[0]}.png`;
+      link.href = dataUrl;
+      link.click();
+    } catch (error) {
+      console.error('Error exportando imagen:', error);
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const openManualEntry = (preset?: 'FULL' | 'NONE' | 'LIBRE', day?: WorkDay) => {
@@ -107,7 +130,14 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
           >
             <Plus className="w-4 h-4" /> Agregar <ChevronDown className="w-3 h-3" />
           </button>
-          <button onClick={onExport} className="bg-slate-100 p-3.5 rounded-2xl text-slate-400 hover:text-slate-900 transition-all"><Download className="w-5 h-5" /></button>
+          <button 
+            onClick={handleExportImage} 
+            disabled={isExporting || sortedDays.length === 0}
+            title="Descargar como imagen"
+            className="bg-slate-100 p-3.5 rounded-2xl text-slate-400 hover:text-slate-900 transition-all flex items-center justify-center disabled:opacity-50"
+          >
+            {isExporting ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImageIcon className="w-5 h-5" />}
+          </button>
           
           {showQuickMenu && (
             <div className="absolute right-0 top-16 w-60 bg-white rounded-[2rem] shadow-[0_20px_50px_rgba(0,0,0,0.1)] border border-slate-50 z-50 overflow-hidden animate-in fade-in slide-in-from-top-2">
@@ -121,51 +151,57 @@ const History: React.FC<HistoryProps> = ({ workDays, setWorkDays, onExport }) =>
         </div>
       </div>
 
-      <div className="space-y-4">
-        {sortedDays.map(day => {
-          const dur = calculateDuration(day);
-          const extra = Math.max(0, dur - 8);
-          const dateObj = new Date(day.date + 'T00:00:00');
-          const isSpec = day.type !== 'work';
-          
-          return (
-            <div key={day.id} className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex justify-between items-center transition-all hover:shadow-xl hover:scale-[1.01] group">
-              <div className="flex items-center gap-5">
-                 <div className="text-center bg-slate-50 p-3 rounded-2xl min-w-[60px]">
-                    <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">{dateObj.toLocaleDateString('es-UY', { weekday: 'short' })}</p>
-                    <p className="text-xl font-black text-slate-800 leading-none italic">{dateObj.getDate()}</p>
-                 </div>
-                 <div>
-                    <div className="flex items-center gap-2 mb-1">
-                       <p className="font-black text-sm text-slate-900 uppercase italic tracking-tight">{dateObj.toLocaleDateString('es-UY', { month: 'short', year: 'numeric' })}</p>
-                       <StatusLabel type={day.type} />
-                    </div>
-                    {!isSpec ? (
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                        {getTimeValue(day.entryTime)} → {getTimeValue(day.exitTime)} 
-                        {day.breakStartTime && <span className="text-amber-500 ml-2">(Descanso)</span>}
-                      </p>
-                    ) : (
-                      <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Jornada no computable</p>
-                    )}
-                 </div>
-              </div>
-
-              <div className="flex items-center gap-6">
-                 {!isSpec && (
-                   <div className="text-right">
-                      <p className="text-lg font-black italic text-slate-900 leading-none">{dur.toFixed(1)}h</p>
-                      {extra > 0 && <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-1">+{extra.toFixed(1)} Extra</p>}
+      <div id="history-list-capture" className="space-y-4 p-1">
+        {sortedDays.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-[2rem] border-2 border-dashed border-slate-100">
+             <p className="text-[10px] font-black uppercase text-slate-300 tracking-widest">No hay registros aún</p>
+          </div>
+        ) : (
+          sortedDays.map(day => {
+            const dur = calculateDuration(day);
+            const extra = Math.max(0, dur - 8);
+            const dateObj = new Date(day.date + 'T00:00:00');
+            const isSpec = day.type !== 'work';
+            
+            return (
+              <div key={day.id} className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 flex justify-between items-center transition-all hover:shadow-xl hover:scale-[1.01] group">
+                <div className="flex items-center gap-5">
+                   <div className="text-center bg-slate-50 p-3 rounded-2xl min-w-[60px]">
+                      <p className="text-[9px] font-black text-slate-300 uppercase leading-none mb-1">{dateObj.toLocaleDateString('es-UY', { weekday: 'short' })}</p>
+                      <p className="text-xl font-black text-slate-800 leading-none italic">{dateObj.getDate()}</p>
                    </div>
-                 )}
-                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <button onClick={() => openManualEntry('NONE', day)} className="p-2 text-slate-300 hover:text-blue-600"><Edit2 className="w-4 h-4" /></button>
-                    <button onClick={() => setDeleteConfirmationId(day.id)} className="p-2 text-slate-300 hover:text-rose-600"><Trash2 className="w-4 h-4" /></button>
-                 </div>
+                   <div>
+                      <div className="flex items-center gap-2 mb-1">
+                         <p className="font-black text-sm text-slate-900 uppercase italic tracking-tight">{dateObj.toLocaleDateString('es-UY', { month: 'short', year: 'numeric' })}</p>
+                         <StatusLabel type={day.type} />
+                      </div>
+                      {!isSpec ? (
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                          {getTimeValue(day.entryTime)} → {getTimeValue(day.exitTime)} 
+                          {day.breakStartTime && <span className="text-amber-500 ml-2">(Descanso)</span>}
+                        </p>
+                      ) : (
+                        <p className="text-[10px] font-bold text-slate-300 uppercase tracking-widest italic">Jornada no computable</p>
+                      )}
+                   </div>
+                </div>
+
+                <div className="flex items-center gap-6">
+                   {!isSpec && (
+                     <div className="text-right">
+                        <p className="text-lg font-black italic text-slate-900 leading-none">{dur.toFixed(1)}h</p>
+                        {extra > 0 && <p className="text-[9px] font-black text-blue-500 uppercase tracking-widest mt-1">+{extra.toFixed(1)} Extra</p>}
+                     </div>
+                   )}
+                   <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openManualEntry('NONE', day)} className="p-2 text-slate-300 hover:text-blue-600"><Edit2 className="w-4 h-4" /></button>
+                      <button onClick={() => setDeleteConfirmationId(day.id)} className="p-2 text-slate-300 hover:text-rose-600"><Trash2 className="w-4 h-4" /></button>
+                   </div>
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </div>
 
       <Modal isOpen={!!deleteConfirmationId} onClose={() => setDeleteConfirmationId(null)} title="Eliminar Registro">
