@@ -27,7 +27,7 @@ const App: React.FC = () => {
   const [settings, setSettings] = useState<UserSettings>({
     workerName: '',
     workplaceName: '',
-    monthlySalary: DEFAULT_SALARY,
+    monthlySalary: 0, // Iniciamos en 0 para saber si el usuario lo configuró
     passwordHash: '1234',
     onboardingComplete: false,
     simplifiedMode: false,
@@ -73,7 +73,16 @@ const App: React.FC = () => {
   };
 
   if (!settings.onboardingComplete) {
-    return <Onboarding onComplete={(name) => setSettings(s => ({ ...s, workerName: name, onboardingComplete: true }))} />;
+    return (
+      <Onboarding 
+        onComplete={(name, salary) => setSettings(s => ({ 
+          ...s, 
+          workerName: name, 
+          monthlySalary: salary, 
+          onboardingComplete: true 
+        }))} 
+      />
+    );
   }
 
   return (
@@ -120,7 +129,6 @@ const App: React.FC = () => {
           <History 
             workDays={workDays} 
             setWorkDays={setWorkDays}
-            onExport={() => generateCSV(workDays)}
           />
         )}
         {activeTab === 'receipt' && (
