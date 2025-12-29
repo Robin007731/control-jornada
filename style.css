@@ -6,6 +6,8 @@ body {
     -webkit-tap-highlight-color: transparent; 
     overflow-x: hidden;
     background-color: #f9fafb;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
 }
 
 ::-webkit-scrollbar {
@@ -25,8 +27,20 @@ body {
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
 .animate-slide-up { animation: slideUp 0.4s ease-out; }
 
+.tabular-nums {
+    font-variant-numeric: tabular-nums;
+    letter-spacing: -0.02em;
+}
+
+/* Evitar que el texto se estire o se vea borroso */
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* Para que los botones no se vean raros en iOS */
-button, input {
+button, input, select {
     appearance: none;
     -webkit-appearance: none;
 }
@@ -38,6 +52,6 @@ button, input {
 
 @media (min-width: 640px) {
     .max-w-xl {
-        max-width: 480px; /* Un ancho más elegante para apps tipo mobile */
+        max-width: 480px; 
     }
 }
