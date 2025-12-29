@@ -1,57 +1,58 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+:root {
+  --safe-area-inset-top: env(safe-area-inset-top, 0px);
+  --safe-area-inset-bottom: env(safe-area-inset-bottom, 0px);
+}
 
 body { 
     font-family: 'Inter', sans-serif; 
-    -webkit-tap-highlight-color: transparent; 
-    overflow-x: hidden;
-    background-color: #f9fafb;
+    background-color: #f8fafc;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
-
-::-webkit-scrollbar {
-    width: 4px;
-}
-::-webkit-scrollbar-track {
-    background: transparent;
-}
-::-webkit-scrollbar-thumb {
-    background: #e2e8f0;
-    border-radius: 10px;
-}
-
-@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes slideUp { from { transform: translateY(15px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
-
-.animate-fade-in { animation: fadeIn 0.3s ease-out; }
-.animate-slide-up { animation: slideUp 0.4s ease-out; }
 
 .tabular-nums {
     font-variant-numeric: tabular-nums;
-    letter-spacing: -0.02em;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.01em;
 }
 
-/* Evitar que el texto se estire o se vea borroso */
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
+/* Clases de animación suaves */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeInUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* Optimizaciones para evitar que los números sobresalgan */
+.money-cell {
   white-space: nowrap;
+  text-align: right;
 }
 
-/* Para que los botones no se vean raros en iOS */
-button, input, select {
-    appearance: none;
-    -webkit-appearance: none;
+/* Fix para iOS Safari height issues */
+.min-h-screen-ios {
+  min-height: -webkit-fill-available;
 }
 
-/* Contenedor principal limitado en tablets/PC */
-#root {
-    min-height: 100vh;
+button:active {
+  transform: scale(0.96);
 }
 
-@media (min-width: 640px) {
-    .max-w-xl {
-        max-width: 480px; 
-    }
+/* Contenedor de reporte para exportación perfecta */
+.report-capture-node {
+  width: 800px !important;
+  background: white !important;
+  margin: 0 !important;
+  padding: 60px !important;
+}
+
+.report-capture-node * {
+  -webkit-print-color-adjust: exact;
 }
