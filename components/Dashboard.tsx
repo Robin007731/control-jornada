@@ -1,12 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { 
-  Play, Coffee, LogOut, CheckCircle, AlertCircle, Clock, 
-  Moon, Sparkles, Coffee as RelaxIcon, Timer, 
-  Calendar as CalIcon, Briefcase, HeartPulse, Palmtree
+  Play, Coffee, LogOut, CheckCircle, Clock, 
+  Moon, Timer, 
+  Calendar as CalIcon, Briefcase, HeartPulse, Palmtree, Eye, EyeOff
 } from 'lucide-react';
 import { WorkDay, UserSettings, Advance, DayType } from '../types';
-import { getSummary, formatCurrency, isHoliday, getLocalDateString, calculateDuration } from '../utils';
+import { getSummary, formatCurrency, getLocalDateString, calculateDuration } from '../utils';
 import Modal from './Modal';
 
 interface DashboardProps {
@@ -44,7 +44,6 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
   const netHoursToday = calculateDuration(currentDay);
   const hasFinancialData = settings.monthlySalary > 0;
   
-  // Progreso mensual (Asumiendo 22 días laborables como meta)
   const workProgress = Math.min(100, (workDays.filter(d => d.type === 'work' && d.status === 'complete').length / 22) * 100);
 
   const registerAction = () => {
@@ -97,7 +96,6 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* Tarjeta de Ganancias VIP - Solo se muestra si hay sueldo configurado */}
       {hasFinancialData ? (
         <div className="bg-slate-900 rounded-[3rem] p-8 text-white shadow-[0_25px_60px_-15px_rgba(15,23,42,0.5)] relative overflow-hidden border border-white/5">
           <div className="relative z-10">
@@ -106,12 +104,15 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
                 Balance Mensual Estimado
               </span>
               <div className="flex items-center gap-1.5">
+                {settings.privacyMode && <EyeOff className="w-3 h-3 text-slate-500" />}
                 <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                 <span className="text-[8px] font-black uppercase text-slate-400 tracking-widest">Live Sync</span>
               </div>
             </div>
             
-            <h2 className="text-5xl font-black tracking-tighter italic mb-8">{formatCurrency(summary.netPay)}</h2>
+            <h2 className="text-5xl font-black tracking-tighter italic mb-8">
+              {formatCurrency(summary.netPay, settings.privacyMode)}
+            </h2>
             
             <div className="space-y-4">
               <div className="flex justify-between text-[9px] font-black uppercase tracking-widest text-slate-500">
@@ -126,7 +127,7 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
             <div className="grid grid-cols-3 gap-4 mt-8 pt-8 border-t border-white/5">
               <StatSmall label="Horas" value={`${summary.totalNormalHours.toFixed(1)}h`} />
               <StatSmall label="Extras" value={`+${summary.totalExtraHours.toFixed(1)}h`} color="text-blue-400" />
-              <StatSmall label="Viáticos" value={formatCurrency(summary.totalAllowances)} color="text-emerald-400" />
+              <StatSmall label="Viáticos" value={formatCurrency(summary.totalAllowances, settings.privacyMode)} color="text-emerald-400" />
             </div>
           </div>
         </div>
@@ -148,7 +149,6 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
         </div>
       )}
 
-      {/* Control Pro de Jornada */}
       <div className="bg-white rounded-[3rem] p-8 shadow-sm border border-slate-100">
         <div className="flex justify-between items-center mb-8">
            <div className="flex items-center gap-4">
@@ -215,7 +215,6 @@ const Dashboard: React.FC<DashboardProps> = ({ workDays, settings, advances, onA
         </div>
       </div>
 
-      {/* Modal Tipo de Jornada */}
       <Modal 
         isOpen={isTypeModalOpen} 
         onClose={() => setIsTypeModalOpen(false)} 

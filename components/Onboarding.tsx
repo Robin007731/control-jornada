@@ -28,8 +28,8 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
           <div className="bg-blue-600 w-20 h-20 rounded-[2rem] flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-blue-500/20 border border-white/10 rotate-3">
             <ShieldCheck className="w-10 h-10 text-white" />
           </div>
-          <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none">Registro Laboral</h1>
-          <p className="text-blue-400 text-[9px] font-black uppercase tracking-[0.3em]">Tus jornadas y ganancias bajo control</p>
+          <h1 className="text-3xl font-black italic tracking-tighter uppercase leading-none">Registro laboral</h1>
+          <p className="text-blue-400 text-[9px] font-black uppercase tracking-[0.3em]">tu jornada y ganancias en tus manos</p>
         </div>
 
         <div className="bg-white text-gray-900 p-8 rounded-[3rem] shadow-2xl space-y-8 border border-white/10">
@@ -76,14 +76,14 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                     </p>
                   </div>
 
-                  {/* Sección 2: Uso de IA */}
+                  {/* Sección 2: Uso de Datos */}
                   <div className="space-y-2">
                     <div className="flex items-center gap-2 text-slate-800 font-black uppercase tracking-widest text-[10px]">
-                      <Cpu className="w-4 h-4 text-purple-600" /> 
-                      <span>2. Inteligencia Artificial (IA)</span>
+                      <ShieldCheck className="w-4 h-4 text-blue-600" /> 
+                      <span>2. Privacidad Absoluta</span>
                     </div>
-                    <p className="pl-6 border-l-2 border-purple-200">
-                      Al utilizar <b>Llavpodes Brain</b>, solo el texto de su consulta es enviado a los servicios de Google Gemini para su procesamiento efímero. Estos datos no son utilizados para entrenar modelos públicos ni son almacenados de forma permanente vinculados a su identidad.
+                    <p className="pl-6 border-l-2 border-blue-200">
+                      Toda tu información es privada. No compartimos datos con terceros. La aplicación funciona de manera autónoma en tu dispositivo.
                     </p>
                   </div>
 
@@ -147,7 +147,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onComplete }) => {
                   </div>
                   <div className="flex-1">
                     <span className="text-[10px] font-black text-slate-700 select-none uppercase tracking-tight leading-snug">
-                      He leído y acepto los términos de soberanía de datos, uso de IA y responsabilidad legal.
+                      He leído y acepto los términos de soberanía de datos y responsabilidad legal.
                     </span>
                   </div>
                 </label>

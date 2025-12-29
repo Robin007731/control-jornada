@@ -1,13 +1,14 @@
 
 import React, { useState, useRef } from 'react';
 import { UserSettings, Advance, WorkDay } from '../types';
-import { formatCurrency } from '../utils';
 import { 
-  Lock, Plus, Trash2, User, Wallet, RefreshCw, 
-  Download, Upload, Check, Database, Briefcase, ChevronRight,
-  Smartphone, Trash, Bell, BellOff, Volume2
+  Lock, Plus, Trash2, Wallet, RefreshCw, 
+  Download, Upload, Briefcase, 
+  Trash, Bell, BellOff, Volume2, ShieldCheck, Eye, EyeOff, Clock, ShieldAlert, Key, Percent
 } from 'lucide-react';
 import Modal from './Modal';
+// Added missing utility import
+import { formatCurrency } from '../utils';
 
 interface SettingsProps {
   settings: UserSettings;
@@ -17,7 +18,6 @@ interface SettingsProps {
   onDeleteAdvance: (id: string) => void;
   workDays: WorkDay[];
   setWorkDays: React.Dispatch<React.SetStateAction<WorkDay[]>>;
-  onInstall: () => void;
   onTestSound: () => void;
 }
 
@@ -29,7 +29,6 @@ const Settings: React.FC<SettingsProps> = ({
   onDeleteAdvance,
   workDays,
   setWorkDays,
-  onInstall,
   onTestSound
 }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -39,6 +38,9 @@ const Settings: React.FC<SettingsProps> = ({
   const [advAmount, setAdvAmount] = useState('');
   const [advNote, setAdvNote] = useState('');
   
+  const [isPinModalOpen, setIsPinModalOpen] = useState(false);
+  const [newPin, setNewPin] = useState('');
+
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleAuth = (e: React.FormEvent) => {
@@ -67,6 +69,30 @@ const Settings: React.FC<SettingsProps> = ({
     }
   };
 
+  const togglePrivacyMode = () => {
+    setSettings(s => ({ ...s, privacyMode: !s.privacyMode }));
+    notifySave();
+  };
+
+  const handleStandardHoursChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = parseInt(e.target.value);
+    setSettings(s => ({ ...s, standardJornadaHours: val }));
+    notifySave();
+  };
+
+  const handleChangePin = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (newPin.length < 4) {
+      alert("El PIN debe tener al menos 4 caracteres.");
+      return;
+    }
+    setSettings(s => ({ ...s, passwordHash: newPin }));
+    setIsPinModalOpen(false);
+    setNewPin('');
+    notifySave();
+    alert("PIN actualizado correctamente.");
+  };
+
   const notifySave = () => {
     setSaveStatus('Configuración Actualizada');
     setTimeout(() => setSaveStatus(null), 2500);
@@ -91,7 +117,7 @@ const Settings: React.FC<SettingsProps> = ({
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.download = `backup_llavpodes_pro_${new Date().toISOString().split('T')[0]}.json`;
+    link.download = `backup_laboral_pro_${new Date().toISOString().split('T')[0]}.json`;
     link.click();
     URL.revokeObjectURL(url);
   };
@@ -140,24 +166,63 @@ const Settings: React.FC<SettingsProps> = ({
         </div>
       </div>
 
-      {/* Sección de Instalación y Notificaciones */}
-      <section className="bg-slate-900 p-8 rounded-[3rem] shadow-xl space-y-6 text-white overflow-hidden relative border border-white/5">
+      {/* Preferencias de Sistema */}
+      <section className="bg-slate-900 p-8 rounded-[3rem] shadow-xl space-y-8 text-white overflow-hidden relative border border-white/5">
         <div className="absolute top-0 right-0 p-8 opacity-10 rotate-12 pointer-events-none">
-           <Smartphone className="w-32 h-32" />
+           <ShieldCheck className="w-48 h-48" />
         </div>
+        
         <div className="flex items-center gap-3 border-b border-white/10 pb-4 relative z-10">
-           <Smartphone className="text-blue-400 w-6 h-6" />
-           <h3 className="font-black text-sm uppercase tracking-widest italic">Soberanía y Acceso</h3>
+           <ShieldCheck className="text-blue-400 w-6 h-6" />
+           <h3 className="font-black text-sm uppercase tracking-widest italic">Preferencias Avanzadas</h3>
         </div>
-        <div className="space-y-4 relative z-10">
+
+        <div className="space-y-6 relative z-10">
+          {/* Jornada Estándar Slider */}
+          <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] space-y-4">
+             <div className="flex items-center gap-3 mb-2">
+                <div className="p-2 bg-indigo-500 rounded-xl text-white">
+                   <Clock className="w-4 h-4" />
+                </div>
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-widest">Jornada Estándar</p>
+                  <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest italic">Define el corte para horas extras</p>
+                </div>
+             </div>
+             <div className="flex items-center gap-6">
+                <input 
+                  type="range" 
+                  min="4" 
+                  max="12" 
+                  step="1" 
+                  value={settings.standardJornadaHours} 
+                  onChange={handleStandardHoursChange}
+                  className="flex-1 h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                />
+                <span className="text-xl font-black italic tabular-nums w-10">{settings.standardJornadaHours}h</span>
+             </div>
+          </div>
+
           <div className="grid grid-cols-1 gap-4">
-            <button 
-              onClick={onInstall} 
-              className="w-full bg-blue-600 text-white py-5 rounded-[2rem] font-black text-[11px] uppercase tracking-widest flex items-center justify-center gap-3 shadow-2xl active:scale-95 transition-all"
-            >
-              <Download className="w-4 h-4" /> Instalar App
-            </button>
-            
+            {/* Control de Modo Privacidad */}
+            <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className={`p-2 rounded-xl ${settings.privacyMode ? 'bg-emerald-600' : 'bg-slate-700'}`}>
+                    {settings.privacyMode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-widest">Modo Privacidad</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Ocultar montos en el Dashboard</p>
+                  </div>
+                </div>
+                <button 
+                  onClick={togglePrivacyMode}
+                  className={`w-12 h-6 rounded-full transition-colors relative ${settings.privacyMode ? 'bg-emerald-600' : 'bg-slate-700'}`}
+                >
+                  <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${settings.privacyMode ? 'left-7' : 'left-1'}`} />
+                </button>
+            </div>
+
             {/* Control de Notificaciones */}
             <div className="bg-white/5 border border-white/10 p-5 rounded-[2rem] space-y-4">
               <div className="flex justify-between items-center">
@@ -166,8 +231,8 @@ const Settings: React.FC<SettingsProps> = ({
                     {settings.notificationsEnabled ? <Bell className="w-4 h-4" /> : <BellOff className="w-4 h-4" />}
                   </div>
                   <div>
-                    <p className="text-[10px] font-black uppercase tracking-widest">Avisos de Salida</p>
-                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Chime Suave a las 8hs</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest">Recordatorios</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest italic">Avisar al cumplir jornada</p>
                   </div>
                 </div>
                 <button 
@@ -187,16 +252,25 @@ const Settings: React.FC<SettingsProps> = ({
               )}
             </div>
 
-            <button 
-              onClick={clearSystemCache}
-              className="w-full text-white/30 py-2 rounded-2xl font-black text-[9px] uppercase tracking-[0.2em] flex items-center justify-center gap-2 hover:text-white/50 transition-all"
-            >
-              <Trash className="w-3 h-3" /> Resetear Memoria Técnica
-            </button>
+            <div className="grid grid-cols-2 gap-4">
+              <button 
+                onClick={() => setIsPinModalOpen(true)}
+                className="bg-white/5 border border-white/10 py-4 rounded-2xl font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
+              >
+                <Key className="w-3 h-3 text-amber-400" /> Cambiar PIN
+              </button>
+              <button 
+                onClick={clearSystemCache}
+                className="bg-white/5 border border-white/10 py-4 rounded-2xl font-black text-[9px] uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-white/10 transition-all"
+              >
+                <RefreshCw className="w-3 h-3 text-blue-400" /> Reset Cache
+              </button>
+            </div>
           </div>
         </div>
       </section>
 
+      {/* Perfil */}
       <section className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
            <Briefcase className="text-blue-600 w-6 h-6" />
@@ -206,9 +280,35 @@ const Settings: React.FC<SettingsProps> = ({
           <InputGroup label="Nombre del Profesional" value={settings.workerName} onChange={(val) => { setSettings(s => ({...s, workerName: val})); notifySave(); }} />
           <InputGroup label="Lugar de Trabajo / Empresa" value={settings.workplaceName} placeholder="Ej: Nexa Studio S.A." onChange={(val) => { setSettings(s => ({...s, workplaceName: val})); notifySave(); }} />
           <InputGroup label="Sueldo Nominal Mensual ($)" type="number" value={settings.monthlySalary} onChange={(val) => { setSettings(s => ({...s, monthlySalary: Number(val)})); notifySave(); }} />
+          
+          {/* Nuevo control para BPS */}
+          <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100 mt-4">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-2 bg-blue-100 rounded-xl text-blue-600">
+                <Percent className="w-4 h-4" />
+              </div>
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-widest text-slate-900">Descuento de Ley (BPS/Otros)</p>
+                <p className="text-[8px] font-bold text-slate-400 uppercase tracking-widest italic">Aportes jubilatorios y salud</p>
+              </div>
+            </div>
+            <div className="flex items-center gap-6">
+              <input 
+                type="range" 
+                min="0" 
+                max="50" 
+                step="0.5" 
+                value={settings.bpsRate} 
+                onChange={(e) => { setSettings(s => ({ ...s, bpsRate: parseFloat(e.target.value) })); notifySave(); }}
+                className="flex-1 h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-blue-600"
+              />
+              <span className="text-xl font-black italic tabular-nums w-12 text-blue-600">{settings.bpsRate}%</span>
+            </div>
+          </div>
         </div>
       </section>
 
+      {/* Adelantos */}
       <section className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
            <Wallet className="text-emerald-600 w-6 h-6" />
@@ -220,9 +320,28 @@ const Settings: React.FC<SettingsProps> = ({
              <input type="text" placeholder="Concepto" className="px-5 py-4 rounded-2xl bg-slate-50 font-bold text-sm outline-none border-none shadow-inner" value={advNote} onChange={(e) => setAdvNote(e.target.value)} />
           </div>
           <button onClick={handleAddAdv} className="bg-emerald-600 text-white w-full py-4 rounded-2xl font-black text-xs uppercase tracking-widest shadow-lg shadow-emerald-900/10 active:scale-95 transition-all">Registrar Adelanto</button>
+          
+          {advances.length > 0 && (
+            <div className="pt-4 space-y-2">
+              <p className="text-[8px] font-black uppercase text-slate-400 tracking-widest mb-2">Últimos Adelantos</p>
+              {advances.slice(-3).reverse().map(adv => (
+                <div key={adv.id} className="flex justify-between items-center bg-slate-50 px-4 py-3 rounded-xl border border-slate-100">
+                  <div>
+                    <p className="text-[10px] font-black text-slate-800">{adv.note || 'Sin concepto'}</p>
+                    <p className="text-[8px] font-bold text-slate-400 uppercase">{new Date(adv.date).toLocaleDateString()}</p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-xs font-black text-rose-500">-{formatCurrency(adv.amount, settings.privacyMode)}</span>
+                    <button onClick={() => onDeleteAdvance(adv.id)} className="text-slate-300 hover:text-rose-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
+      {/* Backup */}
       <section className="bg-white p-8 rounded-[3rem] shadow-sm border border-slate-100 space-y-6">
         <div className="flex items-center gap-3 border-b border-slate-50 pb-4">
            <RefreshCw className="text-indigo-600 w-6 h-6" />
@@ -247,6 +366,24 @@ const Settings: React.FC<SettingsProps> = ({
           }} />
         </div>
       </section>
+
+      {/* Modal Cambiar PIN */}
+      <Modal isOpen={isPinModalOpen} onClose={() => setIsPinModalOpen(false)} title="Seguridad: Cambiar PIN">
+        <form onSubmit={handleChangePin} className="space-y-6">
+          <div className="bg-amber-50 p-4 rounded-2xl border border-amber-100 flex gap-3 mb-4">
+             <ShieldAlert className="w-5 h-5 text-amber-600 shrink-0" />
+             <p className="text-[9px] font-bold text-amber-800 uppercase leading-relaxed">Este PIN protege el acceso a tu Panel de Control y reportes. No lo compartas con nadie.</p>
+          </div>
+          <InputGroup 
+            label="Nuevo PIN de Acceso" 
+            type="password" 
+            placeholder="Mínimo 4 dígitos"
+            value={newPin} 
+            onChange={(val) => setNewPin(val)} 
+          />
+          <button type="submit" className="w-full bg-slate-900 text-white py-5 rounded-3xl font-black uppercase tracking-widest text-xs shadow-xl active:scale-95 transition-all">Actualizar PIN</button>
+        </form>
+      </Modal>
     </div>
   );
 };

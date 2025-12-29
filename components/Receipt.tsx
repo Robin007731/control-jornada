@@ -28,14 +28,13 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
     setIsExporting(true);
     
     try {
-      // Configuramos el canvas para máxima calidad
       const canvas = await html2canvas(element, {
-        scale: 4, // Multiplicador de resolución (4x para HD cristalino)
+        scale: 4,
         useCORS: true,
         allowTaint: true,
         backgroundColor: '#ffffff',
         logging: false,
-        width: 800, // Ancho fijo de documento profesional
+        width: 800,
         onclone: (clonedDoc) => {
           const el = clonedDoc.getElementById('receipt-master-canvas');
           if (el) {
@@ -47,7 +46,6 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
         }
       });
 
-      // Convertimos a imagen y disparamos descarga
       const image = canvas.toDataURL('image/png', 1.0);
       const link = document.createElement('a');
       const safeName = settings.workerName.trim().replace(/\s+/g, '_');
@@ -92,14 +90,12 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
         </div>
       ) : (
         <div className="mx-4 overflow-hidden rounded-[2.5rem] shadow-2xl border border-slate-100 bg-white shadow-slate-200/50">
-          {/* Este contenedor es lo que el usuario ve, adaptado a su pantalla */}
           <div className="overflow-x-auto scrollbar-hide">
             <div 
               id="receipt-master-canvas" 
               className="bg-white p-10 text-slate-800"
               style={{ width: '800px', margin: '0 auto' }}
             >
-              {/* Header de la App en el Reporte */}
               <div className="flex justify-between items-start border-b-[8px] border-slate-900 pb-10 mb-12">
                 <div className="space-y-3">
                   <div className="flex items-center gap-4">
@@ -108,10 +104,10 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                     </div>
                     <div>
                         <h1 className="text-4xl font-black italic uppercase tracking-tighter leading-none text-slate-900">Informe Laboral</h1>
-                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.5em] mt-1">Llavpodes System</p>
+                        <p className="text-[10px] font-black text-blue-600 uppercase tracking-[0.5em] mt-1">Registro laboral</p>
                     </div>
                   </div>
-                  <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em]">Control de Jornada • Estándar Uruguay</p>
+                  <p className="text-[12px] font-black text-slate-400 uppercase tracking-[0.4em]">tu jornada y ganancias en tus manos</p>
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] uppercase font-black text-slate-300 tracking-widest mb-1.5">Estatus</p>
@@ -121,7 +117,6 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                 </div>
               </div>
 
-              {/* Información de Usuario y Empresa */}
               <div className="grid grid-cols-2 gap-16 mb-16">
                 <div className="space-y-8">
                   <div className="max-w-xs">
@@ -147,7 +142,6 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                 </div>
               </div>
 
-              {/* Tabla de Actividad */}
               <div className="mb-16">
                  <div className="flex justify-between items-end mb-8 border-b-2 border-slate-100 pb-4">
                     <h4 className="text-[12px] font-black uppercase tracking-[0.3em] text-slate-900 italic">Cronograma de Asistencia</h4>
@@ -188,7 +182,6 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                  </table>
               </div>
 
-              {/* Resumen de Cobro o de Tiempo */}
               {hasFinancialData ? (
                 <div className="space-y-8 bg-slate-900 text-white p-12 rounded-[4rem] shadow-2xl relative overflow-hidden border-t-[14px] border-blue-600">
                   <div className="absolute top-0 right-0 p-10 opacity-[0.04] rotate-12 pointer-events-none">
@@ -201,7 +194,7 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                        <span className="font-black tabular-nums text-lg">{formatCurrency(summary.totalGross)}</span>
                      </div>
                      <div className="flex justify-between items-center text-sm border-b border-white/10 pb-4">
-                       <span className="font-black uppercase tracking-[0.2em] text-[10px] text-rose-400 italic">Deducción de Ley (22%)</span>
+                       <span className="font-black uppercase tracking-[0.2em] text-[10px] text-rose-400 italic">Deducción de Ley ({settings.bpsRate}%)</span>
                        <span className="font-black text-rose-400 tabular-nums text-lg">-{formatCurrency(summary.bpsDiscount)}</span>
                      </div>
                      {summary.totalAdvances > 0 && (
@@ -219,7 +212,7 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                   <div className="flex justify-between items-end pt-14 mt-6 border-t border-white/5 relative z-10">
                     <div className="space-y-1.5">
                       <p className="font-black text-blue-400 uppercase tracking-[0.6em] text-[14px] italic">Neto Líquido Estimado</p>
-                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest italic">Cifra sujeta a ajustes oficiales de BPS</p>
+                      <p className="text-[9px] font-bold text-slate-500 uppercase tracking-widest italic">Cifra calculada con {settings.bpsRate}% de aportes</p>
                     </div>
                     <span className="text-7xl font-black italic tracking-tighter leading-none text-white tabular-nums drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]">
                         {formatCurrency(summary.netPay)}
@@ -236,13 +229,12 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
                 </div>
               )}
 
-              {/* Disclaimer de la App */}
               <div className="mt-20 pt-12 border-t-4 border-slate-900 flex justify-between items-end">
                 <div className="flex items-center gap-6">
-                   <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center font-black text-2xl italic text-white shadow-xl">LLV</div>
+                   <div className="w-16 h-16 bg-slate-900 rounded-2xl flex items-center justify-center font-black text-2xl italic text-white shadow-xl">RL</div>
                    <div className="space-y-1">
-                      <p className="text-[12px] font-black text-slate-900 uppercase tracking-tight">Registro Laboral Autogestionado</p>
-                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tecnología de Control Autónomo • Uruguay v5.5</p>
+                      <p className="text-[12px] font-black text-slate-900 uppercase tracking-tight">Registro laboral</p>
+                      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Tecnología de Control Autónomo • Uruguay</p>
                    </div>
                 </div>
                 <div className="text-right">
@@ -256,7 +248,6 @@ const Receipt: React.FC<ReceiptProps> = ({ workDays, settings, advances }) => {
       )}
 
       <style>{`
-        /* Eliminar scrollbars visuales pero mantener funcionalidad */
         .scrollbar-hide::-webkit-scrollbar {
           display: none !important;
         }
